@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="salaryShowMapper">
+    <!-- 查询列表 -->
+    <select id="listPage" resultType="pd" parameterType="page">
+        SELECT
+        t.ID,
+        t.EMP_CODE,
+        e.EMP_NAME,
+        e.EMP_GENDER,
+        t.DEPT_NAME,
+        t.POS_NAME,
+        t.YM,
+        t.SALARY_AMOUNT,
+        t.POS_ID,
+        t.FORMULA
+        FROM
+        sal_salary t
+        left join bd_employee e on t.EMP_CODE = e.EMP_CODE
+        WHERE 0=0
+        <if test="pd.DEPT_ID != null and pd.DEPT_ID != ''">
+            AND t.DEPT_ID = #{pd.DEPT_ID}
+        </if>
+        <if test="pd.POS_ID != null and pd.POS_ID != ''">
+            AND t.POS_ID = #{pd.POS_ID}
+        </if>
+        <if test="pd.YM != null and pd.YM != ''">
+            AND t.YM = #{pd.YM}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by t.YM desc,t.EMP_CODE
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 查询部门 -->
+    <select id="queryDept" parameterType="pd" resultType="pd">
+		SELECT * 
+		FROM
+		bd_department
+</select>
+    <!-- 查询岗位 -->
+    <select id="queryPos" parameterType="pd" resultType="pd">
+		SELECT * 
+		FROM
+		bd_position_level
+</select>
+    <!-- 根据id查询详情 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        SELECT
+        t.ID,
+        t.EMP_CODE,
+        e.EMP_NAME,
+        case WHEN e.EMP_GENDER = '1' then '男' WHEN e.EMP_GENDER = '2' then '女' end as EMP_GENDER,
+        t.DEPT_NAME,
+        t.POS_NAME,
+        t.YM,
+        t.REMARKS
+        FROM
+        sal_salary t
+        left join bd_employee e on t.EMP_CODE = e.EMP_CODE
+        WHERE 0=0
+        <if test="id != null and id != ''">
+            AND t.ID = #{id}
+        </if>
+    </select>
+    <!-- 查询详情数据 -->
+    <select id="queryItem" parameterType="pd" resultType="pd">
+	SELECT
+	BS_ID,
+	BS_NAME,
+	ORDER_NUM,
+	BS_AMOUNT,
+	BS_TYPE
+	FROM 
+	sal_salary_detail
+	WHERE  PID = #{id}
+	ORDER BY ORDER_NUM
+	
+	
+</select>
+    <!-- 更新主表 -->
+    <update id="updateSal" parameterType="pd">
+        update sal_salary
+        set SALARY_AMOUNT = #{sum},
+        <if test="remarks != null and remarks != ''">
+            REMARKS = #{remarks},
+        </if>
+        LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+        LAST_UPDATE_TIME = #{LAST_UPDATE_TIME}
+        where ID = #{ID}
+    </update>
+    <!-- 更新子表 -->
+    <update id="updateDetail" parameterType="pd">
+	update sal_salary_detail
+	set BS_AMOUNT = #{BS_AMOUNT}
+	where PID = #{ID} and BS_ID = #{BS_ID}
+</update>
+    <!-- 查询员工薪酬数据是否存在 -->
+    <select id="checkExist" parameterType="pd" resultType="pd">
+	SELECT ID
+	FROM sal_salary
+	WHERE EMP_CODE = #{EMP_CODE}
+	AND YM = #{YM}
+</select>
+    <!-- 保存数据 -->
+    <insert id="addData" parameterType="pd" useGeneratedKeys="true" keyProperty="ID">
+	INSERT into sal_salary
+	(EMP_CODE,DEPT_ID,DEPT_NAME,POS_ID,POS_NAME,YM,SALARY_AMOUNT,F_ID,FORMULA,CREATE_USER,CREATE_TIME,REMARKS)
+	VALUES
+	(#{EMP_CODE},#{DEPT_ID},#{DEPT_NAME},#{POS_ID},#{POS_NAME},#{YM},#{SALARY_AMOUNT},#{F_ID},#{FORMULA},#{CREATE_USER},#{CREATE_TIME},#{REMARKS})
+</insert>
+    <!-- 查询公式 -->
+    <select id="queryFormula" parameterType="pd" resultType="pd">
+	SELECT t.* FROM sal_pos_formula f,sal_formula t,bd_position_level l
+	WHERE f.SF_ID = t.ID
+	AND f.POS_ID = l.ID 
+	AND l.GRADE_CODE = #{POS_CODE}
+</select>
+    <!-- 查询公式详情项 -->
+    <select id="queryDetail" parameterType="pd" resultType="pd">
+	SELECT p.ID,p.NAME,p.TYPE,d.ORDER_NUM FROM sal_formula_detail d,bd_payment p
+	WHERE  d.BS_ID = p.ID
+	AND d.PID = #{F_ID}
+	AND p.ISDEL = 0
+	ORDER BY d.order_num
+</select>
+    <!-- 新增保存详情项 -->
+    <insert id="saveDetail" parameterType="pd">
+	INSERT INTO sal_salary_detail
+	(PID,BS_ID,BS_NAME,BS_TYPE,ORDER_NUM,BS_AMOUNT)
+	VALUES
+	(#{PID},#{BS_ID},#{NAME},#{TYPE},#{ORDER_NUM},#{BS_AMOUNT})
+</insert>
+    <!-- 编辑现有员工薪酬数据 -->
+    <update id="editData" parameterType="pd">
+	UPDATE sal_salary
+	SET DEPT_ID = #{DEPT_ID},
+		DEPT_NAME = #{DEPT_NAME},
+		POS_ID = #{POS_ID},
+		POS_NAME = #{POS_NAME},
+		SALARY_AMOUNT = #{SALARY_AMOUNT},
+		F_ID = #{F_ID},
+		FORMULA = #{FORMULA},
+		LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+		LAST_UPDATE_TIME = #{LAST_UPDATE_TIME},
+		REMARKS = ${REMARKS}
+	WHERE ID = #{ID}
+</update>
+    <!-- 删除已存在数据的子项 -->
+    <delete id="delDetail" parameterType="pd">
+	DELETE FROM sal_salary_detail
+	WHERE PID = #{ID} 
+</delete>
+    <!-- 查询当月数据 -->
+    <select id="findCurData" parameterType="pd" resultType="pd">
+	SELECT e.EMP_CODE,s.ID FROM bd_employee e
+	left join sal_salary s on e.EMP_CODE = s.EMP_CODE AND s.YM = #{YM}
+	WHERE e.ENABLED = '1' 
+</select>
+    <!-- 查询上月数据 -->
+    <select id="findLastData" parameterType="pd" resultType="pd">
+	SELECT s.*,d.* FROM
+	sal_salary s,sal_salary_detail d
+	where s.YM = #{lastYm} AND s.EMP_CODE = #{EMP_CODE} AND s.ID = d.PID
+</select>
+    <!-- 插入薪资主表数据 -->
+    <insert id="doAddSal" parameterType="pd" useGeneratedKeys="true" keyProperty="ID">
+	INSERT INTO sal_salary
+	(EMP_CODE,DEPT_ID,DEPT_NAME,POS_ID,POS_NAME,YM,SALARY_AMOUNT,F_ID,FORMULA,CREATE_USER,CREATE_TIME,REMARKS)
+	VALUES
+	(#{EMP_CODE},#{DEPT_ID},#{DEPT_NAME},#{POS_ID},#{POS_NAME},#{YM},#{SALARY_AMOUNT},#{F_ID},#{FORMULA},#{CREATE_USER},#{CREATE_TIME},#{REMARKS})	
+</insert>
+    <!-- 插入薪资从表 -->
+    <insert id="doAddSalDetail" parameterType="pd">
+	INSERT INTO sal_salary_detail
+	(PID,BS_ID,BS_NAME,BS_TYPE,ORDER_NUM,BS_AMOUNT)
+	VALUES
+	(#{ID},#{BS_ID},#{BS_NAME},#{BS_TYPE},#{ORDER_NUM},#{BS_AMOUNT})
+</insert>
+    <select id="findSalInfo" parameterType="pd" resultType="pd">
+	SELECT e.EMP_CODE,d.ID as DEPT_ID,d.DEPT_NAME,l.ID as POS_ID,l.GRADE_NAME as POS_NAME,m.ID as F_ID,m.FORMULA,s.ORDER_NUM,s.BS_ID,p.NAME as BS_NAME,p.TYPE as BS_TYPE
+	FROM bd_employee e LEFT JOIN bd_department d ON e.EMP_DEPARTMENT_ID = d.ID ,bd_position_level l,sal_pos_formula f,sal_formula m,sal_formula_detail s,bd_payment p
+	WHERE e.EMP_GRADE_ID = l.ID
+    AND l.ID = f.POS_ID
+    AND f.SF_ID = m.ID
+	AND s.PID = m.ID
+	AND s.BS_ID = p.ID
+	AND e.EMP_CODE = #{EMP_CODE}
+	AND m.ISDEL = 0
+	AND p.ISDEL = 0
+	order by s.ORDER_NUM
+</select>
+    <!-- 查询绩效得分 -->
+    <select id="queryPer" parameterType="pd" resultType="pd">
+	SELECT * FROM
+	performance 
+	WHERE EMP_CODE = #{EMP_CODE}
+	AND MONTH = #{YM}
+	AND ISDEL = 0
+</select>
+</mapper>

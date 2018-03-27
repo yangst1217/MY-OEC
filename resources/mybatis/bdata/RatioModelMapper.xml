@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="RatioModelMapper">
+    <resultMap id="BaseResultMap" type="RatioModel">
+        <id column="ID" property="id" jdbcType="INTEGER"/>
+        <result column="RATIO_ID" property="ratioId" jdbcType="VARCHAR"/>
+        <result column="RATIO_NAME" property="ratioName" jdbcType="VARCHAR"/>
+        <result column="RATIO_NUMBER" property="ratioNumber" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="enable" property="enable" jdbcType="VARCHAR"/>
+        <result column="create_user" property="createUser" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="last_update_user" property="lastUpdateUser" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="preparation1" property="preparation1" jdbcType="VARCHAR"/>
+        <result column="preparation2" property="preparation2" jdbcType="VARCHAR"/>
+        <result column="preparation3" property="preparation3" jdbcType="VARCHAR"/>
+        <result column="preparation4" property="preparation4" jdbcType="VARCHAR"/>
+        <result column="preparation5" property="preparation5" jdbcType="VARCHAR"/>
+        <result column="preparation6" property="preparation6" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    ID, RATIO_ID, RATIO_NAME, RATIO_NUMBER, status, enable, create_user, create_time, 
+    last_update_user, last_update_time, preparation1, preparation2, preparation3, preparation4, 
+    preparation5, preparation6
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select
+        <include refid="Base_Column_List"/>
+        from xc_ratio_model
+        where ID = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from xc_ratio_model
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="RatioModel">
+    insert into xc_ratio_model (ID, RATIO_ID, RATIO_NAME, 
+      RATIO_NUMBER, status, enable, 
+      create_user, create_time, last_update_user, 
+      last_update_time, preparation1, preparation2, 
+      preparation3, preparation4, preparation5, 
+      preparation6)
+    values (#{id,jdbcType=INTEGER}, #{ratioId,jdbcType=VARCHAR}, #{ratioName,jdbcType=VARCHAR}, 
+      #{ratioNumber,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{enable,jdbcType=VARCHAR}, 
+      #{createUser,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateUser,jdbcType=VARCHAR}, 
+      #{lastUpdateTime,jdbcType=TIMESTAMP}, #{preparation1,jdbcType=VARCHAR}, #{preparation2,jdbcType=VARCHAR}, 
+      #{preparation3,jdbcType=VARCHAR}, #{preparation4,jdbcType=VARCHAR}, #{preparation5,jdbcType=VARCHAR}, 
+      #{preparation6,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="RatioModel">
+        insert into xc_ratio_model
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="ratioId != null">
+                RATIO_ID,
+            </if>
+            <if test="ratioName != null">
+                RATIO_NAME,
+            </if>
+            <if test="ratioNumber != null">
+                RATIO_NUMBER,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="enable != null">
+                enable,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="lastUpdateUser != null">
+                last_update_user,
+            </if>
+            <if test="lastUpdateTime != null">
+                last_update_time,
+            </if>
+            <if test="preparation1 != null">
+                preparation1,
+            </if>
+            <if test="preparation2 != null">
+                preparation2,
+            </if>
+            <if test="preparation3 != null">
+                preparation3,
+            </if>
+            <if test="preparation4 != null">
+                preparation4,
+            </if>
+            <if test="preparation5 != null">
+                preparation5,
+            </if>
+            <if test="preparation6 != null">
+                preparation6,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="ratioId != null">
+                #{ratioId,jdbcType=VARCHAR},
+            </if>
+            <if test="ratioName != null">
+                #{ratioName,jdbcType=VARCHAR},
+            </if>
+            <if test="ratioNumber != null">
+                #{ratioNumber,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="enable != null">
+                #{enable,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastUpdateUser != null">
+                #{lastUpdateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="lastUpdateTime != null">
+                #{lastUpdateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                #{preparation6,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="RatioModel">
+        update xc_ratio_model
+        <set>
+            <if test="ratioId != null">
+                RATIO_ID = #{ratioId,jdbcType=VARCHAR},
+            </if>
+            <if test="ratioName != null">
+                RATIO_NAME = #{ratioName,jdbcType=VARCHAR},
+            </if>
+            <if test="ratioNumber != null">
+                RATIO_NUMBER = #{ratioNumber,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="enable != null">
+                enable = #{enable,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastUpdateUser != null">
+                last_update_user = #{lastUpdateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="lastUpdateTime != null">
+                last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                preparation1 = #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                preparation2 = #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                preparation3 = #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                preparation4 = #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                preparation5 = #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                preparation6 = #{preparation6,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="RatioModel">
+    update xc_ratio_model
+    set RATIO_ID = #{ratioId,jdbcType=VARCHAR},
+      RATIO_NAME = #{ratioName,jdbcType=VARCHAR},
+      RATIO_NUMBER = #{ratioNumber,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      enable = #{enable,jdbcType=VARCHAR},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      last_update_user = #{lastUpdateUser,jdbcType=VARCHAR},
+      last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+      preparation1 = #{preparation1,jdbcType=VARCHAR},
+      preparation2 = #{preparation2,jdbcType=VARCHAR},
+      preparation3 = #{preparation3,jdbcType=VARCHAR},
+      preparation4 = #{preparation4,jdbcType=VARCHAR},
+      preparation5 = #{preparation5,jdbcType=VARCHAR},
+      preparation6 = #{preparation6,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+
+    <select id="listAll" resultType="pd" parameterType="pd">
+    SELECT
+		t1.ZD_ID AS RATIO_ID,
+		t1. NAME AS RATIO_NAME,
+		t1.BIANMA,
+		t2.ID,
+		IFNULL(t2.RATIO_NUMBER, 0) RATIO_NUMBER
+	FROM
+		sys_dictionaries t1
+	LEFT JOIN xc_ratio_model t2 ON t1.ZD_ID = t2.RATIO_ID
+	WHERE
+		t1.PARENT_ID = #{zdId}
+	ORDER BY t1.ORDY_BY
+  </select>
+
+    <!-- 查询某编码KPI系数 -->
+    <select id="getKpiRatio" parameterType="String" resultType="String">
+	SELECT
+		t1.RATIO_NUMBER
+	FROM
+		xc_ratio_model t1
+	LEFT JOIN sys_dictionaries t2 ON t1.RATIO_ID = t2.ZD_ID
+	WHERE
+		t2.BIANMA = #{bianma:VARCHAR}
+	</select>
+</mapper>

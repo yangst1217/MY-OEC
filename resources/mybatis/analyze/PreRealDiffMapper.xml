@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PreRealDiffMapper">
+    <!-- 获取年月列表 -->
+    <select id="getYearMonth" parameterType="pd" resultType="pd">
+        SELECT
+            CONCAT(
+                t1.`YEAR`,
+                '年',
+                t1.`MONTH`,
+                '月'
+            ) AS 'YEAR_MONTH',
+            SUM(t1.MONTH_COUNT) AS 'PRE_SUM',
+            MAX(IFNULL(s1.`REAL`, 0)) AS 'REAL_SUM',
+            IFNULL(
+                SUM(t1.MONTH_COUNT) - MAX(s1.`REAL`),
+                0
+            ) AS 'DIFF_SUM'
+        FROM
+            b_month_dept_task t1
+        LEFT JOIN (
+            SELECT
+                t3.`YEAR`,
+                t3.`MONTH`,
+                SUM(t2.DAILY_COUNT) AS 'REAL'
+            FROM
+                b_daily_emp_task t2,
+                b_week_emp_task t3
+            WHERE
+                t2.B_WEEK_EMP_TASK_ID = t3.ID
+            AND t3.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+            GROUP BY
+                t3.`YEAR`,
+                t3.`MONTH`
+        ) s1 ON (
+            s1.`YEAR` = t1.`YEAR`
+            AND s1.`MONTH` = t1.`MONTH`
+        )
+        WHERE
+            t1.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+        GROUP BY
+            t1.`YEAR`,
+            t1.`MONTH`
+    </select>
+
+    <!-- 获取部门列表 -->
+    <select id="getDeptList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.DEPT_CODE,
+            MAX(dept.DEPT_NAME) AS 'DEPT_NAME',
+            SUM(IFNULL(t1.MONTH_COUNT, 0)) AS 'PRE_SUM',
+            MAX(IFNULL(s1.`REAL`, 0)) AS 'REAL_SUM',
+            SUM(IFNULL(t1.MONTH_COUNT, 0)) - MAX(IFNULL(s1.`REAL`, 0)) AS 'DIFF_SUM'
+        FROM
+            b_month_dept_task t1
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        LEFT JOIN (
+            SELECT
+                t3.DEPT_CODE,
+                SUM(t2.DAILY_COUNT) AS 'REAL'
+            FROM
+                b_daily_emp_task t2,
+                b_week_emp_task t3
+            WHERE
+                t2.B_WEEK_EMP_TASK_ID = t3.ID
+                AND t3.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+            GROUP BY
+                t3.DEPT_CODE
+            ) s1 ON (t1.DEPT_CODE = s1.DEPT_CODE)
+        WHERE
+            t1.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+        GROUP BY
+            t1.DEPT_CODE;
+    </select>
+
+    <!-- 获取预实差 -->
+    <select id="getPreImplementationList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.MONTH_COUNT AS 'PRE',
+            IFNULL(s1.`REAL`, 0) AS 'REAL',
+            IFNULL(t1.MONTH_COUNT - s1.`REAL`, 0) AS 'DIFF'
+        FROM
+            b_month_dept_task t1
+        LEFT JOIN (
+            SELECT
+                t3.`YEAR`,
+                t3.`MONTH`,
+                SUM(t2.DAILY_COUNT) AS 'REAL'
+            FROM
+                b_daily_emp_task t2,
+                b_week_emp_task t3
+            WHERE
+                t2.B_WEEK_EMP_TASK_ID = t3.ID
+            AND t3.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+            AND t3.DEPT_CODE = #{DEPT_CODE}
+            GROUP BY
+                t3.`YEAR`,
+                t3.`MONTH`
+        ) s1 ON (
+            s1.`YEAR` = t1.`YEAR`
+            AND s1.`MONTH` = t1.`MONTH`
+        )
+        WHERE
+            t1.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+        AND t1.DEPT_CODE = #{DEPT_CODE}
+        ORDER BY
+            CONCAT(
+                t1.`YEAR`,
+                '年',
+                t1.`MONTH`,
+                '月'
+            )
+    </select>
+
+    <!-- 获取可供选择的目标列表 -->
+    <select id="getTargetList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.*
+        FROM
+            b_year_target t1
+        WHERE
+            t1.`YEAR` = #{YEAR}
+        AND (
+            t1.EMP_CODE = #{USER_NUMBER}
+            OR t1.CREATE_USER = #{CREATE_USER}
+        );
+    </select>
+
+    <!-- 获取员工列表 -->
+    <select id="getEmpList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.EMP_CODE,
+            MAX(emp.EMP_NAME) AS 'EMP_NAME',
+            SUM(IFNULL(t1.MONTH_COUNT, 0)) AS 'PRE_SUM',
+            MAX(IFNULL(s1.`REAL`, 0)) AS 'REAL_SUM',
+            SUM(IFNULL(t1.MONTH_COUNT, 0)) - MAX(IFNULL(s1.`REAL`, 0)) AS 'DIFF_SUM'
+        FROM
+            b_month_dept_task t1
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN (
+            SELECT
+                t3.EMP_CODE,
+                SUM(t2.DAILY_COUNT) AS 'REAL'
+            FROM
+                b_daily_emp_task t2,
+                b_week_emp_task t3
+            WHERE
+                t2.B_WEEK_EMP_TASK_ID = t3.ID
+            AND t3.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+            AND t3.DEPT_CODE = #{DEPT_CODE}
+            GROUP BY
+                t3.EMP_CODE
+        ) s1 ON (t1.EMP_CODE = s1.EMP_CODE)
+        WHERE
+            t1.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+        AND t1.DEPT_CODE = #{DEPT_CODE}
+        GROUP BY
+            t1.EMP_CODE;
+    </select>
+
+    <!-- 获取员工预实差 -->
+    <select id="getEmpPreImplementationList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.MONTH_COUNT AS 'PRE',
+            IFNULL(s1.`REAL`, 0) AS 'REAL',
+            IFNULL(t1.MONTH_COUNT - s1.`REAL`, 0) AS 'DIFF'
+        FROM
+            b_month_dept_task t1
+        LEFT JOIN (
+            SELECT
+                t3.`YEAR`,
+                t3.`MONTH`,
+                SUM(t2.DAILY_COUNT) AS 'REAL'
+            FROM
+                b_daily_emp_task t2,
+                b_week_emp_task t3
+            WHERE
+                t2.B_WEEK_EMP_TASK_ID = t3.ID
+            AND t3.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+            AND t3.EMP_CODE = #{EMP_CODE}
+            GROUP BY
+                t3.`YEAR`,
+                t3.`MONTH`
+        ) s1 ON (
+            s1.`YEAR` = t1.`YEAR`
+            AND s1.`MONTH` = t1.`MONTH`
+        )
+        WHERE
+            t1.B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+        AND t1.EMP_CODE = #{EMP_CODE}
+        ORDER BY
+            CONCAT(
+                t1.`YEAR`,
+                '年',
+                t1.`MONTH`,
+                '月'
+            )
+    </select>
+</mapper>

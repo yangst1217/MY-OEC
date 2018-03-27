@@ -1,0 +1,133 @@
+@charset "utf-8";
+/* CSS Document */
+/*登陆页*/
+.loginCenter-moudleRight a.moudle1.loginCenter-moudle1.loginCenter-mStyle {
+    padding-top: 0px;
+}
+
+.loginCenter-moudleRight a.moudle2.loginCenter-moudle2.loginCenter-mStyle {
+    padding-top: 0px;
+}
+
+.loginCenter-moudleRight a.loginCenter-moudle3.loginCenter-mStyle span.moudle-text {
+    margin-top: 0px;
+}
+
+.loginCenter-moudleRight a.moudle3.loginCenter-moudle3.loginCenter-mStyle {
+    padding-top: 0px;
+}
+
+.loginCenter-moudleRight a.moudle3.loginCenter-moudle3.loginCenter-mStyle span.moudle-text {
+    top: -7px;
+}
+
+a.btn-Login, a.btn-register {
+    width: 235px;
+}
+
+/*忘记密码*/
+.ieContentstyle {
+    width: 302px !important;
+}
+
+.w400 {
+    width: 410px !important;
+}
+
+/*注册代码*/
+.registerStyle-left3 .ui-form-item SELECT.selectStyle {
+    margin-left: 0px;
+}
+
+/*项目执行页面样式*/
+.w148 {
+    width: 145px !important;
+}
+
+.wrapStyle input {
+    padding-left: 0px;
+}
+
+/*导航子选项*/
+ul.indexNav_a2_sub li a {
+    font-size: 14px;
+    font-weight: normal;
+    font-family: simnun;
+}
+
+/*首页上传附件弹窗*/
+.windowRadio .element_radio {
+    vertical-align: top;
+}
+
+/*交互记录文本域*/
+.comment1 textarea {
+    height: 65px;
+    border: 2px solid #f1f2f6;
+    padding: 10px;
+    resize: none;
+    width: 558px;
+    border-right: none;
+    border-top: none;
+}
+
+ul.dropdownStyleul2, ul.dropdownStyleul3, ul.dropdownStyleul2, ul.dropdownStyleul6 {
+    left: -152px;
+    top: 35px;
+    z-index: 10;
+}
+
+/*产品库首页*/
+.filter .f-edit {
+    margin-top: -19px;
+}
+
+.btn-related {
+    line-height: 27px !important;
+}
+
+.summary-middle-checkbox input {
+    margin-top: 13px;
+}
+
+.w185 {
+    width: 185px !important;
+}
+
+.wrapStyle .wrapContentright textarea {
+    padding: 0;
+    width: 505px;
+    height: 78px !important;
+}
+
+.wrapStyle .wrapContentright.wraptextie textarea {
+    width: 832px !important;
+}
+
+.w94 {
+    width: 94px !important;
+}
+
+.dropdownBtn {
+    height: 32px;
+}
+
+.Contentstyle span.Contentstyle2 .input2 {
+    height: 36px;
+}
+
+.refuse-reason textarea {
+    width: 570px;
+}
+
+.poptextarea {
+    width: 781px;
+}
+
+.windowCheckbox .text_checkbox {
+    width: 261px;
+}
+
+.pt153 {
+    padding-top: 169px !important;
+}

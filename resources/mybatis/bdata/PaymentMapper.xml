@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="paymentMapper">
+    <!-- 查询表格数据 -->
+    <select id="listPage" resultType="pd" parameterType="page">
+        select
+        ID,
+        CODE,
+        NAME,
+        TYPE,
+        CREATE_USER,
+        CREATE_TIME
+        from bd_payment
+        where
+        ISDEL = '0'
+        <if test="pd.KEYW != null and pd.KEYW != ''">
+            and
+            (
+            CODE LIKE CONCAT(CONCAT('%',#{pd.KEYW}),'%')
+            or
+            NAME LIKE CONCAT(CONCAT('%',#{pd.KEYW}),'%')
+            )
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by CODE
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 	新增薪酬数据 -->
+    <insert id="add" parameterType="pd" keyProperty="ID">
+		INSERT INTO
+		bd_payment
+		(CODE,NAME,TYPE,CREATE_USER,CREATE_TIME,ISDEL)
+		VALUES(
+		#{CODE},#{NAME},#{TYPE},#{CREATE_USER},#{CREATE_TIME},0
+		)
+
+	</insert>
+    <!-- 	根据id查询数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select * from bd_payment where ISDEL = 0
+        <if test="ID != null and ID != ''">
+            and ID = #{ID}
+        </if>
+    </select>
+    <!--   	 保存修改 -->
+    <update id="edit" parameterType="pd">
+        update bd_payment
+        set CODE = #{CODE},
+        NAME = #{NAME},
+        TYPE = #{TYPE}
+        where 0 = 0
+        <if test="ID!=null and ID!=''">
+            and ID = #{ID}
+        </if>
+
+    </update>
+    <!--逻辑删除数据 -->
+    <update id="delete" parameterType="pd">
+        update bd_payment
+        set ISDEL = 1
+        <if test="ID!=null and ID!=''">
+            where ID = #{ID}
+        </if>
+    </update>
+    <select id="checkExist" parameterType="pd" resultType="pd">
+        SELECT * FROM
+        bd_payment t
+        WHERE t.NAME = #{NAME}
+        OR t.CODE = #{CODE}
+        <if test="ID != null and ID != ''">
+            AND t.ID != #{ID}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="PositionLevelMapper">
+    <resultMap id="BaseResultMap" type="PositionLevel">
+        <id column="ID" property="id" jdbcType="INTEGER"/>
+        <result column="GRADE_CODE" property="gradeCode" jdbcType="VARCHAR"/>
+        <result column="GRADE_NAME" property="gradeName" jdbcType="VARCHAR"/>
+        <result column="LABOR_COST" property="laborCost" jdbcType="DECIMAL"/>
+        <result column="GRADE_DESC" property="gradeDesc" jdbcType="VARCHAR"/>
+        <result column="ATTACH_DEPT_ID" property="attachDeptId" jdbcType="INTEGER"/>
+        <result column="ATTACH_DEPT_NAME" property="attachDeptName" jdbcType="VARCHAR"/>
+        <result column="ATTACH_KPI_MODEL" property="attachKpiModel" jdbcType="INTEGER"/>
+
+    </resultMap>
+    <sql id="Base_Column_List">
+    ID, GRADE_CODE, GRADE_NAME, JOB_RANK, LABOR_COST, GRADE_DESC, ATTACH_DEPT_ID, ATTACH_DEPT_NAME, ATTACH_KPI_MODEL
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select
+        <include refid="Base_Column_List"/>
+        from bd_position_level
+        where ID = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from bd_position_level
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="PositionLevel">
+    insert into bd_position_level (ID, GRADE_CODE, GRADE_NAME, 
+      LABOR_COST, GRADE_DESC, ATTACH_DEPT_ID, 
+      ATTACH_DEPT_NAME,ATTACH_KPI_MODEL)
+    values (#{id,jdbcType=INTEGER}, #{gradeCode,jdbcType=VARCHAR}, #{gradeName,jdbcType=VARCHAR}, 
+      #{laborCost,jdbcType=DECIMAL}, #{gradeDesc,jdbcType=VARCHAR}, #{attachDeptId,jdbcType=INTEGER}, 
+      #{attachDeptName,jdbcType=VARCHAR},#{attachKpiModel,jdbcType=INTEGER})
+  </insert>
+    <insert id="insertSelective" parameterType="PositionLevel">
+        insert into bd_position_level
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="gradeCode != null">
+                GRADE_CODE,
+            </if>
+            <if test="gradeName != null">
+                GRADE_NAME,
+            </if>
+            <if test="jobRank != null">
+                JOB_RANK,
+            </if>
+            <if test="laborCost != null">
+                LABOR_COST,
+            </if>
+            <if test="gradeDesc != null">
+                GRADE_DESC,
+            </if>
+            <if test="attachDeptId != null">
+                ATTACH_DEPT_ID,
+            </if>
+            <if test="attachDeptName != null">
+                ATTACH_DEPT_NAME,
+            </if>
+            <if test="attachKpiModel != null and attachKpiModel != '' ">
+                ATTACH_KPI_MODEL,
+            </if>
+            ISDEL, CREATE_TIME, CREATE_USER,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="gradeCode != null">
+                #{gradeCode,jdbcType=VARCHAR},
+            </if>
+            <if test="gradeName != null">
+                #{gradeName,jdbcType=VARCHAR},
+            </if>
+            <if test="jobRank != null">
+                #{jobRank,jdbcType=INTEGER},
+            </if>
+            <if test="laborCost != null">
+                #{laborCost,jdbcType=DECIMAL},
+            </if>
+            <if test="gradeDesc != null">
+                #{gradeDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="attachDeptId != null">
+                #{attachDeptId,jdbcType=INTEGER},
+            </if>
+            <if test="attachDeptName != null">
+                #{attachDeptName,jdbcType=VARCHAR},
+            </if>
+
+            <if test="attachKpiModel != null and attachKpiModel != ''">
+                #{attachKpiModel,jdbcType=INTEGER},
+            </if>
+            0, #{createTime}, #{createUser},
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="PositionLevel">
+        update bd_position_level
+        <set>
+            <if test="gradeCode != null">
+                GRADE_CODE = #{gradeCode,jdbcType=VARCHAR},
+            </if>
+            <if test="gradeName != null">
+                GRADE_NAME = #{gradeName,jdbcType=VARCHAR},
+            </if>
+            <if test="jobRank != null">
+                JOB_RANK = #{jobRank,jdbcType=INTEGER},
+            </if>
+            <if test="laborCost != null">
+                LABOR_COST = #{laborCost,jdbcType=DECIMAL},
+            </if>
+            <if test="gradeDesc != null">
+                GRADE_DESC = #{gradeDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="attachDeptId != null">
+                ATTACH_DEPT_ID = #{attachDeptId,jdbcType=INTEGER},
+            </if>
+            <if test="attachDeptName != null">
+                ATTACH_DEPT_NAME = #{attachDeptName,jdbcType=VARCHAR},
+            </if>
+            <if test="attachKpiModel != null and attachKpiModel != ''">
+                ATTACH_KPI_MODEL = #{attachKpiModel,jdbcType=INTEGER},
+            </if>
+            <if test="attachKpiModel == '' ">
+                ATTACH_KPI_MODEL = null
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="PositionLevel">
+    update bd_position_level
+    set GRADE_CODE = #{gradeCode,jdbcType=VARCHAR},
+      GRADE_NAME = #{gradeName,jdbcType=VARCHAR},
+      LABOR_COST = #{laborCost,jdbcType=DECIMAL},
+      GRADE_DESC = #{gradeDesc,jdbcType=VARCHAR},
+      ATTACH_DEPT_ID = #{attachDeptId,jdbcType=INTEGER},
+      ATTACH_DEPT_NAME = #{attachDeptName,jdbcType=VARCHAR},
+      ATTACH_KPI_MODEL = #{attachKpiModel,jdbcType=INTEGER}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+
+    <!-- 列表(全部) -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        <include refid="Base_Column_List"/>, b.DEPT_NAME
+        from bd_position_level
+        left join
+        (select d.ID as DEPT_ID, d.DEPT_NAME from bd_department d ) b
+        on ATTACH_DEPT_ID=b.DEPT_ID
+        where ISDEL = 0
+        <if test="pd.gradeCode != null and pd.gradeCode != '' ">
+            and GRADE_CODE=#{pd.gradeCode}
+        </if>
+        <if test="pd.gradeName != null and pd.gradeName != ''">
+            and GRADE_NAME=#{pd.gradeName}
+        </if>
+        <if test="pd.attachDeptId != null and pd.attachDeptId != ''">
+            and ATTACH_DEPT_ID=#{pd.attachDeptId}
+        </if>
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            GRADE_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            GRADE_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            GRADE_DESC LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            ATTACH_DEPT_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by GRADE_CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 通过id查找 -->
+    <select id="findObjectById" parameterType="pd" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ID = #{id,jdbcType=INTEGER}
+	</select>
+
+    <!-- 通过id查找 -->
+    <select id="findById" parameterType="String" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ID = #{ID}
+	</select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from bd_position_level
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="checkCodeByGradeCode" parameterType="pd" resultType="java.util.LinkedHashMap">
+        select
+        count(1) SL
+        from bd_position_level
+        where GRADE_CODE = #{gradeCode,jdbcType=VARCHAR}
+        <if test="id != null and id != ''">
+            and ID != #{id}
+        </if>
+    </select>
+
+    <!-- 通过部门id查找 -->
+    <select id="findLevelByDeptId" parameterType="String" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ATTACH_DEPT_ID = #{deptId}
+	</select>
+
+    <select id="findIdByCode" resultType="String" parameterType="String">
+		SELECT
+			ID
+		FROM
+			bd_position_level
+		WHERE
+			GRADE_CODE = #{GRADE_CODE}
+	</select>
+
+    <!-- 查询所有职位，不分页 -->
+    <select id="findAll" resultType="pd">
+		select * from bd_position_level
+	</select>
+
+    <select id="findIdByName" resultType="Integer">
+		select ID from bd_position_level where GRADE_NAME = #{positionName} and ISDEL = 0
+	</select>
+
+    <select id="findPositionByDeptId" resultType="pd">
+        select ID,GRADE_NAME from bd_position_level where ISDEL = 0 and ATTACH_DEPT_ID in
+        <foreach collection="array" close=")" index="index" item="item" open="(" separator=",">
+            #{item}
+        </foreach>
+    </select>
+</mapper>

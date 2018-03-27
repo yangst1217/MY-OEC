@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DeptMapper">
+
+    <!-- 取最大编码-->
+    <select id="maxCode" parameterType="pd" resultType="String">
+		select 
+			max(DEPT_CODE) 
+		from 
+			BD_DEPARTMENT
+	</select>
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd">
+		insert into BD_DEPARTMENT(
+			ID,	
+			DEPT_CODE,	
+			DEPT_NAME,	
+			DEPT_SIGN,	
+			DEPT_LEADER_ID,	
+			DEPT_LEADER_NAME,	
+			ENABLED,
+			DESCRIPTION,
+			PARENT_ID,
+			FUNCTION,
+			AREA,
+			CREATE_TIME,
+			CREATE_USER,
+			LAST_UPDATE_TIME,
+			LAST_UPDATE_USER,
+			IS_FUNCTIONAL_DEPT,
+			IS_PREPARE_DEPT,
+			ORDER_NUM
+		) values (
+			#{ID},	
+			#{DEPT_CODE},	
+			#{DEPT_NAME},	
+			#{DEPT_SIGN},	
+			#{DEPT_LEADER_ID},	
+			#{DEPT_LEADER_NAME},	
+			#{ENABLED},
+			'',
+			#{PARENT_ID},
+			#{FUNCTION},
+			#{AREA},
+			#{CREATE_TIME},
+			#{CREATE_USER},
+			#{LAST_UPDATE_TIME},
+			#{LAST_UPDATE_USER},
+			#{IS_FUNCTIONAL_DEPT},
+			#{IS_PREPARE_DEPT},
+			#{ORDER_NUM}
+		)
+	</insert>
+
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="pd">
+		update BD_DEPARTMENT
+		set
+			IS_DELETE = #{IS_DELETE}
+		where 
+			ID = #{ID}
+	</delete>
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update  BD_DEPARTMENT
+			set 
+				DEPT_CODE = #{DEPT_CODE},
+				DEPT_NAME = #{DEPT_NAME},
+				DEPT_SIGN = #{DEPT_SIGN},
+				PARENT_ID = #{PARENT_ID},
+				FUNCTION = #{FUNCTION},
+				AREA = #{AREA},
+				DEPT_LEADER_ID = #{DEPT_LEADER_ID},
+				DEPT_LEADER_NAME = #{DEPT_LEADER_NAME},
+				ORDER_NUM = #{ORDER_NUM},
+				IS_FUNCTIONAL_DEPT = #{IS_FUNCTIONAL_DEPT},
+				IS_PREPARE_DEPT = #{IS_PREPARE_DEPT},
+				ENABLED = #{ENABLED}
+
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过标识获取ID -->
+    <select id="findIdByS" parameterType="pd" resultType="String">
+		select 
+			ID
+		from
+			BD_DEPARTMENT
+		where
+			DEPT_SIGN = #{DEPT_SIGN}
+	</select>
+
+    <!-- 通过标识获取部门 -->
+    <select id="findIdBySign" parameterType="pd" resultType="pd">
+		select 
+			*
+		from
+			BD_DEPARTMENT
+		where
+			DEPT_SIGN = #{DEPT_SIGN}
+	</select>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			a.ID,	
+			a.DEPT_CODE,	
+			a.DEPT_NAME,	
+			a.DEPT_SIGN,	
+			a.DEPT_LEADER_ID,	
+			a.DEPT_LEADER_NAME,	
+			a.ENABLED,
+			a.DESCRIPTION,
+			a.PARENT_ID,
+			a.FUNCTION,
+			a.AREA,
+			a.CREATE_TIME,
+			a.CREATE_USER,
+			a.LAST_UPDATE_TIME,
+			a.LAST_UPDATE_USER,
+			a.IS_FUNCTIONAL_DEPT,
+			a.IS_PREPARE_DEPT,
+			b.DEPT_NAME PARENT_NAME,
+			a.ORDER_NUM
+		from 
+			BD_DEPARTMENT a LEFT JOIN BD_DEPARTMENT b ON a.PARENT_ID = b.ID
+		where 
+			a.ID = #{ID}
+	</select>
+
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        a.ID,
+        a.DEPT_CODE,
+        a.DEPT_NAME,
+        a.DEPT_SIGN,
+        a.DEPT_LEADER_ID,
+        a.DEPT_LEADER_NAME,
+        a.ENABLED,
+        a.DESCRIPTION,
+        a.PARENT_ID,
+        a.FUNCTION,
+        a.AREA,
+        a.CREATE_TIME,
+        a.CREATE_USER,
+        a.LAST_UPDATE_TIME,
+        a.LAST_UPDATE_USER,
+        a.IS_FUNCTIONAL_DEPT,
+        a.IS_PREPARE_DEPT,
+        (
+        SELECT
+        COUNT(b.EMP_NAME)
+        FROM
+        bd_employee b
+        WHERE
+        b.EMP_DEPARTMENT_ID = a.ID
+        )AS ENUM
+        from
+        BD_DEPARTMENT a
+        where 1 = 1
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.DEPT_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.DEPT_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.DEPT_SIGN LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.PARENT_ID LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAll" parameterType="pd" resultType="pd">
+		select
+				a.ID,	
+				a.DEPT_CODE,	
+				a.DEPT_NAME,	
+				a.DEPT_SIGN,	
+				a.DEPT_LEADER_ID,	
+				a.DEPT_LEADER_NAME,	
+				a.ENABLED,
+				a.DESCRIPTION,
+				a.PARENT_ID,
+				a.FUNCTION,
+				a.AREA,
+				a.CREATE_TIME,
+				a.CREATE_USER,
+				a.LAST_UPDATE_TIME,
+				a.LAST_UPDATE_USER,
+				a.IS_FUNCTIONAL_DEPT,
+				a.IS_PREPARE_DEPT,
+				a.ORDER_NUM,
+				(
+					SELECT
+						COUNT(b.EMP_NAME)
+					FROM
+						bd_employee b
+					WHERE
+						b.EMP_DEPARTMENT_ID = a.ID
+				)AS ENUM,
+				'true' as TO_USE
+		from 
+				BD_DEPARTMENT a
+		WHERE
+				a.IS_DELETE = 0		
+		ORDER BY
+				a.ORDER_NUM,
+				a.CREATE_TIME DESC
+	</select>
+
+    <!-- 列表(无参全部) -->
+    <select id="listAlln" resultType="pd">
+		select
+				a.ID,	
+				a.DEPT_CODE,	
+				a.DEPT_NAME,	
+				a.DEPT_SIGN,	
+				a.DEPT_LEADER_ID,	
+				a.DEPT_LEADER_NAME,	
+				a.ENABLED,
+				a.DESCRIPTION,
+				a.PARENT_ID,
+				a.FUNCTION,
+				a.AREA,
+				a.CREATE_TIME,
+				a.CREATE_USER,
+				a.LAST_UPDATE_TIME,
+				a.LAST_UPDATE_USER,
+				a.IS_FUNCTIONAL_DEPT,
+				a.IS_PREPARE_DEPT
+		from 
+				BD_DEPARTMENT a
+		WHERE
+				a.IS_DELETE = 0		
+		ORDER BY
+				a.PARENT_ID,
+				a.ORDER_NUM,
+				a.CREATE_TIME DESC
+	</select>
+
+    <select id="listWithAuth" resultType="pd">
+        SELECT
+        *
+        FROM
+        bd_department
+        WHERE
+        is_delete = 0
+        and enabled = 1
+        <if test='USER_ID != "1"'>
+            and ID IN (
+            SELECT DISTINCT
+            (dept.ID)
+            FROM
+            bd_department dept
+            LEFT JOIN sys_datarole dr ON dept.ID = dr.DEPT_ID
+            WHERE
+            dept.is_delete = 0
+            and dept.enabled = 1
+            and (dr.USER_ID = #{USER_ID} OR dept.ID = #{deptId})
+            )
+        </if>
+    </select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from BD_DEPARTMENT
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 批量获取 -->
+    <select id="getAllById" parameterType="String" resultType="pd">
+        select PATH from BD_DEPARTMENT
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 删除图片 -->
+    <update id="delTp" parameterType="pd">
+		update  BD_DEPARTMENT
+			set 
+				PATH			= ''
+			where 
+				ID = #{ID}
+	</update>
+    <select id="findBudgetDeptList" resultType="pd">
+		select
+		 	a.ID,	
+			a.DEPT_CODE,	
+			a.DEPT_NAME
+		from bd_department a where a.IS_PREPARE_DEPT=1
+	</select>
+    <select id="findForecastDeptList" resultType="pd">
+		select
+		 	a.ID,	
+			a.DEPT_CODE,	
+			a.DEPT_NAME
+		from bd_department a where a.IS_FUNCTIONAL_DEPT=1
+	</select>
+
+    <!-- 获取除了公司以外的部门信息 -->
+    <select id="findDeptNoCom" parameterType="pd" resultType="pd">
+		SELECT
+			a.DEPT_CODE,
+			a.DEPT_NAME,
+			a.DEPT_SIGN,
+			(
+				SELECT
+					count(*)
+				FROM
+					bd_employee b
+				WHERE
+					b.EMP_DEPARTMENT_ID = a.ID
+			)DEPT_PEOPLE,
+			a.ID
+		FROM
+			bd_department a
+		WHERE
+			a.ENABLED = 1
+			AND A.ID != 1
+	</select>
+
+    <!-- 订单提交模块SQL -->
+    <!-- 查询订单中未添加的部门 -->
+    <select id="listnotInScall" parameterType="pd" resultType="pd">
+        select
+        a.ID,
+        a.DEPT_CODE,
+        a.DEPT_NAME,
+        a.DEPT_SIGN,
+        a.DEPT_LEADER_ID,
+        a.DEPT_LEADER_NAME,
+        a.ENABLED,
+        a.DESCRIPTION,
+        a.PARENT_ID,
+        a.CREATE_TIME,
+        a.CREATE_USER,
+        a.LAST_UPDATE_TIME,
+        a.LAST_UPDATE_USER,
+        a.IS_FUNCTIONAL_DEPT,
+        a.IS_PREPARE_DEPT
+        from
+        BD_DEPARTMENT a
+        where 1=1
+        <if test="null != scaleStr and '' != scaleStr">
+            and a.ID not in ( ${scaleStr} )
+            <!-- <foreach collection="list" item="scaleDeptList" index="index"
+                open="(" close=")" separator=",">
+                #{scaleDeptList}
+            </foreach> -->
+        </if>
+    </select>
+
+    <!-- 查询订单已添加的部门 -->
+    <select id="findScaleDept" parameterType="String" resultType="pd">
+		SELECT 
+			ID,	
+			DEPT_CODE,	
+			DEPT_NAME,	
+			DEPT_SIGN,	
+			DEPT_LEADER_ID,	
+			DEPT_LEADER_NAME,	
+			ENABLED,
+			DESCRIPTION,
+			PARENT_ID,
+			CREATE_TIME,
+			CREATE_USER,
+			LAST_UPDATE_TIME,
+			LAST_UPDATE_USER,
+			IS_FUNCTIONAL_DEPT,
+			IS_PREPARE_DEPT
+		FROM 
+			bd_department 
+		WHERE 
+			id IN(SELECT DEPT_ID FROM project_order_scale WHERE ORDER_ID = #{orderId})
+	</select>
+    <!-- 订单提交模块SQL -->
+    <select id="checkCodeAndSign" parameterType="pd" resultType="java.util.LinkedHashMap">
+    select 
+    count(1) SL
+    from bd_department
+    where DEPT_CODE = #{deptCode} 
+    OR DEPT_SIGN = #{deptSign}
+  </select>
+    <select id="listChild" parameterType="pd" resultType="pd">
+  SELECT 
+  *
+  FROM bd_department a 
+  WHERE a.PARENT_ID = #{ID}
+  </select>
+    <select id="checkEmp" parameterType="pd" resultType="java.util.LinkedHashMap">
+  SELECT 
+  COUNT(1) E
+  FROM bd_employee a 
+  WHERE a.EMP_DEPARTMENT_ID =  #{ID}
+  </select>
+    <!-- 获取部门人数 -->
+    <select id="getENum" parameterType="pd" resultType="pd">
+  SELECT 
+  COUNT(a.ID) eNum
+  FROM bd_employee a 
+  WHERE a.EMP_DEPARTMENT_ID =  #{ID}
+  </select>
+    <!-- 通过ID查询子部门 -->
+    <select id="findSonDeptsById" parameterType="String" resultType="pd">
+        SELECT
+            t1.*
+        FROM
+            bd_department t1
+        WHERE
+            t1.ENABLED = 1
+        AND t1.IS_DELETE = 0
+        AND t1.PARENT_ID = #{ID}
+    </select>
+
+    <!-- 获取员工数据权限部门-->
+    <select id="getSysDeptList" parameterType="pd" resultType="pd">
+        SELECT
+        t2.*
+        FROM
+        <if test="USER_ID != null and USER_ID != ''">
+            sys_datarole t1,
+        </if>
+        bd_department t2
+        WHERE
+        1 = 1
+        <if test="USER_ID != null and USER_ID != ''">
+            AND t1.DEPT_ID = t2.ID
+            AND t1.USER_ID = #{USER_ID}
+        </if>
+        AND t2.IS_DELETE = 0
+    </select>
+
+    <!-- 根据部门名称获取编号 -->
+    <select id="findIdByName" parameterType="String" resultType="pd">
+        SELECT
+			ID
+		FROM
+			bd_department
+		WHERE
+			DEPT_NAME = #{deptName}
+    </select>
+
+    <select id="finIdsByPid" resultType="Integer">
+        SELECT
+			ID
+		FROM
+			bd_department
+		WHERE
+			PARENT_ID = #{pid}
+    </select>
+
+    <!-- 通过ID获取子部门数据 -->
+    <select id="findChildDeptById" parameterType="pd" resultType="pd">
+		select 
+			ID,	
+			DEPT_CODE,	
+			DEPT_NAME,
+			DEPT_SIGN,	
+			ENABLED
+		from 
+			BD_DEPARTMENT
+		where 
+			PARENT_ID = #{ID} 
+			and ENABLED=1
+	</select>
+
+    <!-- 根据部门编码获取部门标识 -->
+    <select id="getSignByCode" resultType="String">
+        select DEPT_SIGN from bd_department where DEPT_CODE = #{deptCode}
+    </select>
+
+    <select id="getNameByIds" parameterType="String" resultType="String">
+        select DEPT_NAME from bd_department where ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 查询部门的负责人 -->
+    <select id="findDeptLeader" parameterType="String" resultType="pd">
+    	select d.ID, d.DEPT_CODE, d.DEPT_NAME, d.DEPT_LEADER_ID, e.EMP_CODE, e.EMP_NAME
+    	from bd_department d, bd_employee e
+    	where d.DEPT_LEADER_ID = e.ID
+    	and d.ID = #{deptId}
+    </select>
+
+    <!-- 查询员工负责的部门 -->
+    <select id="findDeptInCharge" parameterType="String" resultType="pd">
+    	select d.ID, d.DEPT_CODE, d.DEPT_NAME, d.DEPT_LEADER_ID, e.EMP_CODE, e.EMP_NAME
+    	from bd_department d, bd_employee e
+    	where d.DEPT_LEADER_ID = e.ID
+    	and e.EMP_CODE = #{empCode}
+    </select>
+
+</mapper>

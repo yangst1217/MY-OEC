@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BYearTargetMapper">
+
+    <sql id="bYearTargetColumns">
+        CODE,
+        YEAR,
+        NAME,
+        START_DATE,
+        END_DATE,
+        DEPT_CODE,
+        EMP_CODE,
+        PRODUCT_CODE,
+        INDEX_CODE,
+        COUNT,
+        UNIT_CODE,
+        STANDARD,
+        STATUS,
+        ISDEL,
+        CREATE_USER,
+        CREATE_TIME,
+        UPDATE_USER,
+        UPDATE_TIME
+    </sql>
+
+    <!-- 年度经营目标列表 -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        SELECT
+        t1.*, dept.DEPT_NAME,
+        emp.EMP_NAME,
+        pro.PRODUCT_NAME,
+        b_index.INDEX_NAME,
+        unit.UNIT_NAME,
+        sta.`NAME` AS STATUS_NAME,
+        IFNULL(s1.COUNT_SUM,0) AS COUNT_SUM,
+        IF (
+        IFNULL(s1.COUNT_COUNT, 0) = 0,
+        '未分解',
+        IF (
+        IFNULL(s2.YSX_COUNT_COUNT, 0) = 0,
+        '已分解（未生效）',
+        '已分解（已生效）'
+        )
+        ) AS ISEXPLAIN,
+        <!-- 2016-07-07 yangdw 加入标志判断这条数据是否属于你 -->
+        IF (
+        t1.CREATE_USER = #{pd.USER_NAME}
+        OR t1.EMP_CODE = #{pd.USER_NUMBER},
+        'YOURS',
+        'NOT_YOURS'
+        ) 'IS_YOURS'
+        FROM
+        b_year_target t1
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN bd_product pro ON (t1.PRODUCT_CODE = pro.PRODUCT_CODE AND pro.ISDEL = 0)
+        LEFT JOIN bd_bussiness_index b_index ON (t1.INDEX_CODE = b_index.INDEX_CODE AND b_index.ISDEL = 0)
+        LEFT JOIN bd_unit unit ON (t1.UNIT_CODE = unit.UNIT_CODE AND unit.ISDEL = 0)
+        LEFT JOIN sys_status sta ON (t1.`STATUS` = sta.BIANMA AND sta.TYPE = 2)
+        LEFT JOIN (
+        SELECT
+        t2.B_YEAR_TARGET_CODE,
+        SUM(t2.COUNT) AS COUNT_SUM,
+        COUNT(1) AS COUNT_COUNT
+        FROM
+        b_year_dept_task t2
+        where t2.isdel = 0
+        GROUP BY
+        t2.B_YEAR_TARGET_CODE
+        ) s1 ON (
+        t1. CODE = s1.B_YEAR_TARGET_CODE
+        )
+        LEFT JOIN (
+        SELECT
+        t4.B_YEAR_TARGET_CODE,
+        COUNT(1) AS YSX_COUNT_COUNT
+        FROM
+        b_year_dept_task t4
+        WHERE
+        t4.`STATUS` = 'YW_YSX'
+        and t4.isdel = 0
+        GROUP BY
+        t4.B_YEAR_TARGET_CODE
+        ) s2 ON (
+        t1.CODE = s2.B_YEAR_TARGET_CODE
+        )
+        WHERE
+        t1.ISDEL = 0
+        AND (
+        t1.CREATE_USER = #{pd.USER_NAME}
+        OR t1.EMP_CODE = #{pd.USER_NUMBER}
+        <!-- 2016-07-07 yangdw 加入数据权限 -->
+        <if test="pd.sysDeptArr != null and pd.sysDeptArr != ''">
+            OR t1.DEPT_CODE IN (
+            <foreach item="item" index="index" collection="pd.sysDeptArr" separator=",">
+                '${item}'
+            </foreach>
+            )
+        </if>
+        )
+        <!-- 起始时间检索 -->
+        <if test="pd.START_DATE != null and pd.START_DATE != ''">
+            AND t1.START_DATE &gt;= #{pd.START_DATE}
+        </if>
+        <!-- 结束时间检索 -->
+        <if test="pd.END_DATE != null and pd.END_DATE != ''">
+            AND t1.END_DATE &lt;= #{pd.END_DATE}
+        </if>
+        <!-- 状态检索 -->
+        <if test="pd.STATUS != null and pd.STATUS != ''">
+            AND t1.`STATUS` = #{pd.STATUS}
+        </if>
+        <!-- 产品检索 -->
+        <if test="pd.PRODUCT_CODE != null and pd.PRODUCT_CODE != ''">
+            AND t1.PRODUCT_CODE = #{pd.PRODUCT_CODE}
+        </if>
+        <!-- 指标检索 -->
+        <if test="pd.INDEX_CODE != null and pd.INDEX_CODE != ''">
+            AND t1.INDEX_CODE = #{pd.INDEX_CODE}
+        </if>
+        <!-- 关键字 -->
+        <if test="pd.KEY_WORD != null and pd.KEY_WORD != ''">
+            AND (t1.`NAME` LIKE "%"#{pd.KEY_WORD}"%" OR t1.`CODE` LIKE "%"#{pd.KEY_WORD}"%")
+        </if>
+        <!-- 是否分解 -->
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '0'.toString()">
+            AND IFNULL(s1.COUNT_COUNT, 0) = 0
+        </if>
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '1'.toString()">
+            AND (IFNULL(s1.COUNT_COUNT, 0) != 0 AND IFNULL(s2.YSX_COUNT_COUNT, 0) = 0)
+        </if>
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '2'.toString()">
+            AND (IFNULL(s1.COUNT_COUNT, 0) != 0 AND IFNULL(s2.YSX_COUNT_COUNT, 0) != 0)
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by
+                t1.START_DATE DESC,
+                t1.END_DATE DESC,
+                t1.CODE DESC,
+                dept.ORDER_NUM,
+                emp.EMP_NAME,
+                t1.CREATE_TIME DESC
+            </otherwise>
+        </choose>
+
+    </select>
+
+    <!-- 获取新编号 -->
+    <select id="getNewCode" parameterType="String" resultType="String">
+        SELECT
+            LPAD(
+                IFNULL(
+                    MAX(RIGHT(CODE, 4)),
+                    0
+                ) + 1,
+                4,
+                0
+            )
+        FROM
+            b_year_target
+        WHERE
+            CODE LIKE #{codeSign}"%"
+    </select>
+
+    <insert id="add" parameterType="pd" keyProperty="ID">
+        INSERT INTO b_year_target (
+        <include refid="bYearTargetColumns"/>,
+        TARGET_TYPE,
+        MONEY_COUNT
+        )
+        VALUES(
+        #{CODE},
+        #{YEAR},
+        #{NAME},
+        #{START_DATE},
+        #{END_DATE},
+        #{DEPT_CODE},
+        #{EMP_CODE},
+        #{PRODUCT_CODE},
+        #{INDEX_CODE},
+        #{COUNT},
+        #{UNIT_CODE},
+        #{STANDARD},
+        #{STATUS},
+        0,
+        #{createUser},
+        #{createTime},
+        #{updateUser},
+        #{updateTime},
+        #{TARGET_TYPE},
+        #{MONEY_COUNT}
+        )
+    </insert>
+
+    <!-- 添加修改数量历史记录 -->
+    <insert id="addCountHis" parameterType="pd">
+        INSERT INTO b_year_target_count_his (
+         TARGET_ID,
+         OLD_COUNT,
+         COUNT,
+         REVISER,
+         UPDATE_TIME
+        )
+        VALUES(
+            #{TARGET_ID},
+            #{OLD_COUNT},
+            #{COUNT},
+            #{REVISER},
+            #{UPDATE_TIME}
+        )
+    </insert>
+
+    <!-- 通过code获取目标 -->
+    <select id="getTargetByCode" parameterType="String" resultType="pd">
+        SELECT
+            t1.*, dept.DEPT_NAME,
+            dept.ID AS DEPT_ID,
+            emp.EMP_NAME,
+            pro.PRODUCT_NAME,
+            b_index.INDEX_NAME,
+            unit.UNIT_NAME,
+            sta.`NAME` AS STATUS_NAME,
+            IFNULL(s1.COUNT_SUM,0) AS COUNT_SUM,
+            IF (
+                IFNULL(s1.COUNT_COUNT, 0) = 0,
+                '未分解',
+                IF (
+                    IFNULL(s2.YSX_COUNT_COUNT, 0) = 0,
+                    '已分解（未生效）',
+                    '已分解（已生效）'
+                )
+            ) AS ISEXPLAIN
+        FROM
+            b_year_target t1
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN bd_product pro ON (t1.PRODUCT_CODE = pro.PRODUCT_CODE AND pro.ISDEL = 0)
+        LEFT JOIN bd_bussiness_index b_index ON (t1.INDEX_CODE = b_index.INDEX_CODE AND b_index.ISDEL = 0)
+        LEFT JOIN bd_unit unit ON (t1.UNIT_CODE = unit.UNIT_CODE AND unit.ISDEL = 0)
+        LEFT JOIN sys_status sta ON (t1.`STATUS` = sta.BIANMA AND sta.TYPE = 2)
+        LEFT JOIN (
+            SELECT
+                t2.B_YEAR_TARGET_CODE,
+                SUM(t2.COUNT) AS COUNT_SUM,
+                COUNT(1) AS COUNT_COUNT
+            FROM
+                b_year_dept_task t2
+            WHERE t2.ISDEL = 0
+            GROUP BY
+                t2.B_YEAR_TARGET_CODE
+        ) s1 ON (
+            t1. CODE = s1.B_YEAR_TARGET_CODE
+        )
+                LEFT JOIN (
+            SELECT
+                t4.B_YEAR_TARGET_CODE,
+                COUNT(1) AS YSX_COUNT_COUNT
+            FROM
+                b_year_dept_task t4
+            WHERE
+                t4.`STATUS` = 'YW_YSX'
+            GROUP BY
+                t4.B_YEAR_TARGET_CODE
+        ) s2 ON (
+            t1.CODE = s2.B_YEAR_TARGET_CODE
+        )
+        WHERE
+            t1.ISDEL = 0
+        AND t1.`CODE` = #{CODE}
+    </select>
+
+    <!-- 修改年度经营目标 -->
+    <update id="edit" parameterType="pd">
+        UPDATE b_year_target
+        SET
+             CODE = #{CODE},
+             YEAR = #{YEAR},
+             NAME = #{NAME},
+             START_DATE = #{START_DATE},
+             END_DATE = #{END_DATE},
+             DEPT_CODE = #{DEPT_CODE},
+             EMP_CODE = #{EMP_CODE},
+             PRODUCT_CODE = #{PRODUCT_CODE},
+             INDEX_CODE = #{INDEX_CODE},
+             COUNT = ${COUNT},
+             UNIT_CODE = #{UNIT_CODE},
+             STANDARD = #{STANDARD},
+             STATUS = #{STATUS},
+             ISDEL = 0,
+             TARGET_TYPE = #{TARGET_TYPE},
+             MONEY_COUNT = #{MONEY_COUNT},
+             CREATE_USER = #{CREATE_USER},
+             CREATE_TIME = #{CREATE_TIME},
+             UPDATE_USER = #{UPDATE_USER},
+             UPDATE_TIME = #{UPDATE_TIME}
+        WHERE
+            ID = ${ID}
+    </update>
+
+    <!-- 修改目标数量 -->
+    <update id="editCount" parameterType="pd">
+        UPDATE b_year_target
+        SET
+             COUNT = ${COUNT},
+             UPDATE_USER = #{UPDATE_USER},
+             UPDATE_TIME = #{UPDATE_TIME}
+        WHERE
+            ID = ${TARGET_ID}
+    </update>
+
+    <!-- 修改目标数量历史记录 -->
+    <update id="updateCountHis" parameterType="pd">
+        UPDATE b_year_target_count_his
+        SET
+        	 OLD_COUNT = ${OLD_COUNT},
+             COUNT = ${COUNT},
+             REVISER = #{REVISER},
+             UPDATE_TIME = #{UPDATE_TIME}
+        WHERE
+            TARGET_ID = ${TARGET_ID}
+    </update>
+
+    <!-- 批量删除 -->
+    <update id="del" parameterType="String">
+        UPDATE b_year_target
+        SET ISDEL = 1
+        WHERE
+        CODE IN
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!-- 下发目标 -->
+    <update id="arrange" parameterType="pd">
+        UPDATE b_year_target
+        SET `STATUS` = 'YW_YSX',
+         UPDATE_TIME = #{UPDATE_TIME},
+         UPDATE_USER = #{UPDATE_USER}
+        WHERE
+            `CODE` = #{CODE}
+    </update>
+
+    <!-- 根据ID获取目标 -->
+    <select id="findById" resultType="pd">
+        select * from b_year_target where id = #{id}
+    </select>
+
+    <!-- 删除单个目标 -->
+    <update id="delSingle">
+        UPDATE b_year_target
+		SET isdel = 1,
+		 update_time = #{updateTime},
+		 update_user = #{updateUser}
+		WHERE
+		    code = #{code}
+    </update>
+
+    <!-- 通过Id判断是否有数据 -->
+    <select id="checkById" parameterType="pd" resultType="pd">
+    	select * from b_year_target_count_his where TARGET_ID = #{TARGET_ID}
+    </select>
+</mapper>

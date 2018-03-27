@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FlowModelNodeMapper">
+
+    <select id="findNodesByModel" resultType="pd">
+		SELECT
+			n.*, d.DEPT_NAME,
+			e.EMP_NAME,
+			p.GRADE_NAME,
+			m.MODEL_NAME
+		FROM
+			flow_model_node n
+		LEFT JOIN bd_department d ON n.DEPT_ID = d.ID
+		LEFT JOIN bd_employee e ON n.EMP_CODE = e.EMP_CODE
+		LEFT JOIN bd_position_level p ON n.POSITION_ID = p.ID
+		LEFT JOIN flow_model m ON n.SUBFLOW_ID = m.ID
+		WHERE
+			n.MODEL_ID = #{id}
+		AND n.ISDEL = 0
+		ORDER BY
+			n.NODE_LEVEL ASC
+	</select>
+
+    <insert id="saveNode" useGeneratedKeys="true" keyProperty="ID">
+		INSERT INTO flow_model_node (
+			MODEL_ID,
+			NODE_LEVEL,
+			NODE_CODE,
+			NODE_NAME,
+			TIME_INTERVAL,
+			COST_TIME,
+			DEPT_ID,
+			POSITION_ID,
+			EMP_CODE,
+			PARENT_CODE,
+			SUBFLOW_ID,
+			REMARKS,
+			ISDEL,
+			CREATE_TIME,
+			CREATE_USER
+		)VALUES(
+			#{MODEL_ID},
+			#{NODE_LEVEL},
+			#{NODE_CODE},
+			#{NODE_NAME},
+			#{TIME_INTERVAL},
+			#{COST_TIME},
+			#{DEPT_ID},
+			#{POSITION_ID},
+			#{EMP_CODE},
+			#{PARENT_CODE},
+			#{SUBFLOW_ID},
+			#{REMARKS},
+			#{isdel},
+			#{createTime},
+			#{createUser}
+		)
+	</insert>
+
+    <update id="updateNode">
+		UPDATE flow_model_node
+		SET NODE_LEVEL = #{NODE_LEVEL},
+			NODE_CODE = #{NODE_CODE},
+			NODE_NAME = #{NODE_NAME},
+			TIME_INTERVAL = #{TIME_INTERVAL},
+			COST_TIME = #{COST_TIME},
+			DEPT_ID = #{DEPT_ID},
+			POSITION_ID = #{POSITION_ID},
+			EMP_CODE = #{EMP_CODE},
+			PARENT_CODE = #{PARENT_CODE},
+			REMARKS = #{REMARKS},
+			UPDATE_TIME = #{updateTime},
+			UPDATE_USER = #{updateUser}
+		where ID = #{ID}
+	</update>
+
+    <select id="findIdByCode" resultType="Integer">
+		select ID from flow_model_node where NODE_CODE = #{code} and ISDEL = 0
+	</select>
+
+    <update id="delNode">
+		update flow_model_node set ISDEL = 1 where ID = #{id} 
+	</update>
+
+</mapper>

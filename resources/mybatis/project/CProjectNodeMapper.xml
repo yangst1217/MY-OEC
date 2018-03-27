@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CProjectNodeMapper">
+
+    <!-- 根据项目编号获取项目信息 -->
+    <select id="findNodeByParam" resultType="pd" parameterType="pd">
+        SELECT
+        pn.*,
+        dept.DEPT_NAME,
+        p.`NAME` PROJECT_NAME,
+        e.EMP_NAME,dept.ID deptId,
+        (
+        SELECT
+        pn2.NODE_TARGET
+        FROM
+        c_project_node pn2
+        WHERE
+        pn2.ID = pn.PARENT_ID
+        ) PARENT_NAME
+        FROM
+        c_project_node pn
+        LEFT JOIN bd_department dept ON dept.DEPT_CODE = pn.DEPT_CODE
+        LEFT JOIN c_project p ON p.CODE = pn.C_PROJECT_CODE
+        LEFT JOIN bd_employee e ON e.EMP_CODE = pn.EMP_CODE
+        WHERE 1=1
+        <if test="code != null">
+            AND pn.CODE = #{code}
+        </if>
+        <if test="ID != null">
+            AND pn.ID = #{ID}
+        </if>
+    </select>
+
+    <update id="updateNode" parameterType="pd">
+		UPDATE c_project_node
+		SET C_PROJECT_CODE=#{C_PROJECT_CODE},
+			NODE_TARGET=#{NODE_TARGET},
+			PROJECT_NODE_LEVEL_ID=#{PROJECT_NODE_LEVEL_ID},
+			PARENT_ID=#{PARENT_ID},
+			DEPT_CODE=#{DEPT_CODE},
+			EMP_CODE=#{EMP_CODE},
+			PLAN_DATE=#{PLAN_DATE},
+			WEIGHT=#{WEIGHT},
+			DESCP=#{DESCP},
+			STATUS =#{STATUS},
+			UPDATE_USER=#{UPDATE_USER},
+			UPDATE_TIME=#{UPDATE_TIME}
+		WHERE
+			ID = #{ID}
+	</update>
+
+    <insert id="addNode" parameterType="pd" useGeneratedKeys="true" keyProperty="ID">
+		insert into c_project_node(
+			C_PROJECT_CODE,
+			NODE_TARGET,
+			PROJECT_NODE_LEVEL_ID,
+			PARENT_ID,
+			DEPT_CODE,
+			EMP_CODE,
+			PLAN_DATE,
+			WEIGHT,
+			DESCP,
+			ISDEL,
+			CREATE_USER,
+			CREATE_TIME,
+			STATUS
+		)values(
+			#{C_PROJECT_CODE},
+			#{NODE_TARGET},
+			#{PROJECT_NODE_LEVEL_ID},
+			#{PARENT_ID},
+			#{DEPT_CODE},
+			#{EMP_CODE},
+			#{PLAN_DATE},
+			#{WEIGHT},
+			#{DESCP},
+			#{isdel},
+			#{createUser},
+			#{createTime},
+			#{STATUS}
+		)
+	</insert>
+
+    <update id="removeNode" parameterType="java.util.List">
+        update c_project_node set ISDEL = 1 where ID in
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="findRoleIDSByNode" parameterType="pd" resultType="pd">
+		SELECT
+			pnl.ROLEIDS
+		FROM
+			c_project_node pn,
+			bd_project_node_level pnl
+		WHERE
+			pn.PROJECT_NODE_LEVEL_ID = pnl.ID
+		AND pn.ID = #{ID}
+	</select>
+
+    <select id="checkAuthNodeLevel" resultType="pd">
+        SELECT
+        pnl.ROLEIDS
+        FROM
+        bd_level_frame_rel lfr,
+        bd_project_node_level pnl,
+        c_project p,
+        <if test="type == 'node'">
+            c_project_node pn,
+        </if>
+        bd_project_type pt
+        WHERE
+        lfr.PROJECT_NODE_LEVEL_ID = pnl.ID
+        and p.PROJECT_TYPE_ID = pt.ID
+        and pt.PROJECT_NODE_LEVEL_FRAME_ID = lfr.PROJECT_NODE_LEVEL_FRAME_ID
+        and lfr.`LEVEL` = #{level}
+        <if test="type == 'project'">
+            and p.`CODE` = #{ID}
+        </if>
+        <if test="type == 'node'">
+            AND pn.C_PROJECT_CODE = p.`CODE`
+            and pn.`ID` = #{ID}
+        </if>
+    </select>
+
+    <update id="refer">
+		update c_project_node set STATUS = 'YW_YSX' where ID = #{ID}
+	</update>
+
+    <select id="findNodeForGantt" resultType="pd">
+		SELECT
+			convert(CONCAT('node_',pn.ID),CHAR) id,
+			pn.NODE_TARGET text,
+			dept.DEPT_NAME,
+			e.EMP_NAME,
+			'node' type,
+			DATE_FORMAT(pn.PLAN_DATE, '%d-%m-%Y') start_date,
+			1 duration,
+			0 progress,
+			convert((
+				CASE 
+				WHEN pn.PARENT_ID = 0 
+				THEN
+					pn.C_PROJECT_CODE
+				ELSE
+					CONCAT('node_', pn.PARENT_ID)
+				END
+			),CHAR) parent,
+			'true' open
+		FROM
+			c_project_node pn,
+			bd_department dept,
+			bd_employee e
+		WHERE
+			pn.DEPT_CODE = dept.DEPT_CODE
+		and pn.ISDEL = 0
+		AND pn.EMP_CODE = e.EMP_CODE
+		AND pn.C_PROJECT_CODE = #{code}
+	</select>
+
+    <!-- 根据项目获取项目节点 -->
+    <select id="findNodesByProject" resultType="pd">
+        SELECT
+            pn.ID id,
+            pn.C_PROJECT_CODE pid,
+            pn.NODE_TARGET name,
+            pn.STATUS,
+            '无' START_DATE,
+            pn.PLAN_DATE END_DATE,
+            dept.DEPT_NAME,
+            e.EMP_NAME,
+            e.EMP_CODE,
+            emp.`NUMBER` CREATE_USER,
+            emp.`NAME` CREATE_USERNAME,
+            "node" type,
+            true isParent
+        FROM
+            c_project_node pn 
+            LEFT JOIN bd_department dept ON pn.DEPT_CODE = dept.DEPT_CODE
+            LEFT JOIN bd_employee e ON pn.EMP_CODE = e.EMP_CODE
+            LEFT JOIN sys_user emp on pn.CREATE_USER = emp.USERNAME
+        WHERE pn.ISDEL = 0 and 
+            (pn.STATUS = 'YW_YSX' or pn.STATUS = 'YW_YZZ' or pn. STATUS = 'YW_YSB' 
+            or pn. STATUS = 'YW_YWB' or pn. STATUS = 'YW_WWC' or pn.CREATE_USER = #{user.USERNAME}) and
+            pn.C_PROJECT_CODE = #{id}
+            and pn.PARENT_ID = 0
+        order by pn.PLAN_DATE asc
+    </select>
+
+    <!-- 根据项目节点获取子节点 -->
+    <select id="findChildByNodeID" resultType="pd">
+        (
+            SELECT
+                pn.ID id,
+                pn.PARENT_ID pid,
+                pn.NODE_TARGET name,
+                pn.STATUS,
+                '无' START_DATE,
+                pn.PLAN_DATE END_DATE,
+                dept.DEPT_NAME,
+                e.EMP_NAME,
+                e.EMP_CODE,
+                emp.`NUMBER` CREATE_USER,
+                emp.`NAME` CREATE_USERNAME,
+                "node" type,
+                true isParent,
+                1 duration
+            FROM
+                c_project_node pn 
+	            LEFT JOIN bd_department dept ON pn.DEPT_CODE = dept.DEPT_CODE
+	            LEFT JOIN bd_employee e ON pn.EMP_CODE = e.EMP_CODE
+	            LEFT JOIN sys_user emp on pn.CREATE_USER = emp.USERNAME
+            WHERE
+                pn.ISDEL = 0 and
+                (pn.STATUS = 'YW_YSX' or pn.STATUS = 'YW_YZZ' or pn. STATUS = 'YW_YSB' or pn. STATUS = 'YW_YWB' 
+                or pn. STATUS = 'YW_WWC' or pn.CREATE_USER = #{user.USERNAME})
+            AND pn.PARENT_ID = #{id}
+            ORDER BY
+                pn.PLAN_DATE asc
+        )
+        UNION ALL
+            (
+                SELECT
+                    pe.ID id,
+                    pe.C_PROJECT_NODE_ID pid,
+                    pe.NAME name,
+                    pe.STATUS,
+                    DATE_FORMAT(pe.START_DATE,'%Y-%m-%d'),
+                    pe.END_DATE,
+                    dept.DEPT_NAME,
+                    e.EMP_NAME,
+                    e.EMP_CODE,
+                    emp.`NUMBER` CREATE_USER,
+                    emp.`NAME` CREATE_USERNAME,
+                    "event" type,
+                    false isParent,
+                    (TO_DAYS(pe.END_DATE) - TO_DAYS(pe.START_DATE)) duration
+                FROM
+                    c_project_event pe 
+                    LEFT JOIN bd_department dept ON pe.DEPT_CODE = dept.DEPT_CODE
+                    LEFT JOIN bd_employee e ON pe.EMP_CODE = e.EMP_CODE
+                    LEFT JOIN sys_user emp on pe.CREATE_USER = emp.USERNAME
+                WHERE
+                    pe.ISDEL = 0
+                AND pe.C_PROJECT_NODE_ID = #{id}
+                ORDER BY
+                    pe.END_DATE asc
+            )
+    </select>
+
+    <!-- 根据ID查询节点信息 -->
+    <select id="findProjectNodeById" parameterType="Integer" resultType="pd">
+    	select ID, C_PROJECT_CODE, NODE_TARGET, PROJECT_NODE_LEVEL_ID, PARENT_ID, DEPT_CODE,
+    	EMP_CODE, PLAN_DATE, WEIGHT, DESCP, STATUS, ISDEL, CREATE_USER, CREATE_TIME
+    	from c_project_node
+    	where ID = #{id} 
+    </select>
+
+</mapper>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="KpiIndexMapper">
+
+    <sql id="kpiIndexColumns">
+		ID,	
+		YEAR,
+		EMP_ID,
+		KPI_MODEL_ID,
+		KPI_CODE,
+		KPI_NAME,
+		KPI_TYPE,
+		KPI_UNIT,		
+		JAN,
+		FER,
+		MAR,
+		APR,
+		MAY,
+		JUN,
+		JUL,
+		AUG,
+		SEP,
+		OCT,
+		NOV,
+		DECE,
+		SCORE,
+		STATUS,
+		ENABLE,
+		CREATE_USER,	
+		CREATE_TIME,	
+		LAST_UPDATE_USER,	
+		LAST_UPDATE_TIME,
+		PREPARATION1,
+		PREPARATION2,
+		PREPARATION3,
+		PREPARATION4,
+		PREPARATION5,
+		PREPARATION6
+	</sql>
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd">
+		insert into EMP_KPI_INDEX(
+			YEAR,
+			EMP_ID,
+			KPI_MODEL_ID,
+			KPI_CODE,
+			KPI_NAME,
+			KPI_TYPE,
+			KPI_UNIT,		
+			JAN,
+			FER,
+			MAR,
+			APR,
+			MAY,
+			JUN,
+			JUL,
+			AUG,
+			SEP,
+			OCT,
+			NOV,
+			DECE,
+			SCORE,
+			STATUS,
+			ENABLE,
+			CREATE_USER,	
+			CREATE_TIME,	
+			LAST_UPDATE_USER,	
+			LAST_UPDATE_TIME,
+			PREPARATION1,
+			PREPARATION2,
+			PREPARATION3,
+			PREPARATION4,
+			PREPARATION5,
+			PREPARATION6
+		) values (
+			#{YEAR},
+			#{EMP_ID},
+			#{KPI_MODEL_ID},
+			#{KPI_CODE},
+			#{KPI_NAME},
+			#{KPI_TYPE},
+			#{KPI_UNIT},
+			#{JAN},
+			#{FER},
+			#{MAR},
+			#{APR},
+			#{MAY},
+			#{JUN},
+			#{JUL},
+			#{AUG},
+			#{SEP},
+			#{OCT},
+			#{NOV},
+			#{DECE},
+			#{SCORE},
+			0,
+			1,
+			#{CREATE_USER},
+			#{CREATE_TIME},
+			#{LAST_UPDATE_USER},
+			#{LAST_UPDATE_TIME},
+			#{PREPARATION1},
+			#{PREPARATION2},
+			#{PREPARATION3},
+			#{PREPARATION4},
+			#{PREPARATION5},
+			#{PREPARATION6}
+		)
+	</insert>
+
+    <!-- 根据EMP_ID删除-->
+    <delete id="delete" parameterType="pd">
+		delete from EMP_KPI_INDEX
+		where 
+			EMP_ID = #{EMP_ID}
+	</delete>
+
+    <!-- 根据kpicode删除 -->
+    <delete id="deleteByKpicode" parameterType="pd">
+		delete from EMP_KPI_INDEX
+		where 
+			KPI_CODE = #{KPI_CODE}
+	</delete>
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update EMP_KPI_INDEX
+			set 
+				YEAR = #{YEAR},
+				KPI_MODEL_ID = #{KPI_MODEL_ID},
+				KPI_CODE = #{KPI_CODE},
+				KPI_NAME = #{KPI_NAME},
+				KPI_TYPE = #{KPI_TYPE},
+				KPI_UNIT = #{KPI_UNIT},
+				JAN = #{JAN},
+				FER = #{FER},
+				MAR = #{MAR},
+				APR = #{APR},
+				MAY = #{MAY},
+				APR = #{APR},
+				MAY = #{MAY},
+				JUN = #{JUN},
+				JUL = #{JUL},
+				AUG = #{AUG},
+				SEP = #{SEP},
+				OCT = #{OCT},
+				NOV = #{NOV},
+				DECE = #{DECE},
+				SCORE = #{SCORE},
+				STATUS = #{STATUS},
+				ENABLE = #{ENABLE},
+				CREATE_USER = #{CREATE_USER},
+				CREATE_TIME = #{CREATE_TIME},
+				LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+				LAST_UPDATE_TIME = #{LAST_UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiIndexColumns"/>
+        from
+        EMP_KPI_INDEX
+        where
+        ID = #{ID}
+    </select>
+
+    <!-- 通过Code获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiIndexColumns"/>
+        from
+        EMP_KPI_INDEX
+        where
+        KPI_CODE = #{KPI_CODE}
+    </select>
+
+    <!-- 通过EMP_ID获取数据 -->
+    <select id="findByEmpid" parameterType="String" resultMap="KpiIndexMap">
+        select
+        <include refid="kpiIndexColumns"/>
+        from
+        EMP_KPI_INDEX
+        where
+        EMP_ID = #{empId}
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAll" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiIndexColumns"/>
+        from
+        EMP_KPI_INDEX
+    </select>
+
+    <resultMap type="KpiIndex" id="KpiIndexMap">
+        <id column="ID" property="ID"/>
+        <result column="YEAR" property="YEAR"/>
+        <result column="EMP_ID" property="EMP_ID"/>
+        <result column="KPI_MODEL_ID" property="KPI_MODEL_ID"/>
+        <result column="KPI_CODE" property="KPI_CODE"/>
+        <result column="KPI_NAME" property="KPI_NAME"/>
+        <result column="KPI_TYPE" property="KPI_TYPE"/>
+        <result column="KPI_UNIT" property="KPI_UNIT"/>
+        <result column="JAN" property="JAN"/>
+        <result column="FER" property="FER"/>
+        <result column="MAR" property="MAR"/>
+        <result column="APR" property="APR"/>
+        <result column="MAY" property="MAY"/>
+        <result column="JUN" property="JUN"/>
+        <result column="JUL" property="JUL"/>
+        <result column="AUG" property="AUG"/>
+        <result column="SEP" property="SEP"/>
+        <result column="OCT" property="OCT"/>
+        <result column="NOV" property="NOV"/>
+        <result column="DECE" property="DECE"/>
+        <result column="SCORE" property="SCORE"/>
+        <result column="SCORE" property="SCORE"/>
+        <result column="STATUS" property="STATUS"/>
+        <result column="ENABLE" property="ENABLE"/>
+        <result column="ENABLE" property="ENABLE"/>
+    </resultMap>
+</mapper>

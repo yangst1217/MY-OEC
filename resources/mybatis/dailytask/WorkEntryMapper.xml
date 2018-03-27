@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkEntryMapper">
+
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="pd">
+		delete from daily_task_information_detail
+		where 
+			ID = #{ID}
+	</delete>
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+        update daily_task_information_detail
+        <set>
+            <if test="REAL_COMPLETION != null and REAL_COMPLETION != ''">
+                REAL_COMPLETION = #{REAL_COMPLETION},
+            </if>
+            <if test="DESCRIPTION != null and DESCRIPTION != ''">
+                DESCRIPTION = #{DESCRIPTION},
+            </if>
+            <if test="FINISH_PERCENT != null and FINISH_PERCENT != ''">
+                FINISH_PERCENT = #{FINISH_PERCENT},
+            </if>
+            <if test="QA != null and QA != ''">
+                QA = #{QA},
+            </if>
+            <if test="SCORE != null and SCORE != ''">
+                SCORE = #{SCORE},
+                SCORE_DATE = #{score_date},
+            </if>
+            <if test="STATUS != null">
+                STATUS = #{STATUS},
+            </if>
+            <if test="lastUpdateUser!=null and lastUpdateUser!=''">
+                LAST_UPDATE_USER = #{lastUpdateUser},
+            </if>
+            <if test="lastUpdateTime!=null and lastUpdateTime!=''">
+                LAST_UPDATE_TIME = #{lastUpdateTime},
+            </if>
+        </set>
+        where ID = #{ID,jdbcType=INTEGER}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			a.ID, a.DAILY_TASK_ID, a.EMP_ID, a.EMP_NAME, a.REAL_COMPLETION, a.DESCRIPTION, IFNULL(a.FINISH_PERCENT, 0) FINISH_PERCENT, 
+			a.QA, a.SCORE, a.STATUS, a.CREATE_USER, a.CREATE_TIME, a.LAST_UPDATE_USER, a.LAST_UPDATE_TIME, b.NEED_CHECK, b.COMPLETION,
+			datediff(b.END_TIME, NOW()) REMAIN_DAY, sys_status.NAME detailStatusName, b.TASK_CONTECT,
+			emp.EMP_NAME CHECK_PERSON_NAME, emp.EMP_CODE CHECK_PERSON_CODE,substring_index(file.filename,"_",-1) FILENAME,
+			file.filename FILESERVER,file.FILENAME_SERVER
+		from 
+			daily_task_information_detail a
+		LEFT JOIN daily_task_information b ON a.DAILY_TASK_ID = b.ID
+		LEFT JOIN sys_status on sys_status.BIANMA=a.STATUS
+		LEFT JOIN bd_employee emp on emp.ID=b.CHECK_PERSON
+		LEFT JOIN task_file file ON a.ID = file.TASK_ID AND file.TASK_TYPE = #{TASK_TYPE} and file.ISDEL=0
+		where 
+			a.ID = #{ID}
+	</select>
+
+    <!-- 列表 -->
+    <select id="listPage" resultType="pd" parameterType="page">
+        SELECT
+        b.TASK_CODE,
+        b.TASK_TYPE,
+        b.TASK_NAME,
+        DATE_FORMAT(b.START_TIME, '%Y-%m-%d %T') START_TIME,
+        DATE_FORMAT(b.END_TIME, '%Y-%m-%d %T') END_TIME,
+        b.NEED_CHECK,
+        b.COMPLETION,
+        a.ID,
+        a.EMP_NAME,
+        g.NAME CREATE_USER,
+        a.CREATE_TIME,
+        a.STATUS,
+        sys_status.NAME statusName,
+        datediff(b.END_TIME, NOW()) REMAIN_DAY
+        FROM
+        daily_task_information b
+        LEFT JOIN daily_task_information_detail a ON b.ID=a.DAILY_TASK_ID
+        LEFT JOIN sys_status ON sys_status.BIANMA=b.STATUS
+        LEFT JOIN bd_employee d ON d.ID=a.EMP_ID
+        LEFT JOIN sys_user g ON g.USERNAME = a.CREATE_USER
+        where b.STATUS = 'YW_YSX'
+        <if test="pd.taskN != null and pd.taskN != ''">
+            and (b.TASK_NAME like "%"#{pd.taskN}"%" or b.TASK_NAME like CONCAT('%',#{pd.taskN},'%'))
+        </if>
+        <if test="pd.END_TIME!=null and pd.END_TIME != ''">
+            and YEAR(b.END_TIME) = #{pd.END_TIME}
+        </if>
+        <if test="pd.STATUS!=null and pd.STATUS != ''">
+            and a.STATUS = #{pd.STATUS}
+        </if>
+        <if test="pd.userCode!=null and pd.userCode != ''">
+            and d.EMP_CODE = #{pd.userCode}
+        </if>
+        <if test="pd.REMAIN_DAY!=null and pd.REMAIN_DAY != '' and pd.REMAIN_DAY &lt; 0">
+            and datediff(b.END_TIME, NOW()) &lt; 0 and a.STATUS = 1
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                ORDER BY a.STATUS,a.CREATE_TIME DESC
+            </otherwise>
+        </choose>
+
+    </select>
+    <!--根据工作ID查询附件  -->
+    <select id="findAttchmentsByWorkId" resultType="pd">
+        select * from daily_task_attachments where task_id = #{id}
+    </select>
+</mapper>

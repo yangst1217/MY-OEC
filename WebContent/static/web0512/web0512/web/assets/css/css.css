@@ -1,0 +1,25 @@
+/* CSS Document */
+
+body {
+    background-color: #fff;
+}
+
+.eoffice {
+    width: 860px;
+    height: 450px;
+    margin: 0 auto;
+}
+
+.office_tab {
+    width: 290px;
+    float: left;
+}
+
+.office_tab li {
+    width: 60px;
+    min-width: 0;
+}
+
+.eoffice_right {
+    float: right;
+}

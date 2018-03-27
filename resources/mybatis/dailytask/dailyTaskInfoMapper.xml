@@ -1,0 +1,623 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="dailyTaskInfoMapper">
+    <resultMap id="BaseResultMap" type="dailyTaskInfo">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="task_code" property="taskCode" jdbcType="VARCHAR"/>
+        <result column="task_name" property="taskName" jdbcType="VARCHAR"/>
+        <result column="task_type_id" property="taskTypeId" jdbcType="VARCHAR"/>
+        <result column="task_type_name" property="taskTypeName" jdbcType="VARCHAR"/>
+        <result column="from_crm" property="fromCrm" jdbcType="VARCHAR"/>
+        <result column="task_in_order_id" property="taskInOrderId" jdbcType="VARCHAR"/>
+        <result column="task_in_order_name" property="taskInOrderName" jdbcType="VARCHAR"/>
+        <result column="task_to_who_id" property="taskToWhoId" jdbcType="VARCHAR"/>
+        <result column="task_comment" property="taskComment" jdbcType="VARCHAR"/>
+        <result column="task_start_date" property="taskStartDate" jdbcType="DATE"/>
+        <result column="task_end_date" property="taskEndDate" jdbcType="DATE"/>
+        <result column="complete_standard" property="completeStandard" jdbcType="VARCHAR"/>
+        <result column="task_score" property="taskScore" jdbcType="VARCHAR"/>
+        <result column="need_check" property="needCheck" jdbcType="VARCHAR"/>
+        <result column="check_person" property="checkPerson" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="enable" property="enable" jdbcType="VARCHAR"/>
+        <result column="create_user" property="createUser" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="last_update_user" property="lastUpdateUser" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="preparation1" property="preparation1" jdbcType="VARCHAR"/>
+        <result column="preparation2" property="preparation2" jdbcType="VARCHAR"/>
+        <result column="preparation3" property="preparation3" jdbcType="VARCHAR"/>
+        <result column="preparation4" property="preparation4" jdbcType="VARCHAR"/>
+        <result column="preparation5" property="preparation5" jdbcType="VARCHAR"/>
+        <result column="preparation6" property="preparation6" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    id, task_code, task_name, task_type_id, task_type_name, from_crm, task_in_order_id, 
+    task_in_order_name, task_to_who_id, task_comment, task_start_date, task_end_date, 
+    complete_standard, task_score, need_check, check_person, status, enable, create_user, 
+    create_time, last_update_user, last_update_time, preparation1, preparation2, preparation3, 
+    preparation4, preparation5, preparation6
+  </sql>
+    <select id="listPage" resultType="pd" parameterType="page">
+        select
+        a.*,b.emp_name check_person_name
+        from dayly_task_information a left join bd_employee b on a.check_person = b.id
+        where a.create_user = #{pd.createUser}
+        <if test="pd.status!=null and pd.status != ''">
+            and status = #{pd.status}
+        </if>
+        <if test="pd.taskTypeId!=null and pd.taskTypeId != ''">
+            and TASK_TYPE_ID = #{pd.taskTypeId}
+        </if>
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            TASK_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            TASK_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+    </select>
+    <select id="findById" resultType="pd" parameterType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from dayly_task_information
+        where id = #{id}
+    </select>
+    <select id="listTowho" parameterType="Page" resultType="pd">
+        SELECT
+        d.ID,
+        d.EMP_NAME
+        FROM
+        bd_employee d
+        WHERE
+        1 = 1
+        <if test="pd.task_to_who_id != null and pd.task_to_who_id != ''">
+            AND d.ID NOT IN (
+            SELECT
+            REPLACE (
+            SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id),
+            CONCAT(
+            SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id - 1),
+            '&amp;'
+            ),
+            ''
+            ) AS task_to_who_id2
+            FROM
+            sq a
+            CROSS JOIN (
+            SELECT
+            t.id,
+            CONCAT(t.task_to_who_id, '&amp;') AS task_to_who_id1,
+            t.task_to_who_id AS task_to_who_id,
+            LENGTH(task_to_who_id) - LENGTH(REPLACE(task_to_who_id, '&amp;', '')) + 1 AS size
+            FROM
+            dayly_task_information t
+            WHERE
+            t.task_to_who_id = <![CDATA[REPLACE(#{pd.task_to_who_id},',','&')]]>
+            ) b ON a.id &lt;= b.size
+            )
+        </if>
+        <if test="pd.task_in_order_id != null and pd.task_in_order_id != ''">
+            and d.id in (select EMP_ID from project_order_labour where ORDER_ID = #{pd.task_in_order_id})
+        </if>
+    </select>
+    <select id="listTowhoChecked" parameterType="Page" resultType="pd">
+SELECT
+	d.ID,
+	d.EMP_NAME
+FROM
+	bd_employee d
+WHERE
+	1 = 1
+
+AND d.ID IN (
+	SELECT
+		REPLACE (
+			SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id),
+			CONCAT(
+				SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id - 1),
+				'&amp;'
+			),
+			''
+		) AS task_to_who_id2
+	FROM
+		sq a
+	CROSS JOIN (
+		SELECT
+			t.id,
+			CONCAT(t.task_to_who_id, '&amp;') AS task_to_who_id1,
+			t.task_to_who_id AS task_to_who_id,
+			LENGTH(task_to_who_id) - LENGTH(REPLACE(task_to_who_id, '&amp;', '')) + 1 AS size
+		FROM
+			dayly_task_information t
+		WHERE
+			t.task_to_who_id = <![CDATA[REPLACE(#{pd.task_to_who_id},',','&')]]>
+	) b ON a.id &lt;= b.size
+) 
+  </select>
+    <!-- 翻译任务对象 -->
+    <select id="translatetowho" parameterType="Page" resultType="pd">
+  
+  SELECT
+	b.id,
+	b.task_to_who_id,
+	REPLACE (
+		SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id),
+		CONCAT(
+			SUBSTRING_INDEX(b.task_to_who_id1, '&amp;', a.id - 1),
+			'&amp;'
+		),
+		''
+	) AS task_to_who_id2,
+	GROUP_CONCAT(
+		(
+			SELECT
+				d.EMP_NAME
+			FROM
+				bd_employee d
+			WHERE
+				d.id = task_to_who_id2
+		)
+	) AS EMP_NAME
+FROM
+	sq a
+CROSS JOIN (
+	SELECT
+		t.id,
+		CONCAT(t.task_to_who_id, '&amp;') AS task_to_who_id1,
+		t.task_to_who_id,
+		LENGTH(task_to_who_id) - LENGTH(REPLACE(task_to_who_id, '&amp;', '')) + 1 AS size
+	FROM
+		dayly_task_information t
+) b ON a.id  &lt;= b.size
+GROUP BY
+	b.id
+  
+  </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from dayly_task_information
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="save" parameterType="pd">
+    insert into dayly_task_information ( task_code, task_name, 
+      task_type_id, task_type_name, from_crm, 
+      task_in_order_id, task_in_order_name, task_to_who_id, 
+      task_comment, task_start_date, task_end_date, 
+      complete_standard, task_score, need_check, 
+      check_person, status, enable, 
+      create_user, create_time, last_update_user, 
+      last_update_time, preparation1, preparation2, 
+      preparation3, preparation4, preparation5, 
+      preparation6)
+    values ( #{taskCode,jdbcType=VARCHAR}, #{taskName,jdbcType=VARCHAR}, 
+      #{taskTypeId,jdbcType=VARCHAR}, #{taskTypeName,jdbcType=VARCHAR}, #{fromCrm,jdbcType=VARCHAR}, 
+      #{taskInOrderId,jdbcType=VARCHAR}, #{taskInOrderName,jdbcType=VARCHAR}, #{taskToWhoId,jdbcType=VARCHAR}, 
+      #{taskComment,jdbcType=VARCHAR}, #{taskStartDate,jdbcType=DATE}, #{taskEndDate,jdbcType=DATE}, 
+      #{completeStandard,jdbcType=VARCHAR}, #{taskScore,jdbcType=VARCHAR}, #{needCheck,jdbcType=VARCHAR}, 
+      #{checkPerson,jdbcType=VARCHAR}, #{status,jdbcType=VARCHAR}, #{enable,jdbcType=VARCHAR}, 
+      #{createUser,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, #{lastUpdateUser,jdbcType=VARCHAR}, 
+      #{lastUpdateTime,jdbcType=TIMESTAMP}, #{preparation1,jdbcType=VARCHAR}, #{preparation2,jdbcType=VARCHAR}, 
+      #{preparation3,jdbcType=VARCHAR}, #{preparation4,jdbcType=VARCHAR}, #{preparation5,jdbcType=VARCHAR}, 
+      #{preparation6,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="dailyTaskInfo">
+        insert into dayly_task_information
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="taskCode != null">
+                task_code,
+            </if>
+            <if test="taskName != null">
+                task_name,
+            </if>
+            <if test="taskTypeId != null">
+                task_type_id,
+            </if>
+            <if test="taskTypeName != null">
+                task_type_name,
+            </if>
+            <if test="fromCrm != null">
+                from_crm,
+            </if>
+            <if test="taskInOrderId != null">
+                task_in_order_id,
+            </if>
+            <if test="taskInOrderName != null">
+                task_in_order_name,
+            </if>
+            <if test="taskToWhoId != null">
+                task_to_who_id,
+            </if>
+            <if test="taskComment != null">
+                task_comment,
+            </if>
+            <if test="taskStartDate != null">
+                task_start_date,
+            </if>
+            <if test="taskEndDate != null">
+                task_end_date,
+            </if>
+            <if test="completeStandard != null">
+                complete_standard,
+            </if>
+            <if test="taskScore != null">
+                task_score,
+            </if>
+            <if test="needCheck != null">
+                need_check,
+            </if>
+            <if test="checkPerson != null">
+                check_person,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="enable != null">
+                enable,
+            </if>
+            <if test="createUser != null">
+                create_user,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="lastUpdateUser != null">
+                last_update_user,
+            </if>
+            <if test="lastUpdateTime != null">
+                last_update_time,
+            </if>
+            <if test="preparation1 != null">
+                preparation1,
+            </if>
+            <if test="preparation2 != null">
+                preparation2,
+            </if>
+            <if test="preparation3 != null">
+                preparation3,
+            </if>
+            <if test="preparation4 != null">
+                preparation4,
+            </if>
+            <if test="preparation5 != null">
+                preparation5,
+            </if>
+            <if test="preparation6 != null">
+                preparation6,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="taskCode != null">
+                #{taskCode,jdbcType=VARCHAR},
+            </if>
+            <if test="taskName != null">
+                #{taskName,jdbcType=VARCHAR},
+            </if>
+            <if test="taskTypeId != null">
+                #{taskTypeId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskTypeName != null">
+                #{taskTypeName,jdbcType=VARCHAR},
+            </if>
+            <if test="fromCrm != null">
+                #{fromCrm,jdbcType=VARCHAR},
+            </if>
+            <if test="taskInOrderId != null">
+                #{taskInOrderId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskInOrderName != null">
+                #{taskInOrderName,jdbcType=VARCHAR},
+            </if>
+            <if test="taskToWhoId != null">
+                #{taskToWhoId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskComment != null">
+                #{taskComment,jdbcType=VARCHAR},
+            </if>
+            <if test="taskStartDate != null">
+                #{taskStartDate,jdbcType=DATE},
+            </if>
+            <if test="taskEndDate != null">
+                #{taskEndDate,jdbcType=DATE},
+            </if>
+            <if test="completeStandard != null">
+                #{completeStandard,jdbcType=VARCHAR},
+            </if>
+            <if test="taskScore != null">
+                #{taskScore,jdbcType=VARCHAR},
+            </if>
+            <if test="needCheck != null">
+                #{needCheck,jdbcType=VARCHAR},
+            </if>
+            <if test="checkPerson != null">
+                #{checkPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="enable != null">
+                #{enable,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastUpdateUser != null">
+                #{lastUpdateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="lastUpdateTime != null">
+                #{lastUpdateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                #{preparation6,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="editN" parameterType="pd">
+        update dayly_task_information
+        <set>
+            <if test="taskCode != null">
+                task_code = #{taskCode,jdbcType=VARCHAR},
+            </if>
+            <if test="taskName != null">
+                task_name = #{taskName,jdbcType=VARCHAR},
+            </if>
+            <if test="taskTypeId != null">
+                task_type_id = #{taskTypeId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskTypeName != null">
+                task_type_name = #{taskTypeName,jdbcType=VARCHAR},
+            </if>
+            <if test="fromCrm != null">
+                from_crm = #{fromCrm,jdbcType=VARCHAR},
+            </if>
+            <if test="taskInOrderId != null">
+                task_in_order_id = #{taskInOrderId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskInOrderName != null">
+                task_in_order_name = #{taskInOrderName,jdbcType=VARCHAR},
+            </if>
+            <if test="taskToWhoId != null">
+                task_to_who_id = #{taskToWhoId,jdbcType=VARCHAR},
+            </if>
+            <if test="taskComment != null">
+                task_comment = #{taskComment,jdbcType=VARCHAR},
+            </if>
+            <if test="taskStartDate != null">
+                task_start_date = #{taskStartDate,jdbcType=DATE},
+            </if>
+            <if test="taskEndDate != null">
+                task_end_date = #{taskEndDate,jdbcType=DATE},
+            </if>
+            <if test="completeStandard != null">
+                complete_standard = #{completeStandard,jdbcType=VARCHAR},
+            </if>
+            <if test="taskScore != null">
+                task_score = #{taskScore,jdbcType=VARCHAR},
+            </if>
+            <if test="needCheck != null">
+                need_check = #{needCheck,jdbcType=VARCHAR},
+            </if>
+            <if test="checkPerson != null">
+                check_person = #{checkPerson,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=VARCHAR},
+            </if>
+            <if test="enable != null">
+                enable = #{enable,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                create_user = #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="lastUpdateUser != null">
+                last_update_user = #{lastUpdateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="lastUpdateTime != null">
+                last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                preparation1 = #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                preparation2 = #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                preparation3 = #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                preparation4 = #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                preparation5 = #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                preparation6 = #{preparation6,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="edit" parameterType="pd">
+    update dayly_task_information
+    set task_code = #{taskCode,jdbcType=VARCHAR},
+      task_name = #{taskName,jdbcType=VARCHAR},
+      task_type_id = #{taskTypeId,jdbcType=VARCHAR},
+      task_type_name = #{taskTypeName,jdbcType=VARCHAR},
+      from_crm = #{fromCrm,jdbcType=VARCHAR},
+      task_in_order_id = #{taskInOrderId,jdbcType=VARCHAR},
+      task_in_order_name = #{taskInOrderName,jdbcType=VARCHAR},
+      task_to_who_id = #{taskToWhoId,jdbcType=VARCHAR},
+      task_comment = #{taskComment,jdbcType=VARCHAR},
+      task_start_date = #{taskStartDate,jdbcType=DATE},
+      task_end_date = #{taskEndDate,jdbcType=DATE},
+      complete_standard = #{completeStandard,jdbcType=VARCHAR},
+      task_score = #{taskScore,jdbcType=VARCHAR},
+      need_check = #{needCheck,jdbcType=VARCHAR},
+      check_person = #{checkPerson,jdbcType=VARCHAR},
+      status = #{status,jdbcType=VARCHAR},
+      enable = #{enable,jdbcType=VARCHAR},
+      create_user = #{createUser,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      last_update_user = #{lastUpdateUser,jdbcType=VARCHAR},
+      last_update_time = #{lastUpdateTime,jdbcType=TIMESTAMP},
+      preparation1 = #{preparation1,jdbcType=VARCHAR},
+      preparation2 = #{preparation2,jdbcType=VARCHAR},
+      preparation3 = #{preparation3,jdbcType=VARCHAR},
+      preparation4 = #{preparation4,jdbcType=VARCHAR},
+      preparation5 = #{preparation5,jdbcType=VARCHAR},
+      preparation6 = #{preparation6,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+    <delete id="delete" parameterType="pd">
+	  delete
+	  from dayly_task_information
+	  where id = #{id,jdbcType=INTEGER}
+  </delete>
+
+
+    <!-- 订单提交模块SQL -->
+
+    <!-- 根据订单ID查询列表 -->
+    <select id="listByOrderId" parameterType="String" resultType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        dayly_task_information
+        where
+        task_in_order_id = #{task_in_order_id}
+    </select>
+    <!-- 根据订单code查询数据 -->
+    <select id="findByCode" parameterType="String" resultType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        dayly_task_information
+        where
+        task_code = #{task_code}
+    </select>
+    <insert id="save2" parameterType="pd">
+	    insert into dayly_task_information ( task_code, task_name, 
+	      task_type_id, task_type_name,from_crm, 
+	      task_in_order_id, task_in_order_name, task_to_who_id, 
+	      task_comment, task_start_date, task_end_date, 
+	      complete_standard, task_score, need_check, 
+	      check_person, status, enable, 
+	      create_user, create_time, last_update_user, last_update_time)
+	    values (
+	    	#{task_code},
+	    	#{task_name},
+	    	#{task_type_id},
+	    	#{task_type_name},
+	    	#{from_crm},
+	    	#{task_in_order_id},
+	    	#{task_in_order_name},
+	    	#{task_to_who_id},
+	    	#{task_comment},
+	    	#{task_start_date},
+	    	#{task_end_date},
+	    	#{complete_standard},
+	    	#{task_score},
+	    	#{need_check},
+	    	#{check_person},
+	    	0,
+	    	1,
+	    	#{create_user},
+	    	#{create_time},
+	    	#{last_update_user},
+	    	#{last_update_time}
+	    )
+    </insert>
+    <update id="edit2" parameterType="pd">
+	    update dayly_task_information
+	    set task_code = #{task_code},
+	      task_name = #{task_name},
+	      task_type_id = #{task_type_id},
+	      task_type_name = #{task_type_name},
+	      from_crm = #{from_crm},
+	      task_in_order_id = #{task_in_order_id},
+	      task_in_order_name = #{task_in_order_name},
+	      task_to_who_id = #{task_to_who_id},
+	      task_comment = #{task_comment},
+	      task_start_date = #{task_start_date},
+	      task_end_date = #{task_end_date},
+	      complete_standard = #{complete_standard},
+	      task_score = #{task_score},
+	      need_check = #{need_check},
+	      check_person = #{check_person},
+	      status = #{status},
+	      enable = #{enable},
+	      last_update_user = #{last_update_user},
+	      last_update_time = #{last_update_time}
+	    where id = #{id}
+    </update>
+    <update id="updateStatus" parameterType="pd">
+	    update dayly_task_information
+	    set 
+	    	status = #{status},
+	        last_update_user = #{last_update_user},
+	        last_update_time = #{last_update_time}
+	    where task_in_order_id = #{task_in_order_id}
+    </update>
+    <delete id="delById" parameterType="String">
+		delete from dayly_task_information where id = #{id}
+    </delete>
+    <!-- 根据task_code查询数据 -->
+    <select id="findByTaskCode" parameterType="pd" resultType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from
+        dayly_task_information
+        where
+        task_code = #{task_code}
+    </select>
+    <!-- 订单提交模块SQL -->
+
+    <select id="checkCodeByTaskCode" parameterType="pd" resultType="java.util.LinkedHashMap">
+        select
+        count(1) SL
+        from dayly_task_information
+        where TASK_CODE = #{taskCode,jdbcType=VARCHAR}
+        <if test="id != null and id != ''">
+            and ID != #{id}
+        </if>
+    </select>
+    <update id="checkot" parameterType="pd">
+		UPDATE dayly_task_information
+		SET status = '6' WHERE id IN  (
+			SELECT
+				a.id
+			FROM
+				(SELECT * from dayly_task_information temp) a
+			WHERE
+				a.task_end_date &lt; now()
+			and
+				a.status = 1
+		)
+	</update>
+</mapper>

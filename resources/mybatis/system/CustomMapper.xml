@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CustomMapper">
+
+
+    <select id="listYytoooa" parameterType="pd" resultType="pd">
+		 SELECT fyxmid ,fyxmmc ,iperiod ,iyear  ,yuje ,fsje ,cdept_id ,dbill_date			
+		from 
+			css_YyTooOa 
+		where  
+			1=1
+		and dbill_date between  dateadd(mm,-2,getdate()) and getdate()
+	</select>
+
+    <select id="listForm62" parameterType="pd" resultType="pd">
+	SELECT id ,requestId ,xmbm ,xmmc ,xmjb ,sftyjb ,gkglbm ,sxfj ,sfzyskz ,fyxz
+      ,sfkykyjz ,sqbm ,fycdbm ,scbmkmbm ,scbmkmmc ,yfbmjlkmbm ,yfbmjlkmmc
+      ,yfbmzlkmbm ,yfbmzlkmmc ,xsbmkmbm ,xsbmkmmc ,glbmkmbm ,glbmkmmc ,sfmj ,formmodeid
+      ,modedatacreater ,modedatacreatertype ,modedatacreatedate ,modedatacreatetime
+      ,sjxm ,spbm1 ,spbm2 ,spbm3 ,gs
+    FROM formtable_main_62
+	where   1=1
+		
+	</select>
+
+    <select id="listForm63" parameterType="pd" resultType="pd">
+	SELECT id
+      ,requestId
+      ,bmsx
+      ,bm
+      ,formmodeid
+      ,modedatacreater
+      ,modedatacreatertype
+      ,modedatacreatedate
+      ,modedatacreatetime
+  	FROM formtable_main_63
+	where   1=1
+		
+	</select>
+
+    <select id="listForm65" parameterType="pd" resultType="pd">
+			SELECT
+		  id
+		, requestId
+		, sqr
+		, sqrq
+		, bzbm
+		, fycdbm
+		, fyxm
+		, ysnd
+		, sfdrmx
+		, dh
+		, cdbmld
+		, fyxmcx
+		, fycdbmcx
+		, fybzzgs
+		, czdw
+		FROM formtable_main_65
+		WHERE  sqrq BETWEEN dateadd(mm,-2,getdate()) and getdate()
+		
+	</select>
+
+    <select id="listForm65dt1" parameterType="pd" resultType="pd">
+			SELECT
+				  a.id
+				, a.mainid
+				, a.yiy
+				, a.ery
+				, a.sany
+				, a.siy
+				, a.wuy
+				, a.liuy
+				, a.qiy
+				, a.bay
+				, a.jiuy
+				, a.shiy
+				, a.shiyiy
+				, a.shiery
+				, a.ndzys
+				, a.dykm
+				, a.fyxmmc
+				, a.fyxmbm
+				, a.fycdbm
+				, a.fycdbmmc
+				, a.ysxm1
+				, a.mxfyxmcx
+				, a.mxfycdbmcx
+				FROM formtable_main_65_dt1 a,formtable_main_65 b
+				WHERE  a.mainid = b.id and b.sqrq BETWEEN dateadd(mm,-2,getdate()) and getdate()
+		
+	</select>
+
+    <select id="listHrmDept" parameterType="pd" resultType="pd">
+		 SELECT id
+		      ,departmentmark ,departmentname ,subcompanyid1 ,supdepid ,allsupdepid ,showorder
+		      ,canceled ,departmentcode ,coadjutant ,zzjgbmfzr ,zzjgbmfgld ,jzglbmfzr
+		      ,jzglbmfgld ,bmfgld ,budgetAtuoMoveOrder ,bmjl ,fygly
+		FROM HrmDepartment
+		where   1=1
+		
+	</select>
+
+    <select id="listTdcys" parameterType="pd" resultType="pd">
+		 SELECT id  ,fycdbm ,fysqbm ,m1 ,m2  ,m3 ,m4 ,m5 ,m6
+		      ,m7 ,m8 ,m9 ,m10 ,m11 ,m12 ,year ,ys ,fyxm
+		 FROM t_dc_ys
+		 where   1=1
+			and  year >= DatePart(Year,GetDate())-1
+	</select>
+
+
+    <!-- 添加 -->
+    <insert id="insertYytoooa" parameterType="pd">
+    insert into css_yytoooa (fyxmid
+		      ,fyxmmc ,iperiod ,iyear ,yuje
+		      ,fsje ,cdept_id ,dbill_date
+      )
+    values (#{fyxmid} ,#{fyxmmc} ,#{iperiod}
+		      ,#{iyear} ,#{yuje} ,#{fsje} ,#{cdept_id}
+		      ,#{dbill_date}
+      )
+  </insert>
+
+    <insert id="insertForm62" parameterType="pd">
+    insert into formtable_main_62 (id
+      ,requestId
+      ,xmbm
+      ,xmmc
+      ,xmjb
+      ,sftyjb
+      ,gkglbm
+      ,sxfj
+      ,sfzyskz
+      ,fyxz
+      ,sfkykyjz
+      ,sqbm
+      ,fycdbm
+      ,scbmkmbm
+      ,scbmkmmc
+      ,yfbmjlkmbm
+      ,yfbmjlkmmc
+      ,yfbmzlkmbm
+      ,yfbmzlkmmc
+      ,xsbmkmbm
+      ,xsbmkmmc
+      ,glbmkmbm
+      ,glbmkmmc
+      ,sfmj
+      ,formmodeid
+      ,modedatacreater
+      ,modedatacreatertype
+      ,modedatacreatedate
+      ,modedatacreatetime
+      ,sjxm
+      ,spbm1
+      ,spbm2
+      ,spbm3
+      ,gs
+      )
+    values (#{id}
+      ,#{requestId}
+      ,#{xmbm}
+      ,#{xmmc}
+      ,#{xmjb}
+      ,#{sftyjb}
+      ,#{gkglbm}
+      ,#{sxfj}
+      ,#{sfzyskz}
+      ,#{fyxz}
+      ,#{sfkykyjz}
+      ,#{sqbm}
+      ,#{fycdbm}
+      ,#{scbmkmbm}
+      ,#{scbmkmmc}
+      ,#{yfbmjlkmbm}
+      ,#{yfbmjlkmmc}
+      ,#{yfbmzlkmbm}
+      ,#{yfbmzlkmmc}
+      ,#{xsbmkmbm}
+      ,#{xsbmkmmc}
+      ,#{glbmkmbm}
+      ,#{glbmkmmc}
+      ,#{sfmj}
+      ,#{formmodeid}
+      ,#{modedatacreater}
+      ,#{modedatacreatertype}
+      ,#{modedatacreatedate}
+      ,#{modedatacreatetime}
+      ,#{sjxm}
+      ,#{spbm1}
+      ,#{spbm2}
+      ,#{spbm3}
+      ,#{gs}
+      )
+  </insert>
+
+
+    <insert id="insertForm63" parameterType="pd">
+    insert into formtable_main_63 (id ,requestId ,bmsx ,bm ,formmodeid ,modedatacreater
+      ,modedatacreatertype ,modedatacreatedate ,modedatacreatetime
+      )
+    values (#{id}
+      ,#{requestId}
+      ,#{bmsx}
+      ,#{bm}
+      ,#{formmodeid}
+      ,#{modedatacreater}
+      ,#{modedatacreatertype}
+      ,#{modedatacreatedate}
+      ,#{modedatacreatetime}
+      )
+  </insert>
+
+
+    <insert id="insertForm65" parameterType="pd">
+    insert into formtable_main_65 (id
+			, requestId
+			, sqr
+			, sqrq
+			, bzbm
+			, fycdbm
+			, fyxm
+			, ysnd
+			, sfdrmx
+			, dh
+			, cdbmld
+			, fyxmcx
+			, fycdbmcx
+			, fybzzgs
+			, czdw
+      )
+    values (#{id}
+		, #{requestId}
+		, #{sqr}
+		, #{sqrq}
+		, #{bzbm}
+		, #{fycdbm}
+		, #{fyxm}
+		, #{ysnd}
+		, #{sfdrmx}
+		, #{dh}
+		, #{cdbmld}
+		, #{fyxmcx}
+		, #{fycdbmcx}
+		, #{fybzzgs}
+		, #{czdw}
+      )
+  </insert>
+
+
+    <insert id="insertForm65dt1" parameterType="pd">
+    insert into formtable_main_65_dt1 (id
+					, mainid
+					, yiy
+					, ery
+					, sany
+					, siy
+					, wuy
+					, liuy
+					, qiy
+					, bay
+					, jiuy
+					, shiy
+					, shiyiy
+					, shiery
+					, ndzys
+					, dykm
+					, fyxmmc
+					, fyxmbm
+					, fycdbm
+					, fycdbmmc
+					, ysxm1
+					, mxfyxmcx
+					, mxfycdbmcx
+      )
+    values (#{id}
+		, #{mainid}
+		, #{yiy}
+		, #{ery}
+		, #{sany}
+		, #{siy}
+		, #{wuy}
+		, #{liuy}
+		, #{qiy}
+		, #{bay}
+		, #{jiuy}
+		, #{shiy}
+		, #{shiyiy}
+		, #{shiery}
+		, #{ndzys}
+		, #{dykm}
+		, #{fyxmmc}
+		, #{fyxmbm}
+		, #{fycdbm}
+		, #{fycdbmmc}
+		, #{ysxm1}
+		, #{mxfyxmcx}
+		, #{mxfycdbmcx}
+      )
+  </insert>
+
+
+    <insert id="insertHrmDept" parameterType="pd">
+    insert into hrmdepartment (id
+		      ,departmentmark
+		      ,departmentname
+		      ,subcompanyid1
+		      ,supdepid
+		      ,allsupdepid
+		      ,showorder
+		      ,canceled
+		      ,departmentcode
+		      ,coadjutant
+		      ,zzjgbmfzr
+		      ,zzjgbmfgld
+		      ,jzglbmfzr
+		      ,jzglbmfgld
+		      ,bmfgld
+		      ,budgetAtuoMoveOrder
+		      ,bmjl
+		      ,fygly
+      )
+    values (#{id}
+		      ,#{departmentmark}
+		      ,#{departmentname}
+		      ,#{subcompanyid1}
+		      ,#{supdepid}
+		      ,#{allsupdepid}
+		      ,#{showorder}
+		      ,#{canceled}
+		      ,#{departmentcode}
+		      ,#{coadjutant}
+		      ,#{zzjgbmfzr}
+		      ,#{zzjgbmfgld}
+		      ,#{jzglbmfzr}
+		      ,#{jzglbmfgld}
+		      ,#{bmfgld}
+		      ,#{budgetAtuoMoveOrder}
+		      ,#{bmjl}
+		      ,#{fygly}
+      )
+  </insert>
+
+    <insert id="insertTdcys" parameterType="pd">
+    insert into t_dc_ys (id
+		      ,fycdbm
+		      ,fysqbm
+		      ,m1
+		      ,m2
+		      ,m3
+		      ,m4
+		      ,m5
+		      ,m6
+		      ,m7
+		      ,m8
+		      ,m9
+		      ,m10
+		      ,m11
+		      ,m12
+		      ,year
+		      ,ys
+		      ,fyxm
+      )
+    values (#{id}
+		      ,#{fycdbm}
+		      ,#{fysqbm}
+		      ,#{m1}
+		      ,#{m2}
+		      ,#{m3}
+		      ,#{m4}
+		      ,#{m5}
+		      ,#{m6}
+		      ,#{m7}
+		      ,#{m8}
+		      ,#{m9}
+		      ,#{m10}
+		      ,#{m11}
+		      ,#{m12}
+		      ,#{year}
+		      ,#{ys}
+		      ,#{fyxm}
+      )
+  </insert>
+
+
+    <!-- 删除按钮 -->
+    <delete id="deleteBudyear" parameterType="String">
+		delete from budget_year 
+		where remark = '导入'
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteYytoooa" parameterType="String">
+		delete from css_yytoooa 
+		where  1=1
+		and dbill_date between  date_sub(curdate(),interval 2 month) and curdate() 
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteForm62" parameterType="String">
+		delete from formtable_main_62 
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteForm63" parameterType="String">
+		delete from formtable_main_63 
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteForm65" parameterType="String">
+		delete from formtable_main_65 WHERE  sqrq BETWEEN date_sub(curdate(),interval 2 month) and curdate() 
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteForm65dt1" parameterType="String">
+		delete FROM formtable_main_65_dt1 a where a.mainid in(
+				select b.id from formtable_main_65 b 
+					WHERE  b.sqrq BETWEEN date_sub(curdate(),interval 2 month) and curdate())
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteHrmDept" parameterType="String">
+		delete from hrmdepartment 
+	</delete>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteTdcys" parameterType="String">
+		delete from t_dc_ys where   1=1
+			and  year >= DATE_FORMAT( current_timestamp(),'%Y' ) -1
+	</delete>
+
+
+</mapper>

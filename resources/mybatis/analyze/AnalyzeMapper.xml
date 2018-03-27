@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="analyzeMapper">
+
+    <!-- 年度经营目标查询有数据的年份 -->
+    <select id="getYearList" parameterType="pd" resultType="String">
+		SELECT DISTINCT(YEAR) FROM b_year_target WHERE STATUS = 'YW_YSX' AND ISDEL = 0 ORDER BY YEAR DESC
+	</select>
+
+    <!-- 根据年份查询年度经营任务 -->
+    <select id="getYearTargetCodeList" parameterType="String" resultType="pd">
+		SELECT 
+			CODE, NAME 
+		FROM 
+			b_year_target 
+		WHERE 
+			YEAR = #{YEAR} AND STATUS = 'YW_YSX' AND ISDEL = 0
+	</select>
+
+    <!--经营目标时间轴 年度-->
+    <select id="yearTargetList" parameterType="pd" resultType="pd">
+        SELECT
+        ytarget.ID,ytarget.CODE,ytarget.NAME,ytarget.YEAR,ytarget.STANDARD,ytarget.START_DATE,ytarget.END_DATE,
+        dept.DEPT_NAME,emp.EMP_NAME
+        FROM
+        b_year_target ytarget
+        LEFT JOIN
+        bd_department dept
+        ON
+        ytarget.DEPT_CODE = dept.DEPT_CODE
+        LEFT JOIN
+        bd_employee emp
+        ON
+        ytarget.EMP_CODE = emp.EMP_CODE
+        WHERE
+        ytarget.STATUS = 'YW_YSX' AND ytarget.ISDEL = 0
+        <!-- 用户部门权限 -->
+        <if test="deptCodes != null and deptCodes != ''">
+            AND ytarget.DEPT_CODE in (${deptCodes})
+        </if>
+        <!-- 年度条件 -->
+        <if test="YEAR != null and YEAR != ''">
+            AND ytarget.YEAR = #{YEAR}
+        </if>
+        <!-- CODE条件 -->
+        <if test="CODE != null and CODE != ''">
+            AND ytarget.CODE = #{CODE}
+        </if>
+    </select>
+
+    <!-- 获得经营目标年度完成比例 -->
+    <select id="getYearTargetPercent" parameterType="String" resultType="String">
+    	SELECT 
+    		SUM(dtask.DAILY_COUNT)/ytarget.COUNT*100 percent 
+    	FROM 
+    		b_year_target ytarget 
+		LEFT JOIN 
+			B_WEEK_EMP_TASK wtask 
+		ON 
+			wtask.B_YEAR_TARGET_CODE = ytarget.CODE 
+		LEFT JOIN 
+			B_DAILY_EMP_TASK dtask 
+		ON 
+			dtask.B_WEEK_EMP_TASK_ID = wtask.ID 
+		WHERE 
+			ytarget.CODE = #{CODE} 
+		AND 
+			dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0
+		AND 
+			ytarget.STATUS = 'YW_YSX' AND ytarget.ISDEL = 0
+    </select>
+
+    <!-- 查询年度经营目标下的月份 -->
+    <select id="getMonthByYearCode" parameterType="String" resultType="pd">
+		SELECT 
+			DISTINCT(MONTH) 
+		FROM 
+			B_MONTH_DEPT_TASK 
+		WHERE 
+			B_YEAR_TARGET_CODE = #{B_YEAR_TARGET_CODE}
+		AND 
+			STATUS = 'YW_YSX' AND ISDEL = 0
+	</select>
+
+    <!-- 获得经营目标月度完成比例 -->
+    <select id="getMonthTargetPercent" parameterType="pd" resultType="pd">
+        <!-- SELECT
+            SUM(dtask.DAILY_COUNT)/SUM(mdeptask.MONTH_COUNT) percent, SUM(dtask.DAILY_COUNT) actual, SUM(mdeptask.MONTH_COUNT) plan
+        FROM
+            B_MONTH_DEPT_TASK mdeptask
+        LEFT JOIN
+            B_WEEK_EMP_TASK wemptask
+        ON
+            mdeptask.B_YEAR_TARGET_CODE = wemptask.B_YEAR_TARGET_CODE
+        LEFT JOIN
+            B_DAILY_EMP_TASK dtask
+        ON
+            dtask.B_WEEK_EMP_TASK_ID = wemptask.ID
+        WHERE
+            mdeptask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE}
+        AND
+            wemptask.MONTH = #{MONTH}
+        AND
+            dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0
+        AND
+            mdeptask.STATUS = 'YW_YSX' AND mdeptask.ISDEL = 0  -->
+
+        <!-- 分别查出百分比(actual/plan)，实际完成数(actual)，计划完成数(plan) -->
+        SELECT (SELECT SUM(dtask.DAILY_COUNT) FROM B_DAILY_EMP_TASK dtask
+        LEFT JOIN B_WEEK_EMP_TASK weektask ON dtask.B_WEEK_EMP_TASK_ID = weektask.ID
+        WHERE weektask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND weektask.MONTH = #{MONTH}
+        AND dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0 AND weektask.STATUS = 'YW_YSX' AND weektask.ISDEL = 0) /
+        (SELECT SUM(mothtask.MONTH_COUNT) FROM B_MONTH_DEPT_TASK mothtask
+        WHERE mothtask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND mothtask.MONTH = #{MONTH}
+        AND mothtask.STATUS = 'YW_YSX' AND mothtask.ISDEL = 0 )*100 percent,
+        (SELECT SUM(dtask.DAILY_COUNT) FROM B_DAILY_EMP_TASK dtask
+        LEFT JOIN B_WEEK_EMP_TASK weektask ON dtask.B_WEEK_EMP_TASK_ID = weektask.ID
+        WHERE weektask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND weektask.MONTH = #{MONTH}
+        AND dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0 AND weektask.STATUS = 'YW_YSX' AND weektask.ISDEL = 0) actual,
+        (SELECT SUM(mothtask.MONTH_COUNT) FROM B_MONTH_DEPT_TASK mothtask
+        WHERE mothtask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND mothtask.MONTH = #{MONTH}
+        AND mothtask.STATUS = 'YW_YSX' AND mothtask.ISDEL = 0 ) plan
+    </select>
+
+    <!-- 查询月度经营任务下的部门 -->
+    <select id="getDeptByMonth" parameterType="pd" resultType="pd">
+		SELECT 
+			dept.DEPT_NAME, dept.DEPT_CODE,emp.EMP_NAME 
+		FROM 
+			B_MONTH_DEPT_TASK mdeptask 
+		LEFT JOIN 
+			bd_department dept 
+		ON 
+			mdeptask.DEPT_CODE = dept.DEPT_CODE 
+		LEFT JOIN 
+			bd_employee emp 
+		ON 
+			mdeptask.EMP_CODE = emp.EMP_CODE 
+		WHERE 
+			B_YEAR_TARGET_CODE = #{yearTargetCode} AND MONTH = #{month}
+		AND
+			mdeptask.STATUS = 'YW_YSX' AND mdeptask.ISDEL = 0 
+	</select>
+
+    <!-- 获得经营目标部门月度完成比例 -->
+    <select id="getDeptMonthPercent" parameterType="pd" resultType="pd">
+        <!-- SELECT
+            SUM(dtask.DAILY_COUNT)/SUM(mdeptask.MONTH_COUNT) percent,
+            SUM(dtask.DAILY_COUNT) actual, SUM(mdeptask.MONTH_COUNT) plan
+        FROM
+            B_MONTH_DEPT_TASK mdeptask
+        LEFT JOIN
+            B_WEEK_EMP_TASK wemptask
+        ON
+            mdeptask.B_YEAR_TARGET_CODE = wemptask.B_YEAR_TARGET_CODE
+        LEFT JOIN
+            B_DAILY_EMP_TASK dtask
+        ON
+            dtask.B_WEEK_EMP_TASK_ID = wemptask.ID
+        WHERE
+            mdeptask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE}
+        AND
+            mdeptask.MONTH = #{MONTH}
+        AND
+            mdeptask.DEPT_CODE = #{DEPT_CODE}
+        AND
+            dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0
+        AND
+            mdeptask.STATUS = 'YW_YSX' AND mdeptask.ISDEL = 0  -->
+
+        <!-- 分别查出百分比(actual/plan)，实际完成数(actual)，计划完成数(plan) -->
+        SELECT (SELECT SUM(dtask.DAILY_COUNT) FROM B_DAILY_EMP_TASK dtask
+        LEFT JOIN B_WEEK_EMP_TASK weektask ON dtask.B_WEEK_EMP_TASK_ID = weektask.ID
+        WHERE weektask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND weektask.MONTH = #{MONTH}
+        AND dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0 AND weektask.STATUS = 'YW_YSX' AND weektask.ISDEL = 0) /
+        (SELECT SUM(mothtask.MONTH_COUNT) FROM B_MONTH_DEPT_TASK mothtask
+        WHERE mothtask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND mothtask.MONTH = #{MONTH} AND mothtask.DEPT_CODE =
+        #{DEPT_CODE}
+        AND mothtask.STATUS = 'YW_YSX' AND mothtask.ISDEL = 0 )*100 percent,
+        (SELECT SUM(dtask.DAILY_COUNT) FROM B_DAILY_EMP_TASK dtask
+        LEFT JOIN B_WEEK_EMP_TASK weektask ON dtask.B_WEEK_EMP_TASK_ID = weektask.ID
+        WHERE weektask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND weektask.MONTH = #{MONTH}
+        AND dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0 AND weektask.STATUS = 'YW_YSX' AND weektask.ISDEL = 0) actual,
+        (SELECT SUM(mothtask.MONTH_COUNT) FROM B_MONTH_DEPT_TASK mothtask
+        WHERE mothtask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} AND mothtask.MONTH = #{MONTH} AND mothtask.DEPT_CODE =
+        #{DEPT_CODE}
+        AND mothtask.STATUS = 'YW_YSX' AND mothtask.ISDEL = 0 ) plan
+    </select>
+
+    <!-- 查询部门周经营任务 -->
+    <select id="getWeekTask" parameterType="pd" resultType="pd">
+		SELECT 
+			DISTINCT(WEEK),WEEK_START_DATE,WEEK_END_DATE 
+		FROM 
+			B_WEEK_EMP_TASK wemptask 
+		LEFT JOIN 
+			bd_employee emp 
+		ON 
+			wemptask.EMP_CODE = emp.EMP_CODE 
+		WHERE 
+			B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} 
+		AND 
+			DEPT_CODE = #{DEPT_CODE} 
+		AND 
+			MONTH = #{MONTH} 
+		AND 
+			wemptask.STATUS = 'YW_YSX' AND wemptask.ISDEL = 0 
+	</select>
+
+    <!-- 获得经营目标部门周完成比例 -->
+    <select id="getDeptWeekPercent" parameterType="pd" resultType="pd">
+		SELECT 
+			SUM(DAILY_COUNT)/SUM(WEEK_COUNT)*100 percent, SUM(DAILY_COUNT) actual, SUM(WEEK_COUNT) plan 
+		FROM 
+			B_WEEK_EMP_TASK wemptask 
+		LEFT JOIN 
+			B_DAILY_EMP_TASK dtask 
+		ON 
+			wemptask.ID = dtask.B_WEEK_EMP_TASK_ID 
+		WHERE 
+			wemptask.B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} 
+		AND 
+			wemptask.MONTH = #{MONTH} 
+		AND 
+			wemptask.DEPT_CODE = #{DEPT_CODE} 
+		AND
+			wemptask.WEEK= #{WEEK} 
+		AND 
+			dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0 
+		AND 
+			wemptask.STATUS = 'YW_YSX' AND wemptask.ISDEL = 0 
+	</select>
+
+    <!-- 获得员工周任务 -->
+    <select id="getEmpWeek" parameterType="pd" resultType="pd">
+		SELECT 
+			emp.EMP_NAME 
+		FROM 
+			bd_employee emp 
+		LEFT JOIN 
+			B_WEEK_EMP_TASK wemptask 
+		ON 
+			wemptask.EMP_CODE = emp.EMP_CODE 
+		WHERE 
+			B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE} 
+		AND 
+			DEPT_CODE = #{DEPT_CODE} 
+		AND 
+			MONTH = #{MONTH} 
+		AND 
+			WEEK = #{WEEK} 
+		AND 
+			wemptask.STATUS = 'YW_YSX' AND wemptask.ISDEL = 0 
+		GROUP BY 
+			emp.EMP_CODE
+	</select>
+
+    <!-- 获得员工周任务及完成比例 -->
+    <select id="getEmpWeekPercent" parameterType="pd" resultType="pd">
+        SELECT
+        <!-- emp.EMP_NAME, SUM(dtask.DAILY_COUNT)/SUM(wemptask.WEEK_COUNT)*100 percent,
+        SUM(dtask.DAILY_COUNT) actual, SUM(wemptask.WEEK_COUNT) plan  -->
+        MAX(emp.EMP_NAME) EMP_NAME,
+        IFNULL(SUM(dtask.DAILY_COUNT),0)/IFNULL(SUM(wemptask.WEEK_COUNT),0)*100 percent,
+        IFNULL(SUM(dtask.DAILY_COUNT),0) actual,
+        IFNULL(SUM(wemptask.WEEK_COUNT),0) plan
+        FROM
+        bd_employee emp
+        LEFT JOIN
+        B_WEEK_EMP_TASK wemptask
+        ON
+        wemptask.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN
+        B_DAILY_EMP_TASK dtask
+        ON
+        wemptask.ID = dtask.B_WEEK_EMP_TASK_ID
+        WHERE
+        B_YEAR_TARGET_CODE = #{YEAR_TARGET_CODE}
+        AND
+        DEPT_CODE = #{DEPT_CODE}
+        AND
+        MONTH = #{MONTH}
+        AND
+        WEEK = #{WEEK}
+        AND
+        dtask.STATUS = 'YW_YSX' AND dtask.ISDEL = 0
+        AND
+        wemptask.STATUS = 'YW_YSX' AND wemptask.ISDEL = 0
+        GROUP BY
+        emp.EMP_CODE
+    </select>
+
+    <!-- 创新项目查询有数据的年份 -->
+    <select id="getProjectYearList" parameterType="pd" resultType="String">
+		SELECT DISTINCT(YEAR) FROM C_PROJECT WHERE STATUS = 'YW_YSX' AND ISDEL = 0
+	</select>
+
+    <!-- 根据年份查询创新项目 -->
+    <select id="getProjectList" parameterType="String" resultType="pd">
+		SELECT 
+			CODE, NAME 
+		FROM 
+			C_PROJECT 
+		WHERE 
+			YEAR = #{YEAR} AND STATUS = 'YW_YSX' AND ISDEL = 0
+	</select>
+
+    <!-- 查询创新项目时间轴第一层节点 -->
+    <select id="firstNodeList" parameterType="pd" resultType="pd">
+		SELECT 
+			node.ID, node.NODE_TARGET, node.PLAN_DATE, emp.EMP_NAME, dept.DEPT_NAME 
+		FROM 
+			C_PROJECT pro 
+		LEFT JOIN 
+			C_PROJECT_NODE node 
+		ON 
+			pro.CODE = node.C_PROJECT_CODE 
+		
+		LEFT JOIN 
+			BD_EMPLOYEE emp 
+		ON 
+			emp.EMP_CODE = node.EMP_CODE 
+		LEFT JOIN 
+			BD_DEPARTMENT dept 
+		ON 
+			dept.DEPT_CODE = node.DEPT_CODE 
+		WHERE 
+			pro.YEAR = #{YEAR} AND pro.CODE = #{CODE} 
+		AND 
+			node.STATUS = 'YW_YSX' AND node.ISDEL = 0
+	</select>
+
+    <!-- 根据父节点ID获得子节点 -->
+    <select id="getChildNode" parameterType="String" resultType="pd">
+		SELECT 
+			node.ID, node.NODE_TARGET, node.PLAN_DATE, emp.EMP_NAME, dept.DEPT_NAME 
+		FROM 
+			C_PROJECT_NODE node 
+		LEFT JOIN 
+			BD_EMPLOYEE emp 
+		ON 
+			emp.EMP_CODE = node.EMP_CODE 
+		LEFT JOIN 
+			BD_DEPARTMENT dept 
+		ON 
+			dept.DEPT_CODE = node.DEPT_CODE 
+		WHERE 
+			node.PARENT_ID = #{PARENT_ID} 
+		AND 
+			node.STATUS = 'YW_YSX' AND node.ISDEL = 0
+	</select>
+
+    <!-- 根据节点获得所属活动 -->
+    <select id="getEventList" parameterType="String" resultType="pd">
+		SELECT 
+			eve.ID, eve.NAME, eve.WEIGHT, eve.START_DATE, eve.END_DATE, emp.EMP_NAME, dept.DEPT_NAME 
+		FROM 
+			C_PROJECT_EVENT eve 
+		LEFT JOIN 
+			BD_EMPLOYEE emp 
+		ON 
+			emp.EMP_CODE = eve.EMP_CODE 
+		LEFT JOIN 
+			BD_DEPARTMENT dept 
+		ON 
+			dept.DEPT_CODE = eve.DEPT_CODE 
+		WHERE 
+			C_PROJECT_NODE_ID = #{NODE_ID}
+		AND 
+			eve.STATUS = 'YW_YSX' AND eve.ISDEL = 0
+	</select>
+
+    <!-- 活动百分比 -->
+    <select id="getEventPercent" parameterType="Object" resultType="String">
+        SELECT
+        SUM(split.PERCENT_SPLIT/100) <!-- SUM(split.PERCENT_SPLIT/100*eve.WEIGHT)/eve.WEIGHT  -->
+        FROM
+        C_PROJECT_EVENT eve
+        LEFT JOIN
+        C_PROJECT_EVENT_SPLIT split
+        ON
+        split.C_PROJECT_EVENT_ID = eve.ID
+        WHERE
+        eve.ID = #{ID}
+        AND
+        split.ISFINISH = '1'
+        AND
+        eve.STATUS = 'YW_YSX' AND eve.ISDEL = 0 AND split.ISDEL = 0
+        AND
+        split.STATUS = 'YW_YSX' AND split.ISDEL = 0
+    </select>
+
+    <!-- 节点所有活动进度和 -->
+    <select id="getSumEvent" parameterType="Object" resultType="String">
+		SELECT 
+			SUM(split.PERCENT_SPLIT/100*eve.WEIGHT) 
+		FROM 
+			c_project_node node 
+		LEFT JOIN 
+			c_project_event eve 
+		ON 
+			node.ID = eve.C_PROJECT_NODE_ID 
+		LEFT JOIN 
+			C_PROJECT_EVENT_SPLIT split 
+		ON 
+			split.C_PROJECT_EVENT_ID = eve.ID 
+		WHERE 
+			node.ID = #{ID}
+		AND 
+			eve.STATUS = 'YW_YSX' AND eve.ISDEL = 0 
+		AND 
+			split.STATUS = 'YW_YSX' AND split.ISDEL = 0 
+		AND 
+			node.STATUS = 'YW_YSX' AND node.ISDEL = 0
+	</select>
+
+    <!-- 末级节点百分比 -->
+    <select id="getEndNodePercent" parameterType="String" resultType="String">
+        SELECT
+        SUM(split.PERCENT_SPLIT/100*eve.WEIGHT) <!-- SUM(split.PERCENT_SPLIT/100*eve.WEIGHT)/eve.WEIGHT  -->
+        FROM
+        C_PROJECT_EVENT eve
+        LEFT JOIN
+        C_PROJECT_EVENT_SPLIT split
+        ON
+        split.C_PROJECT_EVENT_ID = eve.ID
+        WHERE
+        eve.C_PROJECT_NODE_ID = #{ID} AND split.ISFINISH = '1'
+        AND
+        eve.STATUS = 'YW_YSX' AND eve.ISDEL = 0 AND split.STATUS = 'YW_YSX' AND split.ISDEL = 0
+    </select>
+
+    <!-- 根据节点ID获得数据 -->
+    <select id="getNodeWeightById" parameterType="String" resultType="pd">
+		SELECT 
+			ID, WEIGHT  
+		FROM 
+			C_PROJECT_NODE node 
+		WHERE 
+			ID = #{ID} 
+		AND 
+			STATUS = 'YW_YSX' AND ISDEL = 0
+	</select>
+
+</mapper>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProjectNodeLevelMapper">
+
+    <!-- 新增 -->
+    <insert id="insert" parameterType="pd">
+        insert bd_project_node_level(
+        NODE_LEVEL,
+        <!-- ROLEIDS, -->
+        ISDEL,
+        CREATE_USER,
+        CREATE_TIME
+        )
+        VALUES(
+        #{NODE_LEVEL},
+        <!-- #{ROLEIDS}, -->
+        #{isdel},
+        #{createUser},
+        #{createTime}
+        )
+    </insert>
+
+    <!-- 删除 -->
+    <delete id="delete" parameterType="pd">
+		update bd_project_node_level
+		SET ISDEL = '1'
+		WHERE ID = #{ID}
+	</delete>
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+        update bd_project_node_level
+        <set>
+            <if test="NODE_LEVEL != null and NODE_LEVEL != ''">
+                NODE_LEVEL = #{NODE_LEVEL},
+            </if>
+            <!-- <if test="ROLEIDS != null" > ROLEIDS = #{ROLEIDS}, </if> -->
+            <!-- <if test="ISDEL != null and ISDEL != ''" > ISDEL = #{ISDEL}, </if> -->
+            <if test="updateUser != null and updateUser != ''">
+                UPDATE_USER = #{updateUser},
+            </if>
+            <if test="updateTime != null and updateTime != ''">
+                UPDATE_TIME = #{updateTime},
+            </if>
+        </set>
+        where ID = #{ID,jdbcType=INTEGER}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		SELECT
+		p.ID,
+		p.NODE_LEVEL,
+		p.ROLEIDS,
+		p.ISDEL
+		FROM
+		bd_project_node_level p
+		LEFT JOIN sys_role s ON p.ROLEIDS = s.ROLE_ID
+		where ID = #{ID,jdbcType=INTEGER}
+	</select>
+
+    <!-- 列表 -->
+    <select id="listPage" resultType="pd" parameterType="page">
+        <!-- SELECT t.ID, t.NODE_LEVEL, t.ISDEL, t.ROLEIDS, ta.ROLENAMES FROM bd_project_node_level
+            t, ( SELECT t1.ROLEIDS, GROUP_CONCAT(DISTINCT(t3.ROLE_NAME)) ROLENAMES FROM
+            bd_project_node_level t1 LEFT JOIN sys_role t2 ON FIND_IN_SET(t2.ROLE_ID,
+            t1.ROLEIDS) LEFT JOIN sys_role t3 ON FIND_IN_SET(t3.ROLE_ID, t1.ROLEIDS)
+            WHERE t1.ISDEL=0 <if test = "pd.NODE_LEVEL != null and pd.NODE_LEVEL != ''">
+            and t1.NODE_LEVEL like CONCAT('%',#{pd.NODE_LEVEL},'%') </if> <if test="pd.ROLEIDS
+            !=null and pd.ROLEIDS != ''"> and t2.ROLE_ID = #{pd.ROLEIDS} </if> GROUP
+            BY t1.ROLEIDS ) ta WHERE t.roleids = ta.roleids AND t.isdel = 0 -->
+
+        select ID,NODE_LEVEL from bd_project_node_level where ISDEL = 0
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by NODE_LEVEL asc
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 列表 -->
+    <select id="listP" resultType="pd" parameterType="pd">
+		SELECT
+		p.ID,
+		p.LEVEL_FRAME
+		FROM
+		bd_project_node_level_frame p
+	</select>
+
+    <select id="roleList" parameterType="String" resultType="pd">
+        select
+        a.ROLE_ID,
+        a.ROLE_NAME
+        from
+        sys_role a
+        where ROLE_ID not in
+        <foreach item="item" index="index" collection="array" open="("
+                 separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <select id="roleListAll" parameterType="pd" resultType="pd">
+		select
+		a.ROLE_ID,
+		a.ROLE_NAME
+		from
+		sys_role a
+
+	</select>
+
+    <select id="findLevelsByNode" resultType="pd">
+		SELECT
+		lfr.PROJECT_NODE_LEVEL_ID ID,
+		pnl.*
+		FROM
+		c_project p,
+		bd_project_type pt,
+		bd_level_frame_rel lfr,
+		bd_project_node_level pnl
+		WHERE p.PROJECT_TYPE_ID = pt.ID
+		AND lfr.PROJECT_NODE_LEVEL_FRAME_ID
+		= pt.PROJECT_NODE_LEVEL_FRAME_ID
+		AND lfr.PROJECT_NODE_LEVEL_ID = pnl.ID
+		AND p.CODE = #{PROJECT_CODE}
+		AND lfr.`LEVEL` = #{NODE_LEVEL}
+		and
+		pnl.ISDEL = 0
+	</select>
+</mapper>

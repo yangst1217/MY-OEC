@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PositionDutyMapper">
+
+
+    <!-- 新增岗位职责-->
+    <insert id="save" parameterType="pd">
+		insert into bd_position_responsibility(	
+			GRADE_CODE,
+			responsibility,
+			CREATE_TIME,
+			CREATE_USER,
+			UPDATE_TIME,
+			UPDATE_USER
+		) values (
+			#{GRADE_CODE},	
+			#{responsibility},		
+			#{CREATE_TIME},
+			#{CREATE_USER},
+			#{UPDATE_TIME},
+			#{UPDATE_USER}
+		)
+	</insert>
+    <!-- 根据岗位ID查询岗位CODE -->
+    <select id="findCodeById" parameterType="pd" resultType="pd">
+		select 
+			a.GRADE_CODE
+		from 
+			bd_position_level a
+		WHERE a.ID = #{id}
+
+	</select>
+
+    <!-- 删除岗位职责-->
+    <delete id="delete" parameterType="pd">
+		delete from bd_position_responsibility
+		where 
+			ID = #{ID}
+	</delete>
+
+
+    <!-- 修改岗位职责 -->
+    <update id="edit" parameterType="pd">
+		update  bd_position_responsibility
+			set 
+				responsibility = #{responsibility},
+				UPDATE_TIME = #{UPDATE_TIME},
+				UPDATE_USER = #{UPDATE_USER}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 查询岗位职责 -->
+    <select id="listDuty" parameterType="pd" resultType="pd">
+		select 
+			a.*
+		from 
+			bd_position_responsibility a
+		left join bd_position_level b on a.GRADE_CODE = b.GRADE_CODE
+		WHERE b.ID = #{id}
+
+	</select>
+
+    <!-- 查询岗位 -->
+    <select id="findPosition" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_position_level
+	</select>
+
+    <!-- 查询岗位 -->
+    <select id="findAll" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_position_responsibility
+	</select>
+
+
+    <!-- 查询岗位编码 -->
+    <select id="findCode" parameterType="pd" resultType="pd">
+		select 
+			d.GRADE_CODE
+		from 
+			sys_user b,bd_employee c,bd_position_level d
+		WHERE b.USERNAME = #{USER}
+		AND b.NUMBER = c.EMP_CODE
+		AND c.EMP_GRADE_ID = d.ID
+	</select>
+
+    <!-- 根据岗位编码查询岗位职责 -->
+    <select id="findDutyByCode" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_position_responsibility
+		WHERE GRADE_CODE = #{GRADE_CODE}
+	</select>
+
+    <!-- 新增岗位职责明细-->
+    <insert id="saveDetail" parameterType="pd">
+		insert into bd_responsibility_detail(	
+			responsibility_id,
+			detail,
+			requirement,
+			unit,
+			standard_time,
+			frequency,
+			guide,
+			target,
+			needApprove,
+			CREATE_TIME,
+			CREATE_USER,
+			UPDATE_TIME,
+			UPDATE_USER
+		) values (
+			#{responsibility_id},
+			#{detail},
+			#{requirement},
+			#{unit},
+			#{standard_time},
+			#{frequency},
+			#{guide},
+			#{target},
+			#{needApprove},
+			#{CREATE_TIME},
+			#{CREATE_USER},
+			#{UPDATE_TIME},
+			#{UPDATE_USER}
+		)
+	</insert>
+
+    <!-- 批量删除明细-->
+    <delete id="batchDeleteDetail" parameterType="pd">
+		delete from bd_responsibility_detail
+		where 
+			responsibility_id = #{ID}
+	</delete>
+
+    <!-- 删除明细-->
+    <delete id="deleteDetail" parameterType="pd">
+		delete from bd_responsibility_detail
+		where 
+			ID = #{ID}
+	</delete>
+
+
+    <!-- 修改岗位职责明细 -->
+    <update id="editDetail" parameterType="pd">
+		update  bd_responsibility_detail
+			set 
+				detail = #{detail},
+				requirement = #{requirement},
+				unit =#{unit},
+				standard_time = #{standard_time},
+				frequency = #{frequency},
+				guide = #{guide},
+				target = #{target},
+				needApprove = #{needApprove},
+				UPDATE_TIME = #{UPDATE_TIME},
+				UPDATE_USER = #{UPDATE_USER}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过岗位职责ID获取明细 -->
+    <select id="findDetailByPId" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_responsibility_detail 
+		where 
+			responsibility_id = #{ID}
+	</select>
+
+    <!-- 通过ID获取明细 -->
+    <select id="findDetailById" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_responsibility_detail 
+		where 
+			ID = #{ID}
+	</select>
+
+    <!-- 通过ID获取职责 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_position_responsibility 
+		where 
+			ID = #{ID}
+	</select>
+
+    <!-- 根据用户获取未收藏助手 -->
+    <!--
+    <select id="findDutyByUser" resultType="pd">
+        SELECT
+            rd.*
+        FROM
+            bd_responsibility_detail rd,
+            bd_position_responsibility pr,
+            bd_position_level pl,
+            bd_employee e
+        WHERE
+            rd.responsibility_id = pr.ID
+        AND pr.GRADE_CODE = pl.GRADE_CODE
+        AND pl.ID = e.EMP_GRADE_ID
+        AND e.EMP_CODE = #{NUMBER}
+        AND NOT EXISTS (
+            SELECT
+                1
+            FROM
+                bd_user_common_duty ucd
+            WHERE
+                rd.ID = ucd.detail_id
+            AND ucd.emp_code = e.EMP_CODE
+        )
+    </select>
+     -->
+    <!-- 根据用户获取未收藏助手 -->
+    <select id="findDutyByUser" resultType="pd">
+		SELECT
+			rd.ID, rd.responsibility_id, rd.detail, ucd.detail_id
+		FROM
+			bd_responsibility_detail rd
+		LEFT JOIN
+			bd_position_responsibility pr on rd.responsibility_id = pr.ID
+		LEFT JOIN
+			bd_position_level pl on pr.GRADE_CODE = pl.GRADE_CODE
+		LEFT JOIN
+			bd_employee e on  pl.ID = e.EMP_GRADE_ID
+		LEFT JOIN
+			bd_user_common_duty ucd on rd.ID = ucd.detail_id AND ucd.emp_code = e.EMP_CODE
+		WHERE
+			e.EMP_CODE = #{NUMBER} and ucd.detail_id IS NULL;
+	</select>
+
+    <!-- 根据用户获取已收藏助手 -->
+    <!--
+    <select id="findCommonDury" resultType="pd">
+        SELECT
+            rd.*
+        FROM
+            bd_responsibility_detail rd,
+            bd_position_responsibility pr,
+            bd_position_level pl,
+            bd_employee e
+        WHERE
+            rd.responsibility_id = pr.ID
+        AND pr.GRADE_CODE = pl.GRADE_CODE
+        AND pl.ID = e.EMP_GRADE_ID
+        AND e.EMP_CODE = #{NUMBER}
+        AND EXISTS (
+            SELECT
+                1
+            FROM
+                bd_user_common_duty ucd
+            WHERE
+                rd.ID = ucd.detail_id
+            AND ucd.emp_code = e.EMP_CODE
+        )
+    </select>
+     -->
+    <!--  根据用户获取已收藏助手 -->
+    <select id="findCommonDury" resultType="pd">
+		SELECT
+			rd.ID, rd.responsibility_id, rd.detail, ucd.detail_id
+		FROM
+			bd_responsibility_detail rd
+		LEFT JOIN
+			bd_position_responsibility pr on rd.responsibility_id = pr.ID
+		LEFT JOIN
+			bd_position_level pl on pr.GRADE_CODE = pl.GRADE_CODE
+		LEFT JOIN
+			bd_employee e on  pl.ID = e.EMP_GRADE_ID
+		LEFT JOIN
+			bd_user_common_duty ucd on rd.ID = ucd.detail_id AND ucd.emp_code = e.EMP_CODE
+		WHERE
+			e.EMP_CODE = #{NUMBER} and ucd.detail_id IS NOT NULL;
+	</select>
+
+    <!-- 收藏助手 -->
+    <insert id="addCollection">
+		insert into bd_user_common_duty(emp_code,detail_id) values (#{user},#{id})
+	</insert>
+
+    <select id="checkCollection" resultType="Integer">
+		select count(*) from bd_user_common_duty where emp_code = #{user} and detail_id = #{id}
+	</select>
+
+    <delete id="removeCollection">
+		delete from bd_user_common_duty where emp_code = #{user} and detail_id = #{id}
+	</delete>
+
+
+    <!-- 查询当前岗位下是否有某一职责 -->
+    <select id="findByRes" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_position_responsibility
+		WHERE GRADE_CODE = #{GRADE_CODE}
+		AND responsibility =#{responsibility}
+	</select>
+
+    <!-- 查询当前岗位职责下是否有某一明细 -->
+    <select id="findDetailByRes" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_responsibility_detail
+		WHERE responsibility_id = #{responsibility_id}
+		AND detail =#{detail}
+	</select>
+
+    <!-- 查询岗位下所有职责明细 -->
+    <select id="findAllDetailByEmpCode" parameterType="String" resultType="pd">
+		select detail.ID, detail.responsibility_id, detail.detail, detail.requirement, resp.responsibility,resp.GRADE_CODE,emp.EMP_CODE
+		from bd_responsibility_detail detail
+		left join bd_position_responsibility resp on resp.ID=detail.responsibility_id
+		left join bd_position_level pos on pos.GRADE_CODE=resp.GRADE_CODE
+		left join bd_employee emp on emp.EMP_GRADE_ID=pos.ID 
+		where emp.EMP_CODE=#{empCode}
+	</select>
+
+</mapper>

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="NodeLevelFrameMapper">
+    <resultMap id="BaseResultMap" type="NodeLevelFrame">
+        <id column="ID" property="id" jdbcType="INTEGER"/>
+        <result column="LEVEL_FRAME" property="levelFrame" jdbcType="VARCHAR"/>
+        <result column="DESCP" property="descp" jdbcType="VARCHAR"/>
+        <result column="ISDEL" property="isdel" jdbcType="VARCHAR"/>
+        <result column="CREATE_USER" property="createUser" jdbcType="VARCHAR"/>
+        <result column="CREATE_TIME" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="UPDATE_USER" property="updateUser" jdbcType="VARCHAR"/>
+        <result column="UPDATE_TIME" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="preparation1" property="preparation1" jdbcType="VARCHAR"/>
+        <result column="preparation2" property="preparation2" jdbcType="VARCHAR"/>
+        <result column="preparation3" property="preparation3" jdbcType="VARCHAR"/>
+        <result column="preparation4" property="preparation4" jdbcType="VARCHAR"/>
+        <result column="preparation5" property="preparation5" jdbcType="VARCHAR"/>
+        <result column="preparation6" property="preparation6" jdbcType="VARCHAR"/>
+        <result column="preparation7" property="preparation7" jdbcType="VARCHAR"/>
+        <result column="preparation8" property="preparation8" jdbcType="VARCHAR"/>
+        <result column="preparation9" property="preparation9" jdbcType="VARCHAR"/>
+        <result column="preparation10" property="preparation10" jdbcType="VARCHAR"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    ID, LEVEL_FRAME, DESCP, ISDEL, CREATE_USER, CREATE_TIME, UPDATE_USER, UPDATE_TIME, 
+    preparation1, preparation2, preparation3, preparation4, preparation5, preparation6, 
+    preparation7, preparation8, preparation9, preparation10
+  </sql>
+    <select id="selectByPrimaryKey" resultType="pd" parameterType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from bd_project_node_level_frame
+        where ID = #{id,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    update  bd_project_node_level_frame set ISDEL = 1
+    where ID = #{id,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="pd">
+    insert into bd_project_node_level_frame (ID, LEVEL_FRAME, DESCP, 
+      ISDEL, CREATE_USER, CREATE_TIME, 
+      UPDATE_USER, UPDATE_TIME, preparation1, 
+      preparation2, preparation3, preparation4, 
+      preparation5, preparation6, preparation7, 
+      preparation8, preparation9, preparation10
+      )
+    values (#{id,jdbcType=INTEGER}, #{levelFrame,jdbcType=VARCHAR}, #{descp,jdbcType=VARCHAR}, 
+      #{isdel,jdbcType=VARCHAR}, #{createUser,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}, 
+      #{updateUser,jdbcType=VARCHAR}, #{updateTime,jdbcType=TIMESTAMP}, #{preparation1,jdbcType=VARCHAR}, 
+      #{preparation2,jdbcType=VARCHAR}, #{preparation3,jdbcType=VARCHAR}, #{preparation4,jdbcType=VARCHAR}, 
+      #{preparation5,jdbcType=VARCHAR}, #{preparation6,jdbcType=VARCHAR}, #{preparation7,jdbcType=VARCHAR}, 
+      #{preparation8,jdbcType=VARCHAR}, #{preparation9,jdbcType=VARCHAR}, #{preparation10,jdbcType=VARCHAR}
+      )
+  </insert>
+    <insert id="insertSelective" parameterType="pd">
+        insert into bd_project_node_level_frame
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="levelFrame != null">
+                LEVEL_FRAME,
+            </if>
+            <if test="descp != null">
+                DESCP,
+            </if>
+            <if test="isdel != null">
+                ISDEL,
+            </if>
+            <if test="createUser != null">
+                CREATE_USER,
+            </if>
+            <if test="createTime != null">
+                CREATE_TIME,
+            </if>
+            <if test="updateUser != null">
+                UPDATE_USER,
+            </if>
+            <if test="updateTime != null">
+                UPDATE_TIME,
+            </if>
+            <if test="preparation1 != null">
+                preparation1,
+            </if>
+            <if test="preparation2 != null">
+                preparation2,
+            </if>
+            <if test="preparation3 != null">
+                preparation3,
+            </if>
+            <if test="preparation4 != null">
+                preparation4,
+            </if>
+            <if test="preparation5 != null">
+                preparation5,
+            </if>
+            <if test="preparation6 != null">
+                preparation6,
+            </if>
+            <if test="preparation7 != null">
+                preparation7,
+            </if>
+            <if test="preparation8 != null">
+                preparation8,
+            </if>
+            <if test="preparation9 != null">
+                preparation9,
+            </if>
+            <if test="preparation10 != null">
+                preparation10,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="levelFrame != null">
+                #{levelFrame,jdbcType=VARCHAR},
+            </if>
+            <if test="descp != null">
+                #{descp,jdbcType=VARCHAR},
+            </if>
+            <if test="isdel != null">
+                #{isdel,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                #{updateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                #{preparation6,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation7 != null">
+                #{preparation7,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation8 != null">
+                #{preparation8,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation9 != null">
+                #{preparation9,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation10 != null">
+                #{preparation10,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="pd">
+        update bd_project_node_level_frame
+        <set>
+            <if test="levelFrame != null">
+                LEVEL_FRAME = #{levelFrame,jdbcType=VARCHAR},
+            </if>
+            <if test="descp != null">
+                DESCP = #{descp,jdbcType=VARCHAR},
+            </if>
+            <if test="isdel != null">
+                ISDEL = #{isdel,jdbcType=VARCHAR},
+            </if>
+            <if test="createUser != null">
+                CREATE_USER = #{createUser,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateUser != null">
+                UPDATE_USER = #{updateUser,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null">
+                UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="preparation1 != null">
+                preparation1 = #{preparation1,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation2 != null">
+                preparation2 = #{preparation2,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                preparation3 = #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                preparation4 = #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                preparation5 = #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                preparation6 = #{preparation6,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation7 != null">
+                preparation7 = #{preparation7,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation8 != null">
+                preparation8 = #{preparation8,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation9 != null">
+                preparation9 = #{preparation9,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation10 != null">
+                preparation10 = #{preparation10,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="pd">
+    update bd_project_node_level_frame
+    set LEVEL_FRAME = #{levelFrame,jdbcType=VARCHAR},
+      DESCP = #{descp,jdbcType=VARCHAR},
+      ISDEL = #{isdel,jdbcType=VARCHAR},
+      CREATE_USER = #{createUser,jdbcType=VARCHAR},
+      CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      UPDATE_USER = #{updateUser,jdbcType=VARCHAR},
+      UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+      preparation1 = #{preparation1,jdbcType=VARCHAR},
+      preparation2 = #{preparation2,jdbcType=VARCHAR},
+      preparation3 = #{preparation3,jdbcType=VARCHAR},
+      preparation4 = #{preparation4,jdbcType=VARCHAR},
+      preparation5 = #{preparation5,jdbcType=VARCHAR},
+      preparation6 = #{preparation6,jdbcType=VARCHAR},
+      preparation7 = #{preparation7,jdbcType=VARCHAR},
+      preparation8 = #{preparation8,jdbcType=VARCHAR},
+      preparation9 = #{preparation9,jdbcType=VARCHAR},
+      preparation10 = #{preparation10,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=INTEGER}
+  </update>
+
+    <!-- 列表(全部) -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        <include refid="Base_Column_List"/>
+        from bd_project_node_level_frame
+        where ISDEL = 0
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            LEVEL_FRAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            DESCP LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by LEVEL_FRAME asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="findLevelFrameRel" resultType="pd" parameterType="pd">
+    SELECT
+		t1.ID,
+		t1.PROJECT_NODE_LEVEL_ID,
+		t1. LEVEL,
+		t2.NODE_LEVEL,
+		t2.ROLEIDS
+	FROM
+		bd_level_frame_rel t1
+	LEFT JOIN bd_project_node_level t2 ON t1.PROJECT_NODE_LEVEL_ID = t2.ID
+	WHERE
+		t1.PROJECT_NODE_LEVEL_FRAME_ID = #{ID,jdbcType=INTEGER}
+	AND t2.ISDEL = 0
+	order by t1.LEVEL
+  </select>
+
+    <select id="findAllNodeList" resultType="pd">
+    SELECT
+		ID,NODE_LEVEL,ROLEIDS
+	FROM
+		bd_project_node_level 
+	WHERE
+		ISDEL = 0
+  </select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAllRef" parameterType="String">
+        delete from bd_level_frame_rel
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--批量新增-->
+    <insert id="batchAdd" parameterType="list" flushCache="false">
+        INSERT INTO bd_level_frame_rel (
+        PROJECT_NODE_LEVEL_ID,PROJECT_NODE_LEVEL_FRAME_ID,LEVEL
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (${item.projectNodeLevel},
+            ${item.projectNodeLevelFrameId},
+            ${item.level}
+            )
+        </foreach>
+    </insert>
+
+    <!--批量更新-->
+    <update id="batchUpdate" parameterType="pd">
+        UPDATE bd_level_frame_rel
+        SET
+            PROJECT_NODE_LEVEL_ID = #{projectNodeLevel},
+            PROJECT_NODE_LEVEL_FRAME_ID = #{projectNodeLevelFrameId},
+            LEVEL = #{level}
+        WHERE
+            ID = ${ID}
+    </update>
+</mapper>

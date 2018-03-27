@@ -1,0 +1,395 @@
+/*标题开始*/
+h2 {
+    background-color: #fff !important;
+}
+
+h2.bt {
+    padding-left: 15px;
+    line-height: 44px;
+    font-size: 16px;
+    color: #00A5E3;
+    background-color: #fff;
+    top: 0;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    z-index: 10;
+}
+
+/*标题结束*/
+
+/*文本域开始*/
+#introduction_textarea {
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.i3618-introduce {
+    height: 98px;
+    color: #bebebe;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.i3618-introduce textarea {
+    resize: none;
+    height: 97px;
+    padding-left: 0px;
+    padding-top: 10px;
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.i3618-introduce #text-tip {
+    position: relative;
+    height: 0px;
+    width: 100%;
+    top: -35px;
+    text-align: right;
+    font-size: 10px;
+    line-height: 0;
+    color: rgb(190, 190, 190);
+    background: rgb(255, 255, 255);
+}
+
+#text-tip span {
+    font-size: 13px;
+}
+
+/*文本域结束*/
+
+/*单选项对号样式开始*/
+.ui-tick-choosecheck label.ui-radio.tick-choosecheck {
+    display: inline-block;
+    position: absolute;
+    top: 10%;
+    right: 1%;
+}
+
+.ui-tick-choosecheck .ui-radio input:before {
+    border: none !important;
+}
+
+.ui-tick-choosecheck .ui-radio input:checked:after {
+    background: url(http://i.gtimg.cn/vipstyle/frozenui/1.2.0/img/icon.png?_bid=306) no-repeat -99px 0;
+    -webkit-background-size: 150px auto;
+    content: "";
+    display: block;
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    margin-top: -7px;
+}
+
+/*单选项对号样式结束*/
+
+/*其他样式输入框开始*/
+.input-append {
+    display: inline-block;
+    font-size: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    vertical-align: middle;
+    margin: 10px;
+}
+
+.input-append input {
+    font-size: 14px;
+    background-color: #ffffff;
+    float: left;
+    border: 1px solid #e0e0e0;
+    height: 20px;
+    padding: 5px 6px;
+    line-height: 20px;
+    color: #252525;
+    vertical-align: middle;
+    border-radius: 4px 0 0 4px;
+}
+
+.input-append input:focus {
+    border-color: rgba(82, 168, 236, 0.8);
+    outline: 0;
+}
+
+.input-append .btn {
+    margin-left: -1px;
+    float: left;
+    display: inline-block;
+    padding: 5px 12px;
+    margin-bottom: 0;
+    margin-right: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: #00a5e0;
+    text-align: center;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.75);
+    vertical-align: middle;
+    cursor: pointer;
+    border-radius: 0 4px 4px 0;
+    border: 1px solid #e0e0e0;
+}
+
+.btnimg img {
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    vertical-align: middle;
+    padding-right: 5px;
+}
+
+/******三角搜索框******/
+.form-wrapper {
+    width: 375px;
+    overflow: hidden;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.form-wrapper input {
+    width: 250px;
+    height: 20px;
+    padding: 10px 5px;
+    float: left;
+    font: bold 15px 'lucida sans', 'trebuchet MS', 'Tahoma';
+    border: 0;
+    background: #ebebeb;
+    border-radius: 3px 0 0 3px;
+}
+
+.form-wrapper button {
+    overflow: visible;
+    position: relative;
+    float: left;
+    border: 0;
+    padding: 0;
+    margin-left: 0;
+    cursor: pointer;
+    height: 40px;
+    width: 110px;
+    font: bold 15px/40px 'lucida sans', 'trebuchet MS', 'Tahoma';
+    color: #fff;
+    text-transform: uppercase;
+    background: #d83c3c;
+    border-radius: 0 3px 3px 0;
+}
+
+.form-wrapper button:before {
+    content: '';
+    position: absolute;
+    border-width: 8px 8px 8px 0;
+    border-style: solid solid solid none;
+    border-color: transparent #d83c3c transparent;
+    top: 12px;
+    left: -6px;
+}
+
+/*带图标的搜索框*/
+.ui-custom-searchbar {
+    border: #e0e0e0 1px solid;
+    margin: 10px;
+    border-radius: 4px;
+}
+
+.pb-left {
+    position: absolute;
+    top: 3px;
+    left: 10px;
+}
+
+.pb-right {
+    position: absolute;
+    top: 3px;
+    padding-right: 15px;
+    right: 10px;
+}
+
+.searchBar-right input[type="text"] {
+    padding-left: 10px !important;
+}
+
+.pb-left img {
+    height: 16px;
+}
+
+.ui-custom-searchbar input:not([type="checkbox"]) {
+    padding-left: 40px;
+}
+
+.ui-custom-searchbar-word input[type="text"] {
+    padding-left: 0px;
+}
+
+.ui-custom-fixedwidth {
+    height: 30px;
+    line-height: 30px;
+    width: 180px;
+}
+
+/*其他样式输入框结束*/
+/*点击消失开始*/
+.ui-form-item.ui-form-item-low {
+    height: 30px;
+    line-height: 30px;
+}
+
+/*点击消失结束*/
+
+/*下拉框*/
+.ui-custom-select {
+    width: 200px;
+}
+
+.ui-form-item-select {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.ui-form-item-select select {
+    width: 100%;
+    margin: 0;
+    height: 28px;
+    line-height: normal;
+    line-height: 28px \9;
+    color: #252525;
+    padding: 0 10px;
+}
+
+/*只读形式*/
+.ui-form-item.ui-form-item-low.readonly {
+    background-color: #ebebeb;
+    color: #252525;
+}
+
+/*日历*/
+.ui-form-item-date {
+    padding-right: 10px;
+}
+
+.date_pic_css {
+    background: url(../images/icon_31_bb.png) no-repeat right -5px !important;
+    cursor: pointer;
+}
+
+/*日期*/
+.ui-custom-searchbar.ui-custom-searchbar-date {
+    width: 200px;
+    display: inline-block;
+}
+
+input.date_pic_css {
+    padding-left: 0 !important;
+}
+
+/*定宽密码框*/
+.ui-custom-searchbar input[type="password"] {
+    padding-left: 0 !important;
+}
+
+/*普通样式的单选项按钮*/
+.radio_wj {
+    font-size: 0;
+}
+
+.wrap_content_wj {
+    display: inline-block;
+    padding-left: 15px;
+    vertical-align: top;
+    font-size: 12px;
+}
+
+.radio_wj .element_radio_wj {
+    display: inline-block;
+    padding-top: 3px;
+    font-size: 14px;
+    line-height: 21px;
+    height: 21px;
+    vertical-align: middle;
+}
+
+.radio_wj .text_radio_wj {
+    display: inline-block;
+    height: 21px;
+    line-height: 21px;
+    padding: 3px 20px 3px 5px;
+    vertical-align: auto;
+    font-size: 14px;
+    color: #252525;
+}
+
+.element_checkbox_wj input {
+    vertical-align: middle;
+}
+
+.text_checkbox_wj {
+    display: inline-block;
+    height: 21px;
+    line-height: 21px;
+    padding: 3px 20px 3px 5px;
+    vertical-align: auto;
+    font-size: 14px;
+    color: #252525;
+}
+
+/*必填项*/
+.requiredbox {
+    overflow: hidden;
+}
+
+.required {
+    float: left;
+    height: 30px;
+    line-height: 30px;
+    margin-top: 12px;
+    margin-bottom: 10px;
+    padding-left: 15px;
+    vertical-align: middle;
+}
+
+.ui-custom-searchbar-required {
+    float: left;
+}
+
+.ui-custom-searchbar-required input:not([type="checkbox"]) {
+    padding-left: 0;
+}
+
+.required-img {
+    float: left;
+    line-height: 30px;
+    height: 30px;
+    margin-top: 10px;
+    padding-left: 6px;
+}
+
+/*表格*/
+.goodslist {
+    padding: 5px;
+    background-color: #c0d8f0;
+}
+
+.goodslist tr {
+    background-color: #fff;
+}
+
+.goodslist table tr td {
+    padding: 8px 5px;
+    border: 1px solid #005aaa;
+}
+
+.td-xz {
+    color: #286228;
+}
+
+.td-sh {
+    color: #da9e1a;
+}
+
+.td-fh {
+    color: #be1414;
+}
+
+.td-link a {
+    text-decoration: underline;
+    color: #0b0a70;
+}

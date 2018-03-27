@@ -1,0 +1,430 @@
+/*文字颜色开始*/
+.ui-list-info {
+    color: #252525;
+}
+
+/*文字颜色结束*/
+
+/*标题开始*/
+h2.bt {
+    padding-left: 15px;
+    line-height: 44px;
+    font-size: 16px;
+    color: #00A5E3;
+    top: 0;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+/*标题结束*/
+
+/*右侧标题位置开始*/
+.ui-list-action {
+    font-size: 13px;
+    line-height: 22px;
+    color: #888;
+}
+
+/*右侧标题位置结束*/
+
+/*带右箭头纯文字列表开始*/
+.ui-list-action.ui-list-info-arrow {
+    right: 35px;
+}
+
+/*带右箭头纯文字列表结束*/
+
+/*左侧无空开始*/
+.ui-list-top-end > li {
+    margin-left: 0;
+}
+
+.ui-list-top-end div:first-child, .ui-list-top-end .ui-nowrap, .ui-list-top-end span:first-child, .ui-list-top-end label, .ui-list-top-end i3618-name {
+    padding-left: 15px;
+}
+
+.ui-list-top-end .ui-list-img {
+    padding-left: 0px !important;
+    margin-left: 15px;
+}
+
+.ui-list-top-end li .i3618-name {
+    padding-left: 15px;
+}
+
+.ui-list-top-end .ui-list-info .ui-nowrap, .ui-list-top-end li .ui-list-img span, .ui-list-top-end li .ui-tag-top span, .ui-list-top-end li div .complexlistl {
+    padding-left: 0px !important;
+}
+
+/*左侧无空结束*/
+
+/*头像位置开始*/
+.ui-list-img {
+    width: 64px;
+    height: 64px;
+    margin: 10px 10px 10px 0px;
+    border-radius: 7px;
+    border: 1px solid #b2b2b2;
+    overflow: hidden;
+    position: relative;
+}
+
+/*头像位置结束*/
+
+/* 内容页说明开始*/
+.ui-nowrap-span {
+    font-size: 13px;
+    line-height: 22px;
+    color: #808080;
+    vertical-align: middle;
+    padding-left: 5px;
+    padding-top: 2px;
+}
+
+/* 内容页说明结束*/
+
+/*左侧头像右侧箭头开始*/
+.ui-list-img.ui-list-imgr {
+    margin-right: 35px;
+}
+
+/*左侧头像右侧箭头结束*/
+
+/*单选对号开始*/
+.ui-radio input:checked:after {
+    background: url(http://i.gtimg.cn/vipstyle/frozenui/1.2.0/img/icon.png?_bid=306) no-repeat -99px 0;
+    -webkit-background-size: 150px auto;
+    content: "";
+    display: block;
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    margin-top: -7px;
+}
+
+.ui-radio input:before {
+    border: none !important;
+}
+
+label.ui-radio.tick-choosecheck {
+    display: inline-block;
+    position: absolute;
+    top: 10%;
+    right: 1%
+}
+
+.tick-choosecheck .ui-radio input:checked:after {
+    background: url(http://i.gtimg.cn/vipstyle/frozenui/1.2.0/img/icon.png?_bid=306) no-repeat -99px 0;
+    -webkit-background-size: 150px auto;
+    content: "";
+    display: block;
+    width: 15px;
+    height: 15px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    margin-top: -7px;
+}
+
+/*单选对号结束*/
+
+/*11复杂列表*/
+
+.complexlist ul {
+    width: 100%;
+    margin: 10px 0;
+}
+
+.complexlistbox {
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+}
+
+.complexlistl {
+    position: relative;
+    float: left;
+    height: 32px;
+    width: 32px;
+    z-index: 1;
+    background-size: 100%;
+    border: 1px solid rgba(0, 0, 0.1);
+    overflow: hidden;
+}
+
+.complexlistl img {
+    height: 32px;
+    width: 32px;
+    z-index: 1;
+    background-size: 100%;
+    overflow: hidden;
+}
+
+.complexlistr-in {
+    margin: 0 0 0 41px;
+    height: auto;
+    overflow: hidden;
+}
+
+.complexlistr-top {
+    height: 18px;
+    padding: 0 8px 6px 0;
+    line-height: 18px;
+}
+
+.complexlistr-topic {
+    font-size: 13px;
+    line-height: 18px;
+    float: left;
+}
+
+.complexlistr-time {
+    font-size: 12px;
+    line-height: 18px;
+    color: #8c8c8c;
+    float: right;
+}
+
+.complexlistr-bottom {
+    height: auto;
+    overflow: hidden;
+}
+
+.complexlistr-bottoml {
+    float: left;
+    position: relative;
+    background-size: 100%;
+    z-index: 1;
+    border: 1px solid #d7d6d6;
+    height: 60px;
+    width: 60px;
+    overflow: hidden;
+    text-align: center;
+    margin-right: 7px;
+}
+
+.defaultsizeimg {
+    height: 27px;
+    width: 34px;
+    vertical-align: middle;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -17px;
+    margin-top: -13px;
+}
+
+.complexlistr-cont {
+    font-size: 14px;
+    line-height: 17px;
+    color: #000;
+}
+
+.complexlistr-director {
+    font-size: 12px;
+    line-height: 18px;
+    color: #8c8c8c;
+    padding-top: 6px;
+    padding-right: 8px;
+}
+
+.complexlistr-bottomr-in {
+    margin: 0 0 0 70px;
+    height: auto;
+    overflow: hidden;
+}
+
+.shijian {
+    font-size: 12px;
+    line-height: 18px;
+    color: #8c8c8c;
+    float: right;
+    padding-right: 10px;
+}
+
+.complexlistr-director-short {
+    font-size: 12px;
+    line-height: 18px;
+    color: #8c8c8c;
+    padding-top: 6px;
+    width: 85%;
+}
+
+.complexlistr-cont span img {
+    width: 14px;
+    height: 14px;
+}
+
+.complexlistr-director span img {
+    width: 14px;
+    height: 14px;
+}
+
+.complexlistr-director-right {
+    font-size: 12px;
+    line-height: 18px;
+    color: #8c8c8c;
+    float: right;
+}
+
+.complexlistr-director-right span img {
+    width: 14px;
+    height: 14px;
+}
+
+/*角标开始*/
+.ui-tag-top {
+    background: url(../images/icon-top.png) no-repeat -99px 0;
+}
+
+.superscript {
+    vertical-align: super;
+    font-size: 12px;
+    color: #8c8c8c;
+}
+
+.superscript img {
+    width: 10px;
+    height: 12px;
+}
+
+/*角标开始*/
+
+/*文本域开始*/
+.i3618-introduce {
+    height: 98px;
+    color: #bebebe;
+    font-size: 14px;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+#introduction_textarea {
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.i3618-introduce textarea {
+    resize: none;
+    height: 97px;
+    padding-left: 0px;
+    padding-top: 10px;
+    font-size: 14px;
+    line-height: 22px;
+}
+
+.i3618-introduce #text-tip {
+    position: relative;
+    height: 0px;
+    width: 100%;
+    top: -35px;
+    text-align: right;
+    font-size: 10px;
+    line-height: 0;
+    color: rgb(190, 190, 190);
+    background: rgb(255, 255, 255);
+}
+
+#text-tip span {
+    font-size: 13px;
+}
+
+/*文本域结束*/
+
+/*带小图标复杂列表加箭头开始*/
+.ui-list-activity {
+    background-color: #f8f9fa;
+    width: 100%;
+    border: none;
+}
+
+.li-list-activity {
+    margin-left: 0 !important;
+    margin-bottom: 5px;
+    background-color: #fff;
+    border: none;
+    padding-left: 0 !important;
+}
+
+.list > li::before {
+    border: none !important;
+}
+
+.ui-list-activity li.li-list-activity .ui-list-info p span {
+    display: inline-block;
+    padding-left: 18px;
+    background: url(../images/icon-outline-s-01.png) 0 center no-repeat;
+    background-size: 12px 12px;
+}
+
+.ui-list-activity li.li-list-activity .ui-list-info p span.info-withicon-02 {
+    background-image: url(../images/icon-outline-s-02.png);
+}
+
+.ui-list-activity li.li-list-activity .ui-list-info p span.info-withicon-03 {
+    background-image: url(../images/icon-outline-s-03.png);
+}
+
+.ui-list-activity li.li-list-activity .ui-list-info p span {
+    display: inline-block;
+    padding-left: 18px;
+    background: url(../images/icon-outline-s-01.png) 0 center no-repeat;
+    background-size: 12px 12px;
+}
+
+.fl-r {
+    float: right;
+}
+
+.ui-list-activity li.li-list-activity .ui-list-info h4 em {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    line-height: 15px;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 12px;
+    background-color: #fa7d3a;
+    color: #fff;
+    overflow: hidden;
+}
+
+.li-list-activity .photo-activity {
+    width: 85px;
+    height: 115px;
+    margin: 0 10px 0 5px;
+    border: none;
+    border-radius: 0;
+}
+
+.ui-list-img span {
+    width: 100%;
+    height: 100%;
+    -webkit-background-size: 100% 100%;
+    display: block;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1;
+}
+
+/*带小图标复杂列表加箭头结束*/
+
+/*标题bth4开始*/
+.bth4 {
+    padding-left: 15px;
+    line-height: 22px;
+    font-size: 13px;
+    color: #888;
+    top: 0;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    z-index: 10;
+}
+
+/*标题bth4结束*/

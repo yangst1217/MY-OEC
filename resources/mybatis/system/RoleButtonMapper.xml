@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="RoleButtonMapper">
+    <resultMap id="BaseResultMap" type="RoleButton">
+        <id column="GX_ID" jdbcType="INTEGER" property="gxId"/>
+        <result column="ROLE_ID" jdbcType="VARCHAR" property="roleId"/>
+        <result column="MENU_ID" jdbcType="INTEGER" property="menuId"/>
+        <result column="BUTTONS_ID" jdbcType="VARCHAR" property="buttonsId"/>
+        <result column="ANQX_CODE" jdbcType="VARCHAR" property="anqxCode"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+    GX_ID, ROLE_ID, MENU_ID, BUTTONS_ID, ANQX_CODE
+  </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from sys_role_menu_buttons
+        where GX_ID = #{gxId,jdbcType=INTEGER}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from sys_role_menu_buttons
+    where GX_ID = #{gxId,jdbcType=INTEGER}
+  </delete>
+    <delete id="delete" parameterType="pd">
+    delete from sys_role_menu_buttons
+    where ROLE_ID = #{roleId,jdbcType=VARCHAR} AND MENU_ID = #{menuId,jdbcType=INTEGER}
+  </delete>
+    <insert id="insert" parameterType="pd">
+    insert into sys_role_menu_buttons (GX_ID, ROLE_ID, MENU_ID, 
+      BUTTONS_ID, ANQX_CODE)
+    values (#{gxId,jdbcType=INTEGER}, #{roleId,jdbcType=VARCHAR}, #{menuId,jdbcType=INTEGER}, 
+      #{buttonsId,jdbcType=VARCHAR}, #{anqxCode,jdbcType=VARCHAR})
+  </insert>
+    <insert id="insertSelective" parameterType="RoleButton">
+        insert into sys_role_menu_buttons
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="gxId != null">
+                GX_ID,
+            </if>
+            <if test="roleId != null">
+                ROLE_ID,
+            </if>
+            <if test="menuId != null">
+                MENU_ID,
+            </if>
+            <if test="buttonsId != null">
+                BUTTONS_ID,
+            </if>
+            <if test="anqxCode != null">
+                ANQX_CODE,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="gxId != null">
+                #{gxId,jdbcType=INTEGER},
+            </if>
+            <if test="roleId != null">
+                #{roleId,jdbcType=VARCHAR},
+            </if>
+            <if test="menuId != null">
+                #{menuId,jdbcType=INTEGER},
+            </if>
+            <if test="buttonsId != null">
+                #{buttonsId,jdbcType=VARCHAR},
+            </if>
+            <if test="anqxCode != null">
+                #{anqxCode,jdbcType=VARCHAR},
+            </if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="RoleButton">
+        update sys_role_menu_buttons
+        <set>
+            <if test="roleId != null">
+                ROLE_ID = #{roleId,jdbcType=VARCHAR},
+            </if>
+            <if test="menuId != null">
+                MENU_ID = #{menuId,jdbcType=INTEGER},
+            </if>
+            <if test="buttonsId != null">
+                BUTTONS_ID = #{buttonsId,jdbcType=VARCHAR},
+            </if>
+            <if test="anqxCode != null">
+                ANQX_CODE = #{anqxCode,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where GX_ID = #{gxId,jdbcType=INTEGER}
+    </update>
+    <update id="updateByPrimaryKey" parameterType="RoleButton">
+    update sys_role_menu_buttons
+    set ROLE_ID = #{roleId,jdbcType=VARCHAR},
+      MENU_ID = #{menuId,jdbcType=INTEGER},
+      BUTTONS_ID = #{buttonsId,jdbcType=VARCHAR},
+      ANQX_CODE = #{anqxCode,jdbcType=VARCHAR}
+    where GX_ID = #{gxId,jdbcType=INTEGER}
+  </update>
+</mapper>
+ 

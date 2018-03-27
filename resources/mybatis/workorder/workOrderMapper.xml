@@ -1,0 +1,893 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="workOrderMapper">
+    <resultMap id="BaseResultMap" type="dailyTaskInfo">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="task_code" property="taskCode" jdbcType="VARCHAR"/>
+        <result column="task_name" property="taskName" jdbcType="VARCHAR"/>
+        <result column="task_type_id" property="taskTypeId" jdbcType="VARCHAR"/>
+        <result column="task_type_name" property="taskTypeName" jdbcType="VARCHAR"/>
+        <result column="from_crm" property="fromCrm" jdbcType="VARCHAR"/>
+        <result column="task_in_order_id" property="taskInOrderId" jdbcType="VARCHAR"/>
+        <result column="task_in_order_name" property="taskInOrderName" jdbcType="VARCHAR"/>
+        <result column="task_to_who_id" property="taskToWhoId" jdbcType="VARCHAR"/>
+        <result column="task_comment" property="taskComment" jdbcType="VARCHAR"/>
+        <result column="task_start_date" property="taskStartDate" jdbcType="DATE"/>
+        <result column="task_end_date" property="taskEndDate" jdbcType="DATE"/>
+        <result column="complete_standard" property="completeStandard" jdbcType="VARCHAR"/>
+        <result column="task_score" property="taskScore" jdbcType="VARCHAR"/>
+        <result column="need_check" property="needCheck" jdbcType="VARCHAR"/>
+        <result column="check_person" property="checkPerson" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="enable" property="enable" jdbcType="VARCHAR"/>
+        <result column="create_user" property="createUser" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="last_update_user" property="lastUpdateUser" jdbcType="VARCHAR"/>
+        <result column="last_update_time" property="lastUpdateTime" jdbcType="TIMESTAMP"/>
+        <result column="preparation1" property="preparation1" jdbcType="VARCHAR"/>
+        <result column="preparation2" property="preparation2" jdbcType="VARCHAR"/>
+        <result column="preparation3" property="preparation3" jdbcType="VARCHAR"/>
+        <result column="preparation4" property="preparation4" jdbcType="VARCHAR"/>
+        <result column="preparation5" property="preparation5" jdbcType="VARCHAR"/>
+        <result column="preparation6" property="preparation6" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="dailyworklist">
+        ID,                     <!-- id -->
+        WORKLIST_CODE,          <!-- 任务编号 -->
+        WORKLIST_TIME,          <!-- 日期 -->
+        DEPT_ID,                <!-- 责任部门ID -->
+        DEPT_NAME,              <!-- 责任部门 -->
+        EMP_ID,                 <!-- 责任人ID -->
+        EMP_NAME,               <!-- 责任人 -->
+        STATUS,                 <!-- 状态 -->
+        CREATE_USER,            <!-- 创建人 -->
+        CREATE_TIME,            <!-- 创建时间 -->
+        LAST_UPDATE_USER,       <!-- 最后更新人 -->
+        LAST_UPDATE_TIME,       <!-- 最后更新时间 -->
+        PREPARATION1,
+        PREPARATION2,
+        PREPARATION3,
+        PREPARATION4,
+        PREPARATION5,
+        PREPARATION6
+    </sql>
+
+
+    <select id="FindDailyWorkById" resultType="pd" parameterType="pd">
+        select
+        <include refid="dailyworklist"/>
+        from daily_worklist
+        where ID = #{id}
+    </select>
+
+    <select id="dailyWorklistPage" resultType="pd" parameterType="page">
+        select
+        t.ID,                     <!-- id -->
+        t.WORKLIST_CODE,          <!-- 任务编号 -->
+        t.WORKLIST_TIME,          <!-- 日期 -->
+        t.DEPT_ID,                <!-- 责任部门ID -->
+        t.DEPT_NAME,              <!-- 责任部门 -->
+        t.EMP_ID,                 <!-- 责任人ID -->
+        t.EMP_NAME,               <!-- 责任人 -->
+        t.STATUS,                 <!-- 状态 -->
+        t.CREATE_USER,            <!-- 创建人 -->
+        t.CREATE_TIME,            <!-- 创建时间 -->
+        t.LAST_UPDATE_USER,       <!-- 最后更新人 -->
+        t.LAST_UPDATE_TIME,       <!-- 最后更新时间 -->
+        t.PREPARATION1,
+        t.PREPARATION2,
+        t.PREPARATION3,
+        t.PREPARATION4,
+        t.PREPARATION5,
+        t.PREPARATION6
+        from daily_worklist t,sys_user s
+        where 1 = 1
+
+        <if test="null != pd.WORKLIST_TIME and '' != pd.WORKLIST_TIME">
+            AND t.WORKLIST_TIME = #{pd.WORKLIST_TIME}
+        </if>
+        <if test="null != pd.WORKLIST_CODE and '' != pd.WORKLIST_CODE">
+            AND t.WORKLIST_CODE like "%"#{pd.WORKLIST_CODE}"%"
+        </if>
+        <if test="null != pd.STATUS and '' != pd.STATUS">
+            AND t.STATUS = #{pd.STATUS}
+        </if>
+        and t.CREATE_USER = s.USERNAME
+        AND t.STATUS != 'YW_CG'
+        and ( s.DEPT_ID IN
+        (
+        select
+        d.DEPT_ID
+        from sys_user s, sys_datarole d
+        where 1 = 1
+        AND s.USERNAME = #{pd.USERNAME}
+        and s.USER_ID = d.USER_ID)
+        or s.DEPT_ID = #{pd.DEPT_ID}
+        )
+
+        order by t.CREATE_TIME desc
+
+    </select>
+
+
+    <sql id="dailytaskinformation">
+        ID,                        <!-- ID -->
+        TASK_CODE,                 <!-- 任务编号 -->
+        TASK_TYPE,                 <!-- 任务类型 -->
+        WORKLIST_ID,               <!-- 所属工作清单ID -->
+        TASK_NAME,                 <!-- 任务名称 -->
+        S161_TARGET_ID,            <!-- 关联小161目标 -->
+        S161_PATH_ID,              <!-- 关联小161路径 -->
+        START_TIME,                <!-- 开始时间 -->
+        END_TIME,                  <!-- 结束时间 -->
+        TASK_CONTECT,              <!-- 任务描述 -->
+        COMPLETION,                <!-- 完成标准 -->
+        NEED_CHECK,                <!-- 是否评价 -->
+        CHECK_PERSON,              <!-- 评价人ID -->
+        FINISH_PERCENT,            <!-- 工作完成度 -->
+        DEPT_ID,                   <!-- 责任部门ID -->
+        DEPT_NAME,                 <!-- 责任部门 -->
+        MAIN_EMP_ID,               <!-- 责任人ID -->
+        MAIN_EMP_NAME,             <!-- 责任人 -->
+        KPI_INDEX_ID,              <!-- 关联KPI指标 -->
+        OTHER_EMP_ID,              <!-- 协作人ID -->
+        OTHER_EMP_NAME,            <!-- 协作人 -->
+        STATUS,                    <!-- 状态 -->
+        CREATE_USER,               <!-- 创建人 -->
+        CREATE_TIME,               <!-- 创建时间 -->
+        LAST_UPDATE_USER,          <!-- 最后更新人 -->
+        LAST_UPDATE_TIME,          <!-- 最后更新时间 -->
+        PREPARATION1,
+        PREPARATION2,
+        PREPARATION3,
+        PREPARATION4,
+        PREPARATION5,
+        PREPARATION6
+    </sql>
+
+    <select id="FinddailytaskinformationById" resultType="pd" parameterType="pd">
+        select
+        <include refid="dailytaskinformation"/>
+        from daily_task_information
+        where ID = #{id}
+    </select>
+
+
+    <select id="FindChkId" resultType="pd" parameterType="pd">
+        select
+        WORKLIST_ID,               <!-- 所属工作清单ID -->
+        S161_TARGET_ID,            <!-- 关联小161目标 -->
+        S161_PATH_ID,              <!-- 关联小161路径 -->
+        KPI_INDEX_ID KPIINDEXID,             <!-- 关联KPI指标 -->
+        MAIN_EMP_NAME            <!-- 责任人 -->
+
+
+        from daily_task_information
+        where ID = #{id}
+    </select>
+
+
+    <select id="FindDailyIdOne" resultType="pd" parameterType="pd">
+        select
+        ID,                        <!-- ID -->
+        TASK_CODE,                 <!-- 任务编号 -->
+        TASK_TYPE,                 <!-- 任务类型 -->
+        WORKLIST_ID,               <!-- 所属工作清单ID -->
+        TASK_NAME,                 <!-- 任务名称 -->
+        S161_TARGET_ID,            <!-- 关联小161目标 -->
+        S161_PATH_ID,              <!-- 关联小161路径 -->
+        START_TIME,                <!-- 开始时间 -->
+        END_TIME,                  <!-- 结束时间 -->
+        TASK_CONTECT,              <!-- 任务描述 -->
+        COMPLETION,                <!-- 完成标准 -->
+        NEED_CHECK,                <!-- 是否评价 -->
+        CHECK_PERSON,              <!-- 评价人ID -->
+        FINISH_PERCENT,            <!-- 工作完成度 -->
+        DEPT_ID,                   <!-- 责任部门ID -->
+        DEPT_NAME,                 <!-- 责任部门 -->
+        MAIN_EMP_ID,               <!-- 责任人ID -->
+        MAIN_EMP_NAME,             <!-- 责任人 -->
+        KPI_INDEX_ID,              <!-- 关联KPI指标 -->
+        OTHER_EMP_ID,              <!-- 协作人ID -->
+        OTHER_EMP_NAME,            <!-- 协作人 -->
+        STATUS,                    <!-- 状态 -->
+        CREATE_USER,               <!-- 创建人 -->
+        CREATE_TIME,               <!-- 创建时间 -->
+        LAST_UPDATE_USER,          <!-- 最后更新人 -->
+        LAST_UPDATE_TIME,          <!-- 最后更新时间 -->
+        PREPARATION1,
+        PREPARATION2,
+        PREPARATION3,
+        PREPARATION4,
+        PREPARATION5,
+        PREPARATION6
+        from daily_task_information
+        where WORKLIST_ID = #{WORKLIST_ID}
+    </select>
+
+
+    <select id="dailytaskinformationlistPage" resultType="pd" parameterType="page">
+        select
+        task.ID,
+        task.TASK_CODE,
+        task.TASK_TYPE,
+        task.WORKLIST_ID,
+        task.TASK_NAME,
+        task.START_TIME,
+        task.END_TIME,
+        task.TASK_CONTECT,
+        task.COMPLETION,
+        task.NEED_CHECK,
+        task.CHECK_PERSON,
+        task.FINISH_PERCENT,
+        task.DEPT_ID,
+        task.DEPT_NAME,
+        task.MAIN_EMP_ID,
+        task.MAIN_EMP_NAME,
+        task.KPI_INDEX_ID,
+        task.OTHER_EMP_ID,
+        task.OTHER_EMP_NAME,
+        task.STATUS,
+        task.CREATE_USER,
+        DATE_FORMAT(task.CREATE_TIME,'%Y-%m-%d %T') AS CREATE_TIME,
+        task.LAST_UPDATE_USER,
+        task.LAST_UPDATE_TIME,
+        task.PREPARATION1,
+        task.PREPARATION2,
+        task.PREPARATION3,
+        task.PREPARATION4,
+        task.PREPARATION5,
+        task.PREPARATION6,
+        sys_user.NAME CREATE_NAME
+        from daily_task_information task
+        left join sys_user on sys_user.USERNAME=task.CREATE_USER
+        where task.CREATE_USER = #{pd.createUser}
+
+        <if test="pd.id!=null and pd.id != ''">
+            and task.ID = #{pd.id}
+        </if>
+
+        <if test="pd.status !=null and pd.status != ''">
+            and task.STATUS = #{pd.status}
+        </if>
+
+        <if test="pd.year !=null and pd.year != ''">
+            and task.END_TIME like CONCAT('%','${pd.year}','%' )
+        </if>
+
+        <if test="pd.KEYW != null and pd.KEYW != ''">
+            and
+            (
+            task.TASK_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            task.TASK_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by task.START_TIME desc, task.END_TIME desc
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 根据负责人所在部门领导的ID获得临时任务审核列表-->
+    <select id="dailytaskinformationChecklistPage" resultType="pd" parameterType="page">
+        SELECT
+        a.ID,
+        a.TASK_CODE,
+        a.TASK_TYPE,
+        a.WORKLIST_ID,
+        a.TASK_NAME,
+        a.S161_TARGET_ID,
+        a.S161_PATH_ID,
+        DATE_FORMAT(a.START_TIME, '%Y-%m-%d %T') START_TIME,
+        DATE_FORMAT(a.END_TIME, '%Y-%m-%d %T') END_TIME,
+        a.TASK_CONTECT,
+        a.COMPLETION,
+        a.NEED_CHECK,
+        a.CHECK_PERSON,
+        a.FINISH_PERCENT,
+        a.DEPT_ID,
+        a.DEPT_NAME,
+        a.MAIN_EMP_ID,
+        a.MAIN_EMP_NAME,
+        a.KPI_INDEX_ID,
+        a.OTHER_EMP_ID,
+        a.OTHER_EMP_NAME,
+        a.STATUS,
+        a.CREATE_USER,
+        DATE_FORMAT(a.CREATE_TIME,'%Y-%m-%d %T') AS CREATE_TIME,
+        a.LAST_UPDATE_USER,
+        a.LAST_UPDATE_TIME,
+        a.PREPARATION1,
+        a.PREPARATION2,
+        a.PREPARATION3,
+        a.PREPARATION4,
+        a.PREPARATION5,
+        a.PREPARATION6
+        FROM
+        daily_task_information a,bd_department b,bd_employee c,sys_user d
+        where
+        b.id = a.DEPT_ID
+        AND d.USERNAME = #{pd.createUser}
+        AND b.DEPT_LEADER_ID = c.id
+        AND d.NUMBER = c.EMP_CODE
+        AND a.STATUS IN ('YW_YSX','YW_DSX')
+
+        <if test="pd.id!=null and pd.id != ''">
+            and a.ID = #{pd.id}
+        </if>
+
+        <if test="pd.status !=null and pd.status != ''">
+            and a.STATUS = #{pd.status}
+        </if>
+
+        <if test="pd.year !=null and pd.year != ''">
+            and a.END_TIME like CONCAT('%','${pd.year}','%' )
+        </if>
+
+        <if test="pd.KEYW != null and pd.KEYW != ''">
+            and
+            (
+            a.TASK_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.TASK_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by a.START_TIME desc, a.END_TIME desc
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <select id="dailytaskinformationviewlistPage" resultType="pd" parameterType="page">
+        select
+        <include refid="dailytaskinformation"/>
+        from daily_task_information
+
+        where
+        1 = 1
+        <!-- and CREATE_USER = #{pd.createUser} -->
+
+        <if test="pd.id!=null and pd.id != ''">
+            and WORKLIST_ID = #{pd.id}
+        </if>
+
+        <!--     <if test="pd.WORKLIST_TIME !=null and pd.WORKLIST_TIME != ''">
+                and   START_TIME >= #{pd.WORKLIST_TIME}
+            </if>
+            <if test="pd.WORKLIST_TIME !=null and pd.WORKLIST_TIME != ''">
+                and #{pd.WORKLIST_TIME}  >= END_TIME
+            </if>
+
+
+            <if test="pd.CREATE_USER !=null and pd.CREATE_USER != ''">
+                and CREATE_USER = #{pd.CREATE_USER}
+            </if>  -->
+        <!--   <if test="pd.WORKLIST_TIME !=null and pd.WORKLIST_TIME != ''">
+              and WORKLIST_TIME = #{pd.WORKLIST_TIME}
+          </if>  -->
+
+        <if test="pd.STATUS !=null and pd.STATUS != ''">
+            and STATUS = #{pd.STATUS}
+        </if>
+
+
+    </select>
+
+
+    <select id="dailytaskinformationList" resultType="pd" parameterType="pd">
+        select
+        <include refid="dailytaskinformation"/>
+        from daily_task_information
+        where
+        WORKLIST_ID = #{id}
+    </select>
+
+    <select id="dailytaskinformationListId" resultType="pd" parameterType="pd">
+        select
+        <include refid="dailytaskinformation"/>
+        from daily_task_information
+        where
+        ID = #{id}
+    </select>
+
+
+    <sql id="dailytaskinformationdetail">
+        ID,                      <!-- ID -->
+        DAILY_TASK_ID,           <!-- 工作任务表ID -->
+        PERSON_TYPE,             <!-- 人员类型 -->
+        EMP_ID,                  <!-- 责任人ID -->
+        EMP_NAME,                <!-- 责任人 -->
+        REAL_COMPLETION,         <!-- 实际完成情况 -->
+        DESCRIPTION,             <!-- 任务完成说明 -->
+        PLAN_TIME,               <!-- 计划完成时间 -->
+        REAL_TIME,               <!-- 实际完成时间 -->
+        FINISH_PERCENT,          <!-- 工作完成度 -->
+        QA,                      <!-- 质量评价 -->
+        SCORE,                   <!-- 评价得分 -->
+        STATUS,                  <!-- 状态 -->
+        CREATE_USER,             <!-- 创建人 -->
+        CREATE_TIME,             <!-- 创建时间 -->
+        LAST_UPDATE_USER,        <!-- 最后更新人 -->
+        LAST_UPDATE_TIME,        <!-- 最后更新时间 -->
+        PREPARATION1,
+        PREPARATION2,
+        PREPARATION3,
+        PREPARATION4,
+        PREPARATION5,
+        PREPARATION6
+    </sql>
+
+    <select id="FinddailytaskinformationdetailById" resultType="pd" parameterType="pd">
+        select
+        <include refid="dailytaskinformationdetail"/>
+        from daily_task_information_detail
+        where ID = #{id}
+    </select>
+
+    <select id="dailytaskinformationdetaillistPage" resultType="pd" parameterType="page">
+        select
+        <include refid="dailytaskinformationdetail"/>
+        from daily_task_information_detail
+        where ID = #{id}
+    </select>
+
+
+    <!-- 获取新的目标编号 -->
+    <select id="getNewCode" parameterType="pd" resultType="String">
+        SELECT
+	      LPAD(
+            IFNULL(MAX(RIGHT(TASK_CODE, 4)),0) + 1,
+            5,
+            0
+          )
+        FROM
+            daily_task_information
+      
+    </select>
+
+
+    <insert id="save2" parameterType="pd" useGeneratedKeys="true" keyProperty="ID">
+        insert into daily_task_information
+        (
+        TASK_CODE,                 <!-- 任务编号 -->
+        TASK_TYPE,                 <!-- 任务类型 -->
+        WORKLIST_ID,               <!-- 所属工作清单ID -->
+        TASK_NAME,                 <!-- 任务名称 -->
+        S161_TARGET_ID,            <!-- 关联小161目标 -->
+        S161_PATH_ID,              <!-- 关联小161路径 -->
+        START_TIME,                <!-- 开始时间 -->
+        END_TIME,                  <!-- 结束时间 -->
+        TASK_CONTECT,              <!-- 任务描述 -->
+        COMPLETION,                <!-- 完成标准 -->
+        NEED_CHECK,                <!-- 是否评价 -->
+        CHECK_PERSON,              <!-- 评价人ID -->
+        FINISH_PERCENT,            <!-- 工作完成度 -->
+        DEPT_ID,                   <!-- 责任部门ID -->
+        DEPT_NAME,                 <!-- 责任部门 -->
+        MAIN_EMP_ID,               <!-- 责任人ID -->
+        MAIN_EMP_NAME,             <!-- 责任人 -->
+        KPI_INDEX_ID,              <!-- 关联KPI指标 -->
+        OTHER_EMP_ID,              <!-- 协作人ID -->
+        OTHER_EMP_NAME,            <!-- 协作人 -->
+        STATUS,                    <!-- 状态 -->
+        CREATE_USER,               <!-- 创建人 -->
+        CREATE_TIME,               <!-- 创建时间 -->
+        LAST_UPDATE_USER,          <!-- 最后更新人 -->
+        LAST_UPDATE_TIME,          <!-- 最后更新时间 -->
+        PREPARATION1,
+        PREPARATION2,
+        PREPARATION3,
+        PREPARATION4,
+        PREPARATION5,
+        PREPARATION6
+        )
+        values (
+        #{TASK_CODE},                 <!-- 任务编号 -->
+        '64a4c11151644d8896ebae3579b6784c',                 <!-- 任务类型 -->
+        #{WORKLIST_ID},               <!-- 所属工作清单ID -->
+        #{TASK_NAME},                 <!-- 任务名称 -->
+        #{S161_TARGET_ID},            <!-- 关联小161目标 -->
+        #{S161_PATH_ID},              <!-- 关联小161路径 -->
+        #{START_TIME},                <!-- 开始时间 -->
+        #{END_TIME},                  <!-- 结束时间 -->
+        #{TASK_CONTECT},              <!-- 任务描述 -->
+        #{COMPLETION},                <!-- 完成标准 -->
+        #{NEED_CHECK},                <!-- 是否评价 -->
+        #{CHECK_PERSON},              <!-- 评价人ID -->
+        #{FINISH_PERCENT},            <!-- 工作完成度 -->
+        #{DEPT_ID},                   <!-- 责任部门ID -->
+        #{DEPT_NAME},                 <!-- 责任部门 -->
+        #{MAIN_EMP_ID},               <!-- 责任人ID -->
+        #{MAIN_EMP_NAME},             <!-- 责任人 -->
+        #{KPI_INDEX_ID},              <!-- 关联KPI指标 -->
+        #{OTHER_EMP_ID},              <!-- 协作人ID -->
+        #{OTHER_EMP_NAME},            <!-- 协作人 -->
+        #{status},                            <!-- 状态 -->
+        #{CREATE_USER},               <!-- 创建人 -->
+        #{CREATE_TIME},               <!-- 创建时间 -->
+        #{LAST_UPDATE_USER},          <!-- 最后更新人 -->
+        #{LAST_UPDATE_TIME},          <!-- 最后更新时间 -->
+        #{PREPARATION1},
+        #{PREPARATION2},
+        #{PREPARATION3},
+        #{PREPARATION4},
+        #{PREPARATION5},
+        #{PREPARATION6}
+        )
+    </insert>
+
+    <insert id="save3" parameterType="pd">
+        insert into daily_task_information_detail
+        (
+        DAILY_TASK_ID,        <!-- 工作任务表ID -->
+        EMP_ID,               <!-- 责任人ID -->
+        EMP_NAME,             <!-- 责任人 -->
+        STATUS,               <!-- 状态 -->
+        CREATE_USER,          <!-- 创建人 -->
+        CREATE_TIME,          <!-- 创建时间 -->
+        LAST_UPDATE_USER,     <!-- 最后更新人 -->
+        LAST_UPDATE_TIME      <!-- 最后更新时间 -->
+        )
+        values (
+        #{TASK_CODE},             <!-- 工作任务表ID -->
+        #{MAIN_EMP_ID},                <!-- 责任人ID -->
+        #{EMP_NAME},              <!-- 责任人 -->
+        #{STATUS},                      <!-- 状态 -->
+        #{CREATE_USER},           <!-- 创建人 -->
+        #{CREATE_TIME},           <!-- 创建时间 -->
+        #{LAST_UPDATE_USER},      <!-- 最后更新人 -->
+        #{LAST_UPDATE_TIME}       <!-- 最后更新时间 -->
+        )
+    </insert>
+
+
+    <update id="edit2" parameterType="pd">
+        update daily_task_information
+        set
+        <!--  TASK_CODE          =    #{TASK_CODE},          任务编号 -->
+        TASK_TYPE = '64a4c11151644d8896ebae3579b6784c',          <!-- 任务类型 -->
+        <!--  WORKLIST_ID        =    #{WORKLIST_ID},        所属工作清单ID -->
+        TASK_NAME = #{TASK_NAME},          <!-- 任务名称 -->
+        S161_TARGET_ID = #{S161_TARGET_ID},     <!-- 关联小161目标 -->
+        S161_PATH_ID = #{S161_PATH_ID},       <!-- 关联小161路径 -->
+        START_TIME = #{START_TIME},         <!-- 开始时间 -->
+        END_TIME = #{END_TIME},           <!-- 结束时间 -->
+        TASK_CONTECT = #{TASK_CONTECT},         <!--任务描述 -->
+        COMPLETION = #{COMPLETION},         <!-- 完成标准 -->
+        NEED_CHECK = #{NEED_CHECK},         <!-- 是否评价 -->
+        CHECK_PERSON = #{CHECK_PERSON},       <!-- 评价人ID -->
+        DEPT_ID = #{DEPT_ID},            <!-- 责任部门ID -->
+        DEPT_NAME = #{DEPT_NAME},          <!-- 责任部门 -->
+        MAIN_EMP_ID = #{MAIN_EMP_ID},        <!-- 责任人ID -->
+        MAIN_EMP_NAME = #{MAIN_EMP_NAME},      <!-- 责任人 -->
+        KPI_INDEX_ID = #{KPI_INDEX_ID},       <!-- 关联KPI指标 -->
+        LAST_UPDATE_USER = #{LAST_UPDATE_USER},   <!-- 最后更新人 -->
+        LAST_UPDATE_TIME = #{LAST_UPDATE_TIME}    <!-- 最后更新时间 -->
+        where ID = #{id}
+    </update>
+
+    <update id="back" parameterType="pd">
+        update daily_worklist
+        set
+        STATUS = 'YW_YTH',
+        PREPARATION1 = #{PREPARATION1},       <!-- 关联KPI指标 -->
+        LAST_UPDATE_USER = #{LAST_UPDATE_USER},   <!-- 最后更新人 -->
+        LAST_UPDATE_TIME = #{LAST_UPDATE_TIME}    <!-- 最后更新时间 -->
+        where ID = #{id}
+    </update>
+
+
+    <delete id="delete" parameterType="pd">
+	  delete
+	  from daily_task_information
+	  where id = #{id}
+  	</delete>
+
+    <update id="update" parameterType="pd">
+	    update daily_task_information
+	    set 
+	    status = #{status}
+	    where id = #{id}
+    </update>
+
+
+    <update id="updateExam" parameterType="pd">
+	    update daily_worklist
+	    set 
+	    	status = #{status},
+	        last_update_user = #{last_update_user},
+	        last_update_time = #{last_update_time}
+	    where id = #{id}
+    </update>
+
+    <update id="updateExamDail" parameterType="pd">
+        update daily_task_information
+        set
+        <!-- NEED_CHECK = #{nchk},
+        CHECK_PERSON = #{empid},
+        KPI_INDEX_ID = #{kpiid}, -->
+        status = 'YW_YSX',
+        last_update_user = #{last_update_user},
+        last_update_time = #{last_update_time}
+        where ID = #{id}
+    </update>
+
+    <update id="updateExamDailSave" parameterType="pd">
+	    update daily_task_information
+	    set 
+	    	NEED_CHECK = #{nchk},
+	    	CHECK_PERSON = #{empid},
+	    	KPI_INDEX_ID = #{kpiid},
+	        last_update_user = #{last_update_user},
+	        last_update_time = #{last_update_time}
+	    where ID = #{id}
+     </update>
+
+    <update id="updateExamDailKpi" parameterType="pd">
+	    update daily_task_information
+	    set 
+	    	KPI_INDEX_ID = #{kpiid},
+	        last_update_user = #{last_update_user},
+	        last_update_time = #{last_update_time}
+	    where ID = #{id}
+     </update>
+
+    <update id="updateExamDetail" parameterType="pd">
+	    update daily_task_information_detail
+	    set 
+	    	status = '1',
+	        last_update_user = #{last_update_user},
+	        last_update_time = #{last_update_time}
+	    where DAILY_TASK_ID = #{DAILY_TASK_ID}
+    </update>
+
+
+    <delete id="delById" parameterType="String">
+		delete from dayly_task_information where id = #{id}
+    </delete>
+
+    <select id="s161List" parameterType="page" resultType="pd">
+		select    
+		   t.id S161_TARGET_ID,
+		   p.id S161_PATH_ID,
+		   t.TARGET_CONTECT
+		 from
+		   s161_target t , s161_path p
+		 where
+		   t.ID = p.TARGET_ID
+	</select>
+
+    <select id="findByPathId" parameterType="pd" resultType="pd">
+		select    
+		   p.id S161_PATH_ID		  
+		 from
+		   s161_path p
+		 where
+		   p.TARGET_ID = #{S161_TARGET_ID}
+	</select>
+
+
+    <select id="findByTargeType" parameterType="pd" resultType="pd">
+		select    
+		   t.ID,
+		   t.B161_TARGET_ID,
+		   t.B161_PATH_ID,
+		   t.TARGET_TYPE,
+		   t.STATUS,
+		   t.TARGET_CODE,
+		   t.TARGET_CONTECT		  
+		 from
+		   s161_target t,s161_target_detail s
+		 where
+			 t.STATUS = '1'
+		   and t.TARGET_TYPE = #{TARGET_TYPE}
+		   and t.ID = s.TARGET_ID
+		   and s.TARGET_DEPT_ID = #{TARGET_DEPT_ID}
+		   
+	</select>
+
+    <select id="findDeptByUserId" parameterType="pd" resultType="pd">
+		select    
+		   EMP_DEPARTMENT_ID,
+		   EMP_NAME,
+		   ID
+		 from
+		   bd_employee
+		 where
+			 EMP_CODE = #{UserId}
+	</select>
+
+    <select id="findSysName" parameterType="pd" resultType="pd">
+		select    
+		   NAME
+		 from
+		   sys_user
+		 where
+			 USERNAME = #{UserId}
+	</select>
+
+    <select id="findDeptByUserId1" parameterType="pd" resultType="pd">
+		select    
+		   EMP_DEPARTMENT_ID,
+		   EMP_NAME,
+		   ID
+		 from
+		   bd_employee
+		 where
+			 ID = #{UserId}
+	</select>
+
+    <select id="findDeptByEmpName" parameterType="pd" resultType="pd">
+		select    
+		   EMP_DEPARTMENT_ID,
+		   EMP_NAME,
+		   ID
+		 from
+		   bd_employee
+		 where
+			 EMP_NAME = #{EMP_NAME}
+	</select>
+
+
+    <select id="listKpi" parameterType="pd" resultType="pd">
+		select    
+		   s.ID,
+		   s.KPI_NAME	  
+		 from
+		   bd_employee t,bd_kpi_model_line s ,BD_KPI_MODEL d
+		 where
+		 1=1
+    	 and  t.ID in (#{ID})
+		 and s.MODEL_ID = t.ATTACH_KPI_MODEL
+		 and d.IS_DEL = 0 and d.ENABLE = 1 
+		 and d.ID = s.MODEL_ID
+	</select>
+
+    <select id="listKpi1" parameterType="pd" resultType="pd">
+		select    
+		   s.ID,
+		   s.KPI_NAME,
+		   s.KPI_CODE	  
+		 from
+		   bd_employee t,bd_kpi_model_line s ,BD_KPI_MODEL d
+		 where
+		 1=1
+		   and s.MODEL_ID = t.ATTACH_KPI_MODEL
+		   and d.IS_DEL = 0 and d.ENABLE = 1 
+		   and d.ID = s.MODEL_ID
+	</select>
+
+
+    <select id="listKpi2" parameterType="pd" resultType="pd">
+		select    
+		   s.ID,
+		   s.KPI_NAME,
+		   s.KPI_CODE	  
+		 from
+		   bd_employee t,
+		   bd_kpi_model_line s,
+		   BD_KPI_MODEL d,
+		   bd_position_level p
+		 where
+		 1=1
+    	   and  t.ID = #{ID}
+		   and s.MODEL_ID = p.ATTACH_KPI_MODEL
+		   and t.EMP_GRADE_ID = p.id
+		   and d.IS_DEL = 0 and d.ENABLE = 1 
+		   and d.ID = s.MODEL_ID
+	</select>
+
+
+    <select id="KpiName" parameterType="pd" resultType="pd">
+		select    
+		   KPI_NAME	  
+		 from
+		   bd_kpi_model_line
+		 where
+		    ID = #{KPIID}
+	</select>
+
+    <select id="TargetName" parameterType="pd" resultType="pd">
+		select    
+		   TARGET_CONTECT	  
+		 from
+		   s161_target
+		 where
+		    ID = #{TARGETID}
+	</select>
+
+    <select id="PathName" parameterType="pd" resultType="pd">
+		select    
+		   PATH_CONTECT	  
+		 from
+		   s161_path
+		 where
+		    ID = #{PATHID}
+	</select>
+
+    <delete id="updateExamAll" parameterType="String">
+        update daily_worklist
+        set STATUS = 'YW_YSX'
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+
+    <update id="updateExamAllList" parameterType="String">
+        update daily_task_information
+        set
+        status = 1,
+        last_update_user = #{last_update_user},
+        last_update_time = #{last_update_time}
+        WORKLIST_ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="batchupdateStatus" parameterType="String">
+        update daily_task_information
+        set
+        status = 'YW_YSX'
+        where TASK_CODE in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <select id="findByTaskCodes" parameterType="String" resultType="pd">
+        select
+        *
+        from
+        daily_task_information
+        where
+        status = 'YW_CG'
+        and TASK_CODE in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!-- 保存附件 -->
+    <insert id="saveAttachments">
+        insert into daily_task_attachments(TASK_ID,FILENAME,SERVER_FILENAME) values(#{TASK_ID},#{FILENAME},#{SERVER_FILENAME})
+    </insert>
+
+    <select id="findAttchmentsByWorkId" resultType="pd">
+        select * from daily_task_attachments where task_id = #{id}
+    </select>
+    <!-- 删除附件数据 -->
+    <delete id="deleteAttachment" parameterType="String">
+        delete from daily_task_attachments where id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!-- 根据部门id查询人员 -->
+    <select id="findEmpByDept" parameterType="pd" resultType="pd">
+        select * from bd_employee e
+        where 0=0
+        <if test="DEPT_ID!=null and DEPT_ID!=''">
+            AND EMP_DEPARTMENT_ID = #{DEPT_ID}
+        </if>
+        and ENABLED = 1
+    </select>
+    <!-- 根据id查询人员 -->
+    <select id="findNameById" parameterType="pd" resultType="pd">
+    	select * from bd_employee e 
+    	where 0=0
+    	AND ID = #{CHECK_PERSON}
+    	and ENABLED = 1
+    </select>
+</mapper>

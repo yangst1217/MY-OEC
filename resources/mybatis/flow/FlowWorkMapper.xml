@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="FlowWorkMapper">
+
+    <!-- 列表(全部) -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        fw.ID,
+        fw.FLOW_CODE,
+        fw.FLOW_NAME,
+        fm.MODEL_NAME,
+        fw.CREATE_USER,
+        fw.CREATE_TIME,
+        fw.REMARKS,
+        fw.PARENT_NODE,
+        fwn.NODE_NAME,
+        su.NAME
+        from flow_work fw
+        left join flow_model fm
+        on fw.MODEL_ID = fm.ID
+        left join flow_work_node fwn
+        on fw.PARENT_NODE = fwn.ID
+        left join sys_user su
+        on fw.CREATE_USER = su.USERNAME
+
+        where fw.ISDEL = 0
+
+        <choose>
+            <when test="pd.flg == 1">
+                and fw.FOCUS_EMP like "%"#{pd.EMP_CODE}"%"
+            </when>
+            <otherwise>
+                and fw.CREATE_USER like "%"#{pd.CREATE_USER}"%"
+            </otherwise>
+        </choose>
+
+        <if test="pd.FLOW_CODE != null and pd.FLOW_CODE != '' ">
+            and fw.FLOW_CODE like "%"#{pd.FLOW_CODE}"%"
+        </if>
+        <if test="pd.NAME != null and pd.NAME != ''">
+            and su.NAME like "%"#{pd.NAME}"%"
+        </if>
+        <if test="pd.CREATE_TIME != null and pd.CREATE_TIME != ''">
+            and fw.CREATE_TIME like "%"#{pd.CREATE_TIME}"%"
+        </if>
+        <if test="pd.FLOW_NAME != null and pd.FLOW_NAME != ''">
+            and fw.FLOW_NAME like "%"#{pd.FLOW_NAME}"%"
+        </if>
+        <if test="pd.FLOW_MODEL_NAME != null and pd.FLOW_MODEL_NAME != ''">
+            and fm.MODEL_NAME like "%"#{pd.FLOW_MODEL_NAME}"%"
+        </if>
+
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by fw.CREATE_TIME desc, FLOW_CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 流程模板列表(全部) -->
+    <select id="temList" parameterType="pd" resultType="pd">
+		select
+			ID,
+			MODEL_NAME
+		from 
+			flow_model
+		where 
+			ISDEL = 0 and DEPT_ID like "%"#{DEPT_ID}"%"
+			order by PARENT_ID, MODEL_NAME
+	</select>
+
+    <!-- 关注人列表(全部) -->
+    <select id="empList" parameterType="pd" resultType="pd">
+		select
+			EMP_CODE,
+			EMP_NAME
+		from 
+			bd_employee
+	</select>
+
+    <!-- 父流程列表(全部) -->
+    <select id="parentList" parameterType="pd" resultType="pd">
+		select
+			fwn.ID,
+			fw.FLOW_NAME,
+			fwn.NODE_NAME
+		from 
+			flow_work_node fwn
+		left join
+			flow_work fw
+		on
+		   fwn.FLOW_ID = fw.ID
+		where 
+			fwn.ISDEL = 0 and fwn.EMP_CODE = #{EMP_CODE} and fwn.STATUS = #{STATUS}
+	</select>
+
+    <!-- 通过id查找 -->
+    <select id="findObjectById" parameterType="pd" resultType="pd">
+		select  
+			*
+		from flow_work
+		where ID = #{ID,jdbcType=INTEGER} 
+	</select>
+
+    <!-- 通过id查找流程模板信息 -->
+    <select id="findFlowModelById" parameterType="pd" resultType="pd">
+		select  
+			*
+		from flow_model
+		where ID = #{ID,jdbcType=INTEGER} 
+	</select>
+
+    <!-- 通过name查找 -->
+    <select id="findObjectByName" parameterType="pd" resultType="pd">
+		select  
+			EMP_CODE
+		from bd_employee
+		where EMP_NAME = #{EMP_NAME} 
+	</select>
+
+    <!-- flow列表(全部) -->
+    <select id="flowlist" parameterType="page" resultType="pd">
+		select
+			fmn.ID,
+			fmn.NODE_NAME,
+			fmn.NODE_LEVEL,
+			fmn.CREATE_TIME,
+			fmn.REMARKS,
+			fmn.DEPT_ID,
+			fmn.POSITION_ID,
+			fmn.EMP_CODE,
+			bd.DEPT_NAME,
+			bpl.GRADE_NAME,
+			be.EMP_NAME
+		from flow_model_node fmn
+		left join bd_department bd
+		on  fmn.DEPT_ID = bd.ID
+		left join bd_position_level bpl
+		on  fmn.POSITION_ID = bpl.ID
+		left join bd_employee be
+		on  fmn.EMP_CODE = be.EMP_CODE
+		
+		where fmn.ISDEL = 0 and fmn.MODEL_ID = #{pd.ID}
+		order by fmn.NODE_LEVEL asc
+		
+	</select>
+
+    <!-- 保存流程信息-->
+    <insert id="save" parameterType="pd">
+		insert into flow_work(
+			MODEL_ID,
+			FLOW_CODE,
+			FLOW_NAME,
+			DEPT_ID,
+			DEPT_NAME,
+			PARENT_NODE,
+			REMARKS,
+			ISDEL,
+			FOCUS_EMP,
+			CREATE_USER,
+			CREATE_TIME
+			
+		) values (
+			#{ID},
+			#{FLOW_CODE},
+			#{MODEL_NAME},
+			#{DEPT_ID},
+			#{DEPT_NAME},
+			#{PARENT_NODE},
+			#{REMARKS},
+			'0',
+			#{FOCUS_EMP},
+			#{CREATE_USER},
+			#{CREATE_TIME}
+		)
+	</insert>
+
+    <!-- 保存流程历史记录-->
+    <insert id="saveFlowWorkHistory" parameterType="pd">
+		insert into flow_work_history(
+			FLOW_ID,
+			OPERA_TIME,
+			OPERATOR,
+			NEXT_NODE,
+			NEXT_NODE_EMP_CODE,
+			OPERA_TYPE
+			
+		) values (
+			#{FLOW_ID},
+			#{OPERA_TIME},
+			#{OPERATOR},
+			#{NEXT_NODE},
+			#{NEXT_NODE_EMP_CODE},
+			#{OPERA_TYPE}
+		)
+	</insert>
+
+    <!-- nodeList列表(全部) -->
+    <select id="nodeList" parameterType="pd" resultType="pd">
+		select
+			*
+		from 
+			flow_model_node
+		where 
+			ISDEL = 0 and MODEL_ID = #{ID}
+		order by NODE_LEVEL asc
+	</select>
+
+    <!-- 查找最新work_id -->
+    <select id="findForId" parameterType="pd" resultType="pd">
+		select  
+			max(ID)
+		from flow_work
+	</select>
+
+    <!-- 查找最新work_node_id -->
+    <select id="findForNodeId" parameterType="pd" resultType="pd">
+		select  
+			max(ID)
+		from flow_work_node
+	</select>
+
+    <!-- 保存流程节点信息-->
+    <insert id="saveNode" parameterType="pd">
+		insert into flow_work_node(
+			FLOW_ID,
+			NODE_LEVEL,
+			NODE_NAME,
+			TIME_INTERVAL,
+			COST_TIME,
+			DEPT_ID,
+			POSITION_ID,
+			EMP_CODE,
+			SUBFLOW_ID,
+			STATUS,
+			REMARKS,
+			ISDEL,
+			CREATE_TIME,
+			CREATE_USER
+			
+		) values (
+			#{FLOW_ID},
+			#{NODE_LEVEL},
+			#{NODE_NAME},
+			#{TIME_INTERVAL},
+			#{COST_TIME},
+			#{DEPT_ID},
+			#{POSITION_ID},
+			#{EMP_CODE},
+			#{SUBFLOW_ID},
+			#{STATUS},
+			#{REMARKS},
+			'0',
+			#{CREATE_TIME},
+			#{CREATE_USER}
+		)
+	</insert>
+
+    <!-- 通过ID获取名称 -->
+    <select id="findNameByID" parameterType="pd" resultType="String">
+		select 
+			DEPT_NAME
+		from
+			bd_department
+		where
+			ID = #{DEPT_ID}
+	</select>
+
+    <!-- 通过ID获取CODE -->
+    <select id="findCodeByID" parameterType="pd" resultType="String">
+		select 
+			MODEL_CODE
+		from
+			flow_model
+		where
+			ID = #{ID}
+	</select>
+    <!-- 根据ID获取流程历史 -->
+    <select id="findHistoryById" resultType="pd">
+		SELECT
+			wh.*, wn1.NODE_NAME CURRENT_NODE_NAME,
+			wn2.NODE_NAME NEXT_NODE_NAME, wh.NEXT_NODE_EMP_CODE, nextEmp.EMP_NAME,
+			DATE_FORMAT(
+				wh.OPERA_TIME,
+				'%Y-%m-%d %T'
+			) operTime,
+			wh.FILE_ID
+		FROM
+			flow_work_history wh
+		LEFT JOIN flow_work_node wn1 ON wh.CURRENT_NODE = wn1.ID
+		LEFT JOIN flow_work_node wn2 ON wh.NEXT_NODE = wn2.ID
+		LEFT JOIN task_file tf on tf.ID = wh.FILE_ID and tf.ISDEL=0
+		LEFT JOIN bd_employee nextEmp on nextEmp.EMP_CODE = wh.NEXT_NODE_EMP_CODE
+		WHERE wh.FLOW_ID = #{ID}
+	</select>
+
+    <select id="findNodesByFlowID" resultType="pd">
+        <!-- select * from flow_work_node where FLOW_ID = #{ID} and ISDEL = 0 order by NODE_LEVEL asc -->
+        SELECT
+        wn.*, d.DEPT_NAME,
+        pl.GRADE_NAME,
+        e.EMP_NAME
+        FROM
+        flow_work_node wn
+        LEFT JOIN bd_department d ON wn.DEPT_ID = d.ID
+        LEFT JOIN bd_position_level pl ON wn.POSITION_ID = pl.ID
+        LEFT JOIN bd_employee e ON wn.EMP_CODE = e.EMP_CODE
+        WHERE
+        wn.FLOW_ID = #{ID}
+        AND wn.ISDEL = 0
+        ORDER BY
+        wn.NODE_LEVEL ASC
+    </select>
+
+    <!-- 根据节点实例id查询关联的岗位职责明细 -->
+    <select id="findDutyDetailByNodeId" parameterType="String" resultType="pd">
+		select detail.ID, detail.responsibility_id, detail.detail, detail.requirement, resp.responsibility
+		from bd_responsibility_detail detail
+		left join bd_position_responsibility resp on resp.ID=detail.responsibility_id
+		where FIND_IN_SET(detail.ID, 
+		(select RESPONSIBILITY_DETAIL_IDS from flow_work_node where id=#{workNodeId}));
+	</select>
+
+    <!-- 查询节点上传的最新附件 -->
+    <select id="findFileIdByNodeId" parameterType="String" resultType="pd">
+		select history.ID, history.FLOW_ID, history.OPERA_TIME, history.FILE_ID
+		from flow_work_history history 
+		where CURRENT_NODE = #{workNodeId} order by history.ID desc limit 1
+	</select>
+    <!-- 查询节点上传的最新附件 -->
+    <select id="findFileNameByNodeId" parameterType="String" resultType="pd">
+		select history.ID, history.FLOW_ID, history.OPERA_TIME, history.FILE_ID, task_file.FILENAME_SERVER
+		from flow_work_history history 
+		left join task_file on task_file.ID = history.FILE_ID and task_file.ISDEL=0
+		where CURRENT_NODE = #{workNodeId} order by history.ID desc limit 1
+	</select>
+    <!-- 根据文件id查询文件信息  -->
+    <select id="findFileList" parameterType="String" resultType="pd">
+        select * from task_file where ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and ISDEL=0
+    </select>
+</mapper>

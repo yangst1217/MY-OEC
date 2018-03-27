@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="scoreMapper">
+
+    <!--  -->
+    <select id="list" resultType="pd">
+        SELECT
+        *, (
+        PROJECT_SCORE + DAILY_SCORE + WORKORDER_SCORE + FLOW_SCORE
+        ) SCORE_SUM
+        FROM
+        (
+        SELECT
+        e.EMP_CODE,
+        e.EMP_NAME,
+        dept.DEPT_NAME,
+        posi.GRADE_NAME,
+        IFNULL(
+        (
+        SELECT
+        SUM(eve.score)
+        FROM
+        c_project_event eve
+        WHERE
+        eve.EMP_CODE = e.EMP_CODE
+        AND eve.score_date LIKE CONCAT(#{month},'%')
+        ),
+        0
+        ) AS PROJECT_SCORE,
+        IFNULL(
+        (
+        SELECT
+        sum(daily.SCORE)
+        FROM
+        position_daily_task daily
+        WHERE
+        daily.EMP_CODE = e.EMP_CODE
+        AND daily.score_date LIKE CONCAT(#{month},'%')
+        ),
+        0
+        ) AS DAILY_SCORE,
+        IFNULL(
+        (
+        SELECT
+        sum(workorder.SCORE)
+        FROM
+        daily_task_information_detail workorder
+        WHERE
+        workorder.EMP_ID = e.ID
+        AND workorder.score_date LIKE CONCAT(#{month},'%')
+        ),
+        0
+        ) AS WORKORDER_SCORE,
+        IFNULL(
+        (
+        SELECT
+        SUM(his.SCORE)
+        FROM
+        flow_work_history his,
+        flow_work_node node
+        WHERE
+        his.CURRENT_NODE = node.ID
+        AND node.EMP_CODE = e.EMP_CODE
+        AND his.OPERA_TIME LIKE CONCAT(#{month},'%')
+        ),
+        0
+        ) AS FLOW_SCORE
+        FROM
+        bd_employee e
+        LEFT JOIN bd_department dept ON e.EMP_DEPARTMENT_ID = dept.ID
+        LEFT JOIN bd_position_level posi ON e.EMP_GRADE_ID = posi.ID
+        where 1 = 1
+        <if test="deptID != null and deptID != ''">
+            and e.EMP_DEPARTMENT_ID = #{deptID}
+        </if>
+        <if test='sortKey != null and sortKey != ""'>
+            order by ${sortKey} ${sortMethod}
+        </if>
+        ) AS result
+        <choose>
+            <when test="sortMethod != null and sortMethod != ''">
+                order by score_sum ${sortMethod}
+            </when>
+            <otherwise>
+                order by score_sum desc
+            </otherwise>
+        </choose>
+    </select>
+</mapper>

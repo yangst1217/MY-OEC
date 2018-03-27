@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BMonthEmpTargetMapper">
+
+    <sql id="bMonthEmpTargetColumns">
+        B_MONTH_DEPT_TASK_ID,
+        B_YEAR_TARGET_CODE,
+        DEPT_CODE,
+        EMP_CODE,
+        YEAR,
+        MONTH,
+        MONTH_START_DATE,
+        MONTH_END_DATE,
+        MONTH_COUNT,
+        MONEY_COUNT,
+        STATUS,
+        ISDEL,
+        CREATE_USER,
+        CREATE_TIME,
+        UPDATE_USER,
+        UPDATE_TIME,
+        PARTICIPANT
+    </sql>
+
+    <!--获取目标的现有拆分-->
+    <select id="getMonthEmpTargetList" parameterType="pd" resultType="pd">
+        SELECT
+            t1.*, dept.DEPT_NAME,
+            dept.ID AS DEPT_ID,
+            emp.EMP_NAME
+        FROM
+            b_month_emp_target t1
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        WHERE
+            B_MONTH_DEPT_TASK_ID = ${ID}
+        AND ISDEL = 0
+    </select>
+
+    <!--批量新增-->
+    <insert id="batchAdd" parameterType="java.util.List" flushCache="false">
+        INSERT INTO b_month_emp_target (
+        <include refid="bMonthEmpTargetColumns"/>
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (
+            ${item.B_MONTH_DEPT_TASK_ID},
+            #{item.B_YEAR_TARGET_CODE},
+            #{item.DEPT_CODE},
+            #{item.EMP_CODE},
+            #{item.YEAR},
+            #{item.MONTH},
+            #{item.MONTH_START_DATE},
+            #{item.MONTH_END_DATE},
+            #{item.MONTH_COUNT},
+            #{item.MONEY_COUNT},
+            #{item.STATUS},
+            0,
+            #{item.CREATE_USER},
+            #{item.CREATE_TIME},
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.PARTICIPANT}
+            )
+        </foreach>
+    </insert>
+
+    <!--批量更新-->
+    <update id="batchUpdate" parameterType="pd">
+        UPDATE b_month_emp_target
+        SET
+            DEPT_CODE = #{DEPT_CODE},
+            EMP_CODE = #{EMP_CODE},
+            PARTICIPANT = #{PARTICIPANT},
+            MONTH_COUNT = #{MONTH_COUNT},
+            MONEY_COUNT = #{MONEY_COUNT},
+            ISDEL = 0,
+            `STATUS` = #{STATUS},
+            UPDATE_USER = #{UPDATE_USER},
+            UPDATE_TIME = #{UPDATE_TIME}
+        WHERE
+            ID = ${ID}
+    </update>
+
+    <!--批量新增历史记录-->
+    <insert id="batchHisAdd" parameterType="java.util.List" flushCache="false">
+        INSERT INTO b_month_emp_target_his (
+        <include refid="bMonthEmpTargetColumns"/>
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (
+            ${item.B_MONTH_DEPT_TASK_ID},
+            #{item.B_YEAR_TARGET_CODE},
+            #{item.DEPT_CODE},
+            #{item.EMP_CODE},
+            #{item.YEAR},
+            #{item.MONTH},
+            #{item.MONTH_START_DATE},
+            #{item.MONTH_END_DATE},
+            #{item.MONTH_COUNT},
+            #{item.MONEY_COUNT},
+            #{item.STATUS},
+            0,
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            <if test="item.PARTICIPANT != null and item.PARTICIPANT != ''">
+                #{item.PARTICIPANT}
+            </if>
+            <if test="item.PARTICIPANT == null or item.PARTICIPANT == ''">
+                null
+            </if>
+            )
+        </foreach>
+    </insert>
+
+    <!--获取历史数据时间分组-->
+    <select id="getHisTimeList" parameterType="String" resultType="pd">
+        SELECT
+            t1.UPDATE_TIME,
+            SUM(t1.MONTH_COUNT) AS MONTH_COUNT_SUM,
+            SUM(t1.MONEY_COUNT) AS MONEY_COUNT_SUM,
+            (
+                SELECT
+                    t2.MONTH_COUNT
+                FROM
+                    b_month_dept_task_his t2
+                WHERE
+                    MAX(t1.DEPT_CODE) = t2.DEPT_CODE
+                AND MAX(t1.B_YEAR_TARGET_CODE) = t2.B_YEAR_TARGET_CODE
+                AND MAX(t1.`MONTH`) = t2.`MONTH`
+                AND MAX(t1.`YEAR`) = t2.`YEAR`
+                AND t1.UPDATE_TIME > t2.UPDATE_TIME
+                ORDER BY
+                    t2.UPDATE_TIME DESC
+                LIMIT 1
+            ) AS HIS_COUNT,
+            (
+                SELECT
+                    t2.MONEY_COUNT
+                FROM
+                    b_month_dept_task_his t2
+                WHERE
+                    MAX(t1.DEPT_CODE) = t2.DEPT_CODE
+                AND MAX(t1.B_YEAR_TARGET_CODE) = t2.B_YEAR_TARGET_CODE
+                AND MAX(t1.`MONTH`) = t2.`MONTH`
+                AND MAX(t1.`YEAR`) = t2.`YEAR`
+                AND t1.UPDATE_TIME > t2.UPDATE_TIME
+                ORDER BY
+                    t2.UPDATE_TIME DESC
+                LIMIT 1
+            ) AS HIS_COUNT_MONEY
+        FROM
+            b_month_emp_target_his t1
+        WHERE
+            t1.B_MONTH_DEPT_TASK_ID = #{id}
+        AND t1.ISDEL = 0
+        GROUP BY
+            t1.UPDATE_TIME
+        ORDER BY
+            t1.UPDATE_TIME DESC
+    </select>
+
+    <!--按时间获取历史记录-->
+    <select id="getHisListByTime" parameterType="pd" resultType="pd">
+        SELECT
+            t1.*, dept.DEPT_NAME,
+            emp.EMP_NAME,
+            (select 
+            	GROUP_CONCAT(emp2.EMP_NAME) 
+            from 
+            	bd_employee emp2 
+            where 
+            	FIND_IN_SET(emp2.EMP_CODE , t1.PARTICIPANT)) PAR_NAME
+        FROM
+            b_month_emp_target_his t1
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        WHERE
+            t1.B_MONTH_DEPT_TASK_ID = #{B_MONTH_DEPT_TASK_ID}
+        AND t1.UPDATE_TIME = #{UPDATE_TIME}
+        AND ISDEL = 0
+    </select>
+
+    <!-- 下发目标分解 -->
+    <update id="arrange" parameterType="pd">
+        UPDATE b_month_emp_target
+        SET `STATUS` = 'YW_YSX',
+            UPDATE_TIME = #{UPDATE_TIME},
+            UPDATE_USER = #{UPDATE_USER}
+        WHERE
+            B_MONTH_DEPT_TASK_ID = #{ID}
+    </update>
+
+    <!--获取月度经营任务（员工）列表-->
+    <select id="listPage" parameterType="pd" resultType="pd">
+        SELECT
+        t1.*, dept.DEPT_NAME,
+        emp.EMP_NAME,
+        pro.PRODUCT_NAME,
+        t2.`NAME`,
+        sta.`NAME` AS STATUS_NAME,
+        IFNULL(s1.WEEK_COUNT_SUM,0) AS WEEK_COUNT_SUM,
+        IF (
+        IFNULL(s1.WEEK_COUNT_COUNT, 0) = 0,
+        '未分解',
+        IF (
+        IFNULL(s2.YSX_WEEK_COUNT_COUNT, 0) = 0,
+        '已分解（未生效）',
+        '已分解（已生效）'
+        )
+        ) AS ISEXPLAIN,
+        unit.UNIT_NAME,
+        b_index.INDEX_NAME,
+        <!-- 2016-07-07 yangdw 加入标志判断这条数据是否属于你 -->
+        IF (
+        t1.EMP_CODE = #{pd.USER_NUMBER},
+        'YOURS',
+        'NOT_YOURS'
+        ) 'IS_YOURS'
+        FROM
+        b_month_emp_target t1
+        JOIN b_year_target t2 ON t1.B_YEAR_TARGET_CODE = t2.`CODE`
+        JOIN b_month_dept_task mdt ON t1.B_MONTH_DEPT_TASK_ID = mdt.`ID`
+        JOIN b_year_dept_task ydt ON mdt.B_YEAR_DEPT_TASK_ID = ydt.`ID`
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN bd_product pro ON (ydt.PRODUCT_CODE = pro.PRODUCT_CODE AND pro.ISDEL = 0)
+        LEFT JOIN sys_status sta ON (t1.`STATUS` = sta.BIANMA AND sta.TYPE = 2)
+        LEFT JOIN bd_unit unit ON (t2.UNIT_CODE = unit.UNIT_CODE AND unit.ISDEL = 0)
+        LEFT JOIN bd_bussiness_index b_index ON (t2.INDEX_CODE = b_index.INDEX_CODE AND b_index.ISDEL = 0)
+        LEFT JOIN (
+        SELECT
+        t3.B_MONTH_EMP_TARGET_ID,
+        SUM(t3.WEEK_COUNT) AS WEEK_COUNT_SUM,
+        COUNT(t3.WEEK_COUNT) AS WEEK_COUNT_COUNT
+        FROM
+        b_week_emp_task t3
+        GROUP BY
+        t3.B_MONTH_EMP_TARGET_ID
+        ) s1 ON (
+        t1.ID = s1.B_MONTH_EMP_TARGET_ID
+        )
+        LEFT JOIN (
+        SELECT
+        t4.B_MONTH_EMP_TARGET_ID,
+        COUNT(1) AS YSX_WEEK_COUNT_COUNT
+        FROM
+        b_week_emp_task t4
+        WHERE
+        t4.`STATUS` = 'YW_YSX'
+        GROUP BY
+        t4.B_MONTH_EMP_TARGET_ID
+        ) s2 ON (
+        t1.ID = s2.B_MONTH_EMP_TARGET_ID
+        )
+        WHERE
+        t1.ISDEL = 0
+        AND t2.ISDEL=0
+        AND (
+        t1.EMP_CODE = #{pd.USER_NUMBER}
+        <!-- 2016-07-07 yangdw 加入数据权限 -->
+        <if test="pd.sysDeptArr != null and pd.sysDeptArr != ''">
+            OR t1.DEPT_CODE IN (
+            <foreach item="item" index="index" collection="pd.sysDeptArr" separator=",">
+                '${item}'
+            </foreach>
+            )
+        </if>
+        )
+        AND t1.`STATUS` = 'YW_YSX'
+        <!-- 起始时间检索 -->
+        <if test="pd.START_DATE != null and pd.START_DATE != ''">
+            AND t1.MONTH_START_DATE &gt;= #{pd.START_DATE}
+        </if>
+        <!-- 结束时间检索 -->
+        <if test="pd.END_DATE != null and pd.END_DATE != ''">
+            AND t1.MONTH_END_DATE &lt;= #{pd.END_DATE}
+        </if>
+        <!-- 状态检索 -->
+        <if test="pd.STATUS != null and pd.STATUS != ''">
+            AND t1.`STATUS` = #{pd.STATUS}
+        </if>
+        <!-- 产品检索 -->
+        <if test="pd.PRODUCT_CODE != null and pd.PRODUCT_CODE != ''">
+            AND t2.PRODUCT_CODE = #{pd.PRODUCT_CODE}
+        </if>
+        <!-- 关键字 -->
+        <if test="pd.KEY_WORD != null and pd.KEY_WORD != ''">
+            AND (t2.`NAME` LIKE "%"#{pd.KEY_WORD}"%" OR t2.`CODE` LIKE "%"#{pd.KEY_WORD}"%")
+        </if>
+        <!-- 是否分解 -->
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '0'.toString()">
+            AND IFNULL(s1.WEEK_COUNT_COUNT, 0) = 0
+        </if>
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '1'.toString()">
+            AND (IFNULL(s1.WEEK_COUNT_COUNT, 0) != 0 AND IFNULL(s2.YSX_WEEK_COUNT_COUNT, 0) = 0)
+        </if>
+        <if test="pd.ISEXPLAIN != null and pd.ISEXPLAIN != '' and pd.ISEXPLAIN == '2'.toString()">
+            AND (IFNULL(s1.WEEK_COUNT_COUNT, 0) != 0 AND IFNULL(s2.YSX_WEEK_COUNT_COUNT, 0) != 0)
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                ORDER BY
+                t1.MONTH_START_DATE DESC,
+                t2.CODE DESC,
+                dept.ORDER_NUM,
+                emp.EMP_NAME,
+                t1.CREATE_TIME DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--通过id获取月度经营目标（员工）-->
+    <select id="getMonthTargetById" parameterType="pd" resultType="pd">
+        SELECT
+            t1.*, dept.DEPT_NAME,
+            emp.EMP_NAME,
+            pro.PRODUCT_NAME,
+            t2.`NAME`,
+            sta.`NAME` AS STATUS_NAME,
+            t2.TARGET_TYPE,
+            IFNULL(s1.WEEK_COUNT_SUM,0) AS 'WEEK_COUNT_SUM',
+            IFNULL(s1.REAL_COUNT_SUM,0) AS 'REAL_COUNT_SUM',
+            IFNULL(s1.WEEK_COUNT_SUM_MONEY,0) AS 'WEEK_COUNT_SUM_MONEY',
+            IFNULL(s1.REAL_COUNT_SUM_MONEY,0) AS 'REAL_COUNT_SUM_MONEY',
+            b_index.INDEX_NAME,
+            IF (
+                IFNULL(s1.WEEK_COUNT_COUNT, 0) = 0,
+                '未分解',
+                IF (
+                    IFNULL(s2.YSX_WEEK_COUNT_COUNT, 0) = 0,
+                    '已分解（未生效）',
+                    '已分解（已生效）'
+                )
+            ) AS ISEXPLAIN,
+            (select 
+            	GROUP_CONCAT(emp2.EMP_NAME) 
+            from 
+            	bd_employee emp2 
+            where 
+            	FIND_IN_SET(emp2.EMP_CODE , t1.PARTICIPANT)) PAR_NAME
+        FROM
+            b_month_emp_target t1
+        JOIN b_year_target t2 ON t1.B_YEAR_TARGET_CODE = t2.`CODE`
+        JOIN b_month_dept_task mdt ON t1.B_MONTH_DEPT_TASK_ID = mdt.`ID`
+        JOIN b_year_dept_task ydt ON mdt.B_YEAR_DEPT_TASK_ID = ydt.`ID`
+        JOIN bd_department dept ON t1.DEPT_CODE = dept.DEPT_CODE
+        JOIN bd_employee emp ON t1.EMP_CODE = emp.EMP_CODE
+        LEFT JOIN bd_bussiness_index b_index ON (
+            t2.INDEX_CODE = b_index.INDEX_CODE
+            AND b_index.ISDEL = 0
+        )
+        LEFT JOIN bd_product pro ON (
+            ydt.PRODUCT_CODE = pro.PRODUCT_CODE
+            AND pro.ISDEL = 0
+        )
+        LEFT JOIN sys_status sta ON (
+            t1.`STATUS` = sta.BIANMA
+            AND sta.TYPE = 2
+        )
+        LEFT JOIN (
+            SELECT
+                t3.B_MONTH_EMP_TARGET_ID,
+                SUM(t3.WEEK_COUNT) AS WEEK_COUNT_SUM,
+                SUM(s3.REAL_COUNT) AS REAL_COUNT_SUM,
+                SUM(t3.MONEY_COUNT) AS WEEK_COUNT_SUM_MONEY,
+                SUM(s3.REAL_COUNT_MONEY) AS REAL_COUNT_SUM_MONEY,
+                COUNT(1) AS WEEK_COUNT_COUNT
+            FROM
+                b_week_emp_task t3
+            LEFT JOIN (
+                SELECT
+                    t4.B_WEEK_EMP_TASK_ID,
+                    SUM(t4.DAILY_COUNT) AS REAL_COUNT,
+                    SUM(t4.MONEY_COUNT) AS REAL_COUNT_MONEY
+                FROM
+                    b_daily_emp_task t4
+                WHERE t4.ISDEL = 0
+                GROUP BY
+                    t4.B_WEEK_EMP_TASK_ID
+            ) s3 ON (
+                t3.ID = s3.B_WEEK_EMP_TASK_ID
+            )
+            GROUP BY
+                t3.B_MONTH_EMP_TARGET_ID
+        ) s1 ON (
+            t1.ID = s1.B_MONTH_EMP_TARGET_ID
+        )
+        LEFT JOIN (
+            SELECT
+                t4.B_MONTH_EMP_TARGET_ID,
+                COUNT(1) AS YSX_WEEK_COUNT_COUNT
+            FROM
+                b_week_emp_task t4
+            WHERE
+                t4.`STATUS` = 'YW_YSX'
+            GROUP BY
+                t4.B_MONTH_EMP_TARGET_ID
+        ) s2 ON (
+            t1.ID = s2.B_MONTH_EMP_TARGET_ID
+        )
+        WHERE
+            t1.ISDEL = 0
+        AND t1.ID = ${ID}
+        AND t1.`STATUS` = 'YW_YSX';
+    </select>
+
+    <!--批量删除-->
+    <update id="batchDelete" parameterType="pd">
+        UPDATE b_month_emp_target
+        SET
+        ISDEL = 1
+        WHERE
+        ID NOT IN (
+        <foreach item="item" index="index" collection="update_ids" separator=",">
+            ${item}
+        </foreach>
+        )
+        AND B_MONTH_DEPT_TASK_ID = #{B_MONTH_DEPT_TASK_ID}
+    </update>
+
+    <update id="deleteByYearTargetCode">
+        update b_month_emp_target 
+        set isdel = 1,
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        where B_YEAR_TARGET_CODE = #{yearTargetCode}
+    </update>
+</mapper>

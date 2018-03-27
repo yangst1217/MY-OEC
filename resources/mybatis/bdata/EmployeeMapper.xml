@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmployeeMapper">
+
+    <sql id="employeeColumns">
+		ID,	
+		EMP_CODE,	
+		EMP_NAME,
+		EMP_GENDER,
+		EMP_DEPARTMENT_ID,
+		EMP_DEPARTMENT_NAME,
+		EMP_EMAIL,
+		EMP_PHONE,
+		EMP_POSITION_CODE,
+		EMP_GRADE_ID,
+		EMP_GRADE_NAME,
+		ATTACH_KPI_MODEL,
+		EMP_REMARK,
+		ENABLED,
+		CREATE_TIME,
+		CREATE_USER,
+		LAST_UPDATE_TIME,
+		LAST_UPDATE_USER
+	</sql>
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd">
+		insert into BD_EMPLOYEE(
+			EMP_CODE,	
+			EMP_NAME,
+			EMP_GENDER,
+			EMP_DEPARTMENT_ID,
+			EMP_DEPARTMENT_NAME,
+			EMP_EMAIL,
+			EMP_PHONE,
+			EMP_POSITION_CODE,
+			EMP_GRADE_ID,
+			EMP_GRADE_NAME,
+			ATTACH_KPI_MODEL,
+			EMP_REMARK,
+			ENABLED,
+			CREATE_TIME,
+			CREATE_USER,
+			LAST_UPDATE_TIME,
+			LAST_UPDATE_USER
+		) values (
+			#{EMP_CODE},	
+			#{EMP_NAME},		
+			#{EMP_GENDER},
+			#{EMP_DEPARTMENT_ID},
+			#{EMP_DEPARTMENT_NAME},
+			#{EMP_EMAIL},
+			#{EMP_PHONE},
+			#{EMP_POSITION_CODE},
+			#{EMP_GRADE_ID},
+			#{EMP_GRADE_NAME},
+			#{ATTACH_KPI_MODEL},
+			#{EMP_REMARK},
+			#{ENABLED},
+			#{CREATE_TIME},
+			#{CREATE_USER},
+			#{LAST_UPDATE_TIME},
+			#{LAST_UPDATE_USER}
+		)
+	</insert>
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="pd">
+		delete from BD_EMPLOYEE
+		where 
+			ID = #{ID}
+	</delete>
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update BD_EMPLOYEE
+			set 
+				EMP_CODE = #{EMP_CODE}, 	
+				EMP_NAME = #{EMP_NAME},
+				EMP_GENDER = #{EMP_GENDER},
+				EMP_DEPARTMENT_ID = #{EMP_DEPARTMENT_ID},
+				EMP_DEPARTMENT_NAME = #{EMP_DEPARTMENT_NAME},
+				EMP_EMAIL = #{EMP_EMAIL},
+				EMP_PHONE = #{EMP_PHONE},
+				EMP_POSITION_CODE = #{EMP_POSITION_CODE},
+				EMP_GRADE_ID = #{EMP_GRADE_ID},
+				EMP_GRADE_NAME = #{EMP_GRADE_NAME},
+				ATTACH_KPI_MODEL = #{ATTACH_KPI_MODEL},
+				EMP_REMARK = #{EMP_REMARK},
+				ENABLED = #{ENABLED},
+				LAST_UPDATE_TIME = #{LAST_UPDATE_TIME},
+				LAST_UPDATE_USER = #{LAST_UPDATE_USER} 
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        BD_EMPLOYEE
+        where
+        ID = #{ID}
+    </select>
+
+    <!-- 通过Code获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        BD_EMPLOYEE
+        where
+        EMP_CODE = #{EMP_CODE}
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAll" parameterType="pd" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        BD_EMPLOYEE
+        where 1 = 1
+        <!-- 员工编码检索 -->
+        <if test="null != EMP_CODE and '' != EMP_CODE">
+            and EMP_CODE like "%"#{EMP_CODE}"%"
+            <!-- and CONCAT('%','${EMP_CODE}','%' )  -->
+        </if>
+        <!-- 员工姓名检索 -->
+        <if test="EMP_NAME != null and EMP_NAME != ''">
+            and EMP_NAME like "%"#{EMP_NAME}"%"
+        </if>
+        <!-- 是否启用检索 -->
+        <if test="ENABLED != null and ENABLED != ''">
+            and ENABLED like "%"#{ENABLED}"%"
+        </if>
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAllLabour" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        BD_EMPLOYEE
+        where 1=1
+        <!-- <if test="null != labourList and '' != labourList">
+            and ID not in
+            <foreach collection="labourList" item="labourList" index="index" open="(" close=")" separator=",">
+                #{labourList}
+            </foreach>
+        </if> -->
+        <!-- 员工编码检索 -->
+        <if test="null != EMP_CODE and '' != EMP_CODE">
+            and EMP_CODE like "%"#{EMP_CODE}"%"
+        </if>
+        <!-- 员工姓名检索 -->
+        <if test="EMP_NAME != null and EMP_NAME != ''">
+            and EMP_NAME like "%"#{EMP_NAME}"%"
+        </if>
+        <!-- 部门检索 -->
+        <if test="EMP_DEPARTMENT_ID != null and EMP_DEPARTMENT_ID != ''">
+            and EMP_DEPARTMENT_ID = #{EMP_DEPARTMENT_ID}
+        </if>
+    </select>
+
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from BD_EMPLOYEE
+        where 1 = 1
+        <if test="pd.EMP_CODE != null and pd.EMP_CODE != '' ">
+            and EMP_CODE like "%"#{pd.EMP_CODE}"%"
+        </if>
+        <if test="pd.EMP_NAME != null and pd.EMP_NAME != ''">
+            and EMP_NAME like "%"#{pd.EMP_NAME}"%"
+        </if>
+        <if test="pd.ENABLED != null and pd.ENABLED != ''">
+            and ENABLED like "%"#{pd.ENABLED}"%"
+        </if>
+        <if test="pd.deptId != null and pd.deptId != ''">
+            and EMP_DEPARTMENT_ID = #{pd.deptId}
+        </if>
+        <if test="pd.ids != null and pd.ids != ''">
+            and EMP_DEPARTMENT_ID in
+            <foreach item="item" index="index" collection="pd.ids" open="(" separator="," close=")">
+                ${item}
+            </foreach>
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by EMP_CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAllByIds" parameterType="String" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        BD_EMPLOYEE
+        where id not in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!-- 通过部门id查找员工 -->
+    <select id="findEmpByDept" parameterType="String" resultType="pd">
+        select
+        <include refid="employeeColumns"/>
+        from
+        bd_employee
+        where EMP_DEPARTMENT_ID = #{deptId}
+        and ENABLED = 1
+        order by EMP_NAME
+    </select>
+
+    <select id="findEmpByDeptCode" parameterType="String" resultType="pd">
+		SELECT
+			e.*
+		FROM
+			bd_employee e,
+			bd_department p
+		WHERE
+			e.EMP_DEPARTMENT_ID = p.ID
+		AND p.DEPT_CODE = #{code}
+	</select>
+
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from BD_EMPLOYEE
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 查找没有登录用户的员工编号 -->
+    <select id="findEmpNotInUser" resultType="pd">
+		SELECT
+			e.EMP_CODE
+		FROM
+			bd_employee e
+		WHERE
+			NOT EXISTS (
+				SELECT
+					1
+				FROM
+					sys_user u
+				WHERE
+					e.EMP_CODE = u.number
+			);
+	</select>
+
+    <!-- 查询岗位下是否有员工 -->
+    <select id="findEmpByGradeId" parameterType="pd" resultType="Integer">
+		select count(ID) as Num from bd_employee e where EMP_GRADE_ID = #{gradeId}
+	</select>
+
+    <select id="countEmp" resultType="Integer" parameterType="page">
+        select count(ID) from bd_employee e where 1 = 1
+        <if test="pd.EMP_CODE != null and pd.EMP_CODE != '' ">
+            and EMP_CODE like "%"#{pd.EMP_CODE}"%"
+        </if>
+        <if test="pd.EMP_NAME != null and pd.EMP_NAME != ''">
+            and EMP_NAME like "%"#{pd.EMP_NAME}"%"
+        </if>
+        <if test="pd.ENABLED != null and pd.ENABLED != ''">
+            and ENABLED like "%"#{pd.ENABLED}"%"
+        </if>
+        <if test="pd.deptId != null and pd.deptId != ''">
+            and EMP_DEPARTMENT_ID = #{pd.deptId}
+        </if>
+    </select>
+
+    <!-- 根据员工编码查询员工所在部门 -->
+    <select id="findDeptByEmpCode" parameterType="String" resultType="pd">
+		select d.ID, d.DEPT_CODE, d.DEPT_NAME
+		from bd_employee e 
+		left join bd_department d on e.EMP_DEPARTMENT_ID=d.ID
+		where e.EMP_CODE=#{empCode}
+	</select>
+
+    <!-- 查询部门下的员工列表 -->
+    <select id="findEmpByDeptIds" parameterType="List" resultType="pd">
+        select e.ID, e.EMP_CODE, e.EMP_NAME, e.EMP_DEPARTMENT_ID
+        from bd_employee e
+        left join bd_department dep on dep.ID = e.EMP_DEPARTMENT_ID
+        where e.ENABLED=1
+        and e.EMP_DEPARTMENT_ID in
+        <foreach collection="list" item="dept" open="(" close=")" separator=",">
+            #{dept}
+        </foreach>
+        order by dep.ORDER_NUM, e.EMP_NAME
+    </select>
+    <!-- 根据编码批量查询用户 -->
+    <select id="getAllByCodes" parameterType="String" resultType="pd">
+        select ID,EMP_CODE,EMP_NAME,EMP_DEPARTMENT_ID,EMP_DEPARTMENT_NAME,EMP_GRADE_ID,EMP_GRADE_NAME
+        from
+        bd_employee
+        where
+        ENABLED ='1' and
+        EMP_CODE IN
+        <foreach collection="array" item="ArrayDATA_CODES" open="(" separator="," close=")">
+            #{ArrayDATA_CODES}
+        </foreach>
+    </select>
+
+    <!-- 通过员工ID获取员工档案 -->
+    <select id="findRecord" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_emp_record
+		where 
+			EMP_ID = #{EMP_ID}
+	</select>
+
+    <!-- 通过员工ID获取员工工作经历-->
+    <select id="findExp" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_emp_record_exp
+		where 
+			EMP_ID = #{EMP_ID}
+	</select>
+
+
+    <!-- 新增员工档案基础信息-->
+    <insert id="saveRecord" parameterType="pd">
+		insert into bd_emp_record(
+			EMP_ID,
+			NAME,
+			GENDER,
+			ADDRESS,
+			AGE,
+			BIRTHDAY,
+			PHONE,
+			EMAIL,
+			SCHOOL,
+			GRADUATE_TIME,
+			MAJOR,
+			DEGREE
+		) values (
+			#{EMP_ID},
+			#{NAME},
+			#{GENDER},
+			#{ADDRESS},
+			#{AGE},
+			#{BIRTHDAY},
+			#{PHONE},
+			#{EMAIL},
+			#{SCHOOL},
+			#{GRADUATE_TIME},
+			#{MAJOR},
+			#{DEGREE}
+		)
+	</insert>
+
+    <!--修改员工档案基础信息 -->
+    <update id="editRecord" parameterType="pd">
+		update bd_emp_record
+			set 
+				NAME = #{NAME},
+				GENDER = #{GENDER},
+				ADDRESS = #{ADDRESS},
+				AGE = #{AGE},
+				BIRTHDAY = #{BIRTHDAY},
+				PHONE = #{PHONE},
+				EMAIL = #{EMAIL},
+				SCHOOL = #{SCHOOL},
+				GRADUATE_TIME = #{GRADUATE_TIME},
+				MAJOR = #{MAJOR},
+				DEGREE = #{DEGREE}
+			where 
+				EMP_ID = #{EMP_ID}
+	</update>
+
+    <!-- 新增员工工作经历-->
+    <insert id="saveExp" parameterType="pd">
+		insert into bd_emp_record_exp(
+			EMP_ID,
+			EXP,
+			POSITION
+		) values (
+			#{EMP_ID},
+			#{EXP},
+			#{POSITION}
+		)
+	</insert>
+
+
+    <!--批量新增员工档案工作经历-->
+    <insert id="batchAdd" parameterType="java.util.List" flushCache="false">
+        INSERT INTO bd_emp_record_exp (
+        EMP_ID,
+        EXP,
+        POSITION
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.EMP_ID},
+            #{item.EXP},
+            #{item.POSITION}
+            )
+        </foreach>
+    </insert>
+
+    <!--批量更新员工档案工作经历-->
+    <update id="batchUpdate" parameterType="pd">
+        UPDATE bd_emp_record_exp
+        SET
+            EXP = #{EXP},
+            POSITION = #{POSITION}
+        WHERE
+            ID = ${ID};
+    </update>
+
+
+    <!--批量删除员工档案工作经历-->
+    <delete id="batchDelete" parameterType="pd">
+        delete from bd_emp_record_exp
+        WHERE
+        1 = 1
+        AND ID NOT IN (
+        <foreach item="item" index="index" collection="update_ids" separator=",">
+            ${item}
+        </foreach>
+        )
+        AND EMP_ID = #{EMP_ID}
+    </delete>
+
+
+    <!-- 删除员工档案工作经历- -->
+    <delete id="deleteAllExp" parameterType="pd">
+		delete from bd_emp_record_exp
+		where 
+			EMP_ID = #{EMP_ID}
+	</delete>
+
+    <select id="findCodeByName" resultType="String">
+		select EMP_CODE from bd_employee where EMP_NAME = #{name} and ENABLED = 1
+	</select>
+
+    <select id="findEmpByPosition" resultType="pd">
+		SELECT
+			EMP_CODE,
+			EMP_NAME
+		FROM
+			bd_employee
+		WHERE
+			ENABLED = 1
+		AND EMP_GRADE_ID = #{positionId}
+	</select>
+    <!-- 通过部门id查找员工，形成组织人员树查到的人员信息 -->
+    <select id="findEmpByDeptPd" parameterType="pd" resultType="pd">
+		select 
+			ID,
+			EMP_CODE DEPT_CODE,
+			EMP_NAME DEPT_NAME,
+			#{ID} PARENT_ID
+		from 
+			bd_employee 
+		where EMP_DEPARTMENT_ID = #{ID}
+		and ENABLED = 1
+	</select>
+
+    <!-- 根据员工编码查询岗位信息 -->
+    <select id="findPositionByEmpCode" parameterType="String" resultType="pd">
+		select emp.EMP_CODE, emp.EMP_NAME, emp.EMP_GRADE_ID, pos.GRADE_CODE, pos.GRADE_NAME, pos.JOB_RANK
+		from bd_employee emp
+		left join bd_position_level pos on pos.ID=emp.EMP_GRADE_ID and emp.ENABLED=1 and pos.ISDEL=0
+		where emp.EMP_CODE = #{empCode}
+	</select>
+
+    <!-- 查询员工信息，包含部门和岗位 -->
+    <select id="findAllEmpInfo" parameterType="pd" resultType="pd">
+        select emp.ID, emp.EMP_CODE, emp.EMP_NAME, emp.EMP_GENDER, emp.EMP_DEPARTMENT_ID, emp.EMP_DEPARTMENT_NAME,
+        emp.EMP_EMAIL, emp.EMP_PHONE, emp.EMP_GRADE_ID, emp.EMP_GRADE_NAME, emp.ATTACH_KPI_MODEL, emp.EMP_REMARK,
+        emp.ENABLED, emp.CREATE_TIME, emp.CREATE_USER, dep.DEPT_SIGN , pos.GRADE_CODE
+        from bd_employee emp
+        left join bd_department dep on dep.ID = emp.EMP_DEPARTMENT_ID and dep.IS_DELETE = 0
+        left join bd_position_level pos on pos.ID = emp.EMP_GRADE_ID and pos.ISDEL = 0
+        where 1=1
+        <if test="null != EMP_CODE and '' != EMP_CODE">
+            and emp.EMP_CODE like "%"#{EMP_CODE}"%"
+        </if>
+        <if test="EMP_NAME != null and EMP_NAME != ''">
+            and emp.EMP_NAME like "%"#{EMP_NAME}"%"
+        </if>
+        <if test="ENABLED != null and ENABLED != ''">
+            and emp.ENABLED = #{ENABLED}
+        </if>
+    </select>
+
+</mapper>

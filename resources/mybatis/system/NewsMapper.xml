@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NewsMapper">
+
+    <!-- ================================================================================================== -->
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update  sys_notice
+			set NOTICE    = #{NOTICE}
+			where 
+				ID = #{NEWS_ID}
+	</update>
+
+    <!-- 通过id获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			ID,
+			NOTICE,
+			TOWHO,
+			CREATEUSERNAME,
+			CREATEDEPTNAME
+		from 
+			sys_notice
+		where 
+		FLAG = '0' and
+			ID = #{NEWS_ID}
+	</select>
+    <!--
+        CREATEUSERID,
+            CREATEUSERNAME,
+            CREATEDEPTID,
+            CREATEDEPTNAME,
+            TOWHO,
+    --><!-- 新增 -->
+    <insert id="save" parameterType="pd">
+		insert into sys_notice (
+			NOTICE
+		) values (
+			#{NOTICE}
+		)
+	</insert>
+
+    <!-- 列表 -->
+    <select id="newslistPage" parameterType="page" resultType="pd">
+        select
+        ID,
+        NOTICE,
+        TOWHO,
+        CREATEUSERNAME,
+        CREATEDEPTNAME
+        from
+        sys_notice t
+        where
+        FLAG = '0'
+
+        <if test="pd.NEWS_ID != null and pd.NEWS_ID != ''">
+            and t.ID = #{pd.NEWS_ID}
+        </if>
+
+        <if test="pd.NAME != null and pd.NAME != ''">
+            and t.NOTICE LIKE CONCAT(CONCAT('%', #{pd.NAME}),'%')
+        </if>
+        order by t.ID
+    </select>
+
+
+    <!-- 列表 -->
+    <select id="mnewslistPage" parameterType="page" resultType="pd">
+        select
+        ID,
+        NOTICE,
+        TOWHO,
+        CREATEUSERNAME,
+        CREATEDEPTNAME
+        from
+        sys_notice t
+        where
+        FLAG = '0'
+        <if test="pd.NEWS_ID != null and pd.NEWS_ID != ''">
+            and t.ID = #{pd.NEWS_ID}
+        </if>
+
+        <if test="pd.NAME != null and pd.NAME != ''">
+            and t.NOTICE LIKE CONCAT(CONCAT('%', #{pd.NAME}),'%')
+        </if>
+        order by t.ID
+    </select>
+
+
+    <!-- 查询总数 -->
+    <select id="findCount" parameterType="pd" resultType="pd">
+		select 
+			count(ZD_ID) ZS
+		from 
+			SYS_DICTIONARIES
+		where 
+			PARENT_ID = #{ZD_ID}
+	</select>
+
+    <!-- 查询某编码 -->
+    <select id="findBmCount" parameterType="pd" resultType="pd">
+        select
+        ZD_ID
+        from
+        SYS_DICTIONARIES
+        where
+        BIANMA = #{BIANMA}
+        and FLAG = '0'
+        <if test="ZD_ID != null and ZD_ID != ''">
+            and ZD_ID != #{ZD_ID}
+        </if>
+    </select>
+
+    <!-- 删除用户 -->
+
+    <update id="delete" parameterType="pd">
+		update  sys_notice
+			set FLAG    = '1'
+			where 
+				ID = #{ID}
+	</update>
+    <!-- ================================================================================================== -->
+
+</mapper>

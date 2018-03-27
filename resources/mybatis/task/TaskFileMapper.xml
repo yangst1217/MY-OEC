@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskFileMapper">
+    <!-- 日清上传文件表 -->
+
+    <!-- 根据关联的任务ID查询文件 -->
+    <select id="findFile" parameterType="pd" resultType="pd">
+		select ID, FILENAME, TASK_TYPE, TASK_ID, CREATE_USER, CREATE_DATE, FILENAME_SERVER
+		from task_file 
+		where ISDEL=0 and TASK_ID=#{taskId} and TASK_TYPE=#{taskType}
+	</select>
+
+    <!-- 保存文件 -->
+    <insert id="saveFile" parameterType="pd" useGeneratedKeys="true" keyProperty="id">
+		insert into task_file(FILENAME,FILENAME_SERVER, TASK_TYPE, TASK_ID, CREATE_USER, CREATE_DATE)
+		values(#{fileName},#{fileName_server}, #{taskType}, #{taskId}, #{createUser}, #{createDate})
+	</insert>
+
+    <!-- 删除文件 -->
+    <!--
+    <delete id="deleteFile" parameterType="pd">
+        delete from task_file where TASK_ID=#{taskId} and TASK_TYPE=#{taskType}
+    </delete>
+     -->
+
+    <!-- 删除任务关联的所有文件 -->
+    <update id="deleteFile" parameterType="pd">
+		update task_file set ISDEL=1 where TASK_ID=#{taskId} and TASK_TYPE=#{taskType}
+	</update>
+
+    <!-- 根据文件ID删除与任务的关联 -->
+    <update id="deleteFileByFileId" parameterType="Integer">
+		update task_file set ISDEL=1 where ID=#{id}
+	</update>
+</mapper>

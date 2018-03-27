@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD SQL Map Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <settings>
+        <setting name="cacheEnabled" value="false"/>
+        <setting name="useGeneratedKeys" value="true"/>
+        <setting name="defaultExecutorType" value="REUSE"/>
+    </settings>
+
+    <typeAliases>
+        <typeAlias type="com.mfw.entity.system.User" alias="User"/>
+        <typeAlias type="com.mfw.entity.system.Role" alias="Role"/>
+        <typeAlias type="com.mfw.entity.system.Menu" alias="Menu"/>
+        <typeAlias type="com.mfw.util.PageData" alias="pd"/>
+        <!-- 按钮 -->
+        <typeAlias type="com.mfw.entity.system.Buttons" alias="Buttons"/>
+        <!-- 分页 -->
+        <typeAlias type="com.mfw.entity.Page" alias="Page"/>
+
+        <!-- 日清管理-日清任务发放 -->
+        <typeAlias type="com.mfw.entity.dailytask.dailyTaskInfo" alias="dailyTaskInfo"/>
+        <typeAlias type="com.mfw.entity.dailytask.employeeDaylyTask" alias="employeeDaylyTask"/>
+
+        <!-- KPI模板 -->
+        <typeAlias type="com.mfw.entity.bdata.KpiModelLine" alias="KpiModelLine"/>
+        <!-- 员工与KPI模板关联明细 -->
+        <typeAlias type="com.mfw.entity.bdata.KpiIndex" alias="KpiIndex"/>
+
+        <!-- 系统参数 -->
+        <typeAlias type="com.mfw.entity.system.Parameter" alias="Parameter"/>
+        <typeAlias type="com.mfw.entity.reportcenter.ReportParameter" alias="ReportParameter"/>
+
+        <!-- 基础管理-岗位管理 -->
+        <typeAlias type="com.mfw.entity.bdata.PositionLevel" alias="PositionLevel"/>
+        <!-- 按钮权限 -->
+        <typeAlias type="com.mfw.entity.system.RoleButton" alias="RoleButton"/>
+
+        <typeAlias type="com.mfw.entity.bdata.RatioModel" alias="RatioModel"/>
+        <typeAlias type="com.mfw.entity.system.DataRole" alias="DataRole"/>
+        <!-- 产品 -->
+        <typeAlias type="com.mfw.entity.bdata.Product" alias="Product"/>
+        <!-- 节点层级机构 -->
+        <typeAlias type="com.mfw.entity.bdata.NodeLevelFrame" alias="NodeLevelFrame"/>
+        <typeAlias type="com.mfw.entity.system.UserLog" alias="UserLog"/>
+
+        <typeAlias type="com.mfw.entity.project.CProject" alias="cproject"/>
+    </typeAliases>
+
+    <plugins>
+        <plugin interceptor="com.mfw.plugin.PagePlugin">
+            <property name="dialect" value="mysql"/>
+            <property name="pageSqlId" value=".*listPage.*"/>
+        </plugin>
+    </plugins>
+
+</configuration>

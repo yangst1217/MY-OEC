@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserLogMapper">
+
+    <select id="listPage" resultType="pd" parameterType="page">
+        SELECT
+        ul.*, u.NAME
+        FROM
+        sys_userlog ul,
+        sys_user u
+        WHERE
+        ul.user_id = u.USER_ID
+        <if test="pd.operObj != null and pd.operObj != '' ">
+            and operObj like "%"#{pd.operObj}"%"
+        </if>
+        <if test="pd.logType != null and pd.logType != ''">
+            and logType like "%"#{pd.logType}"%"
+        </if>
+        <if test="pd.selTime != null and pd.selTime != ''">
+            and oper_date like "%"#{pd.selTime}"%"
+        </if>
+        <if test="pd.empName != null and pd.empName != ''">
+            and NAME like "%"#{pd.empName}"%"
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by oper_date desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="countLog" resultType="Integer" parameterType="page">
+        select count(ul.ID) from sys_userlog ul,sys_user u where ul.user_id = u.USER_ID
+        <if test="pd.operObj != null and pd.operObj != '' ">
+            and operObj like "%"#{pd.operObj}"%"
+        </if>
+        <if test="pd.logType != null and pd.logType != ''">
+            and logType like "%"#{pd.logType}"%"
+        </if>
+        <if test="pd.selTime != null and pd.selTime != ''">
+            and oper_date like "%"#{pd.selTime}"%"
+        </if>
+        <if test="pd.empName != null and pd.empName != ''">
+            and NAME like "%"#{pd.empName}"%"
+        </if>
+    </select>
+
+    <insert id="logOper" parameterType="UserLog">
+        INSERT INTO sys_userlog (
+        oper_date,
+        user_id,
+        logType,
+        operObj
+        <if test="content != null and user_id != ''">
+            ,content
+        </if>
+        )VALUES(
+        #{oper_date},
+        #{user_id},
+        #{logType},
+        #{operObj}
+        <if test="content != null and user_id != ''">
+            ,#{content}
+        </if>
+        )
+    </insert>
+
+</mapper>

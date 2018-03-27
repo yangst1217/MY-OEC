@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="KpiFilesMapper">
+
+    <sql id="kpiFilesColumns">
+		ID,	
+		KPI_CODE,
+		KPI_NAME,
+		KPI_CATEGORY_ID,
+		KPI_CATEGORY_NAME,
+		KPI_DESCRIPTION,
+		KPI_SQL,
+		KPI_UNIT,
+		PARENT_ID,		 
+		REMARKS,
+		ENABLED,
+		DOCUMENT,
+		DOCUMENT_ID,
+		CREATE_TIME,
+		CREATE_USER,
+		LAST_UPDATE_TIME,
+		LAST_UPDATE_USER,
+		RELATION_ID,
+		SUBJECT_ATTR,
+		IS_RECOMMEND,
+		UNIT_PRECI_CODE
+	</sql>
+
+    <!-- 取最大ID-->
+    <select id="maxID" parameterType="pd" resultType="pd">
+		select 
+			IFNULL(max(ID),0) 'max(ID)'
+		from 
+			BD_KPI_FILES
+	</select>
+
+    <insert id="saveDocument" parameterType="pd">
+		insert into ss_docfile(
+			DOCUMENT_ID,
+			FILENAME,
+			PATH
+		)values(
+			#{DOCUMENT_ID},
+			#{DOCUMENT},
+			#{PATH}
+		)
+	
+	</insert>
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd">
+		insert into BD_KPI_FILES(
+			KPI_CODE,
+			KPI_NAME,
+			KPI_CATEGORY_ID,
+			KPI_CATEGORY_NAME,
+			KPI_DESCRIPTION,
+			KPI_SQL,
+			KPI_UNIT,		
+			PARENT_ID,		
+			REMARKS,
+			ENABLED,
+			CREATE_TIME,
+			CREATE_USER,
+			LAST_UPDATE_TIME,
+			LAST_UPDATE_USER,
+			RELATION_ID,
+			SUBJECT_ATTR,
+			IS_RECOMMEND,
+			UNIT_PRECI_CODE,
+			DOCUMENT,
+			DOCUMENT_ID
+		) values (
+			#{KPI_CODE},
+			#{KPI_NAME,jdbcType=VARCHAR},
+			#{KPI_CATEGORY_ID},
+			#{KPI_CATEGORY_NAME},
+			#{KPI_DESCRIPTION},
+			#{KPI_SQL},
+			#{KPI_UNIT},		
+			#{PARENT_ID},		
+			'',
+			#{ENABLED},
+			#{CREATE_TIME},
+			#{CREATE_USER},
+			#{LAST_UPDATE_TIME},
+			#{LAST_UPDATE_USER},
+			#{RELATION_ID},
+			#{SUBJECT_ATTR},
+			#{IS_RECOMMEND},
+			#{UNIT_PRECI_CODE},
+			'',
+			#{DOCUMENT_ID}
+		)
+	</insert>
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="pd">
+		delete from BD_KPI_FILES
+		where 
+			ID = #{ID}
+	</delete>
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update BD_KPI_FILES
+			set 
+				KPI_CODE = #{KPI_CODE},
+				KPI_NAME = #{KPI_NAME},
+				KPI_DESCRIPTION = #{KPI_DESCRIPTION},
+				KPI_SQL = #{KPI_SQL},
+				KPI_UNIT = #{KPI_UNIT},		
+				PARENT_ID = #{PARENT_ID},		
+				
+				ENABLED = #{ENABLED},
+				DOCUMENT_ID = #{DOCUMENT_ID},
+				LAST_UPDATE_TIME = #{LAST_UPDATE_TIME},
+				LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+				RELATION_ID = #{RELATION_ID},
+				SUBJECT_ATTR = #{SUBJECT_ATTR},
+				IS_RECOMMEND = #{IS_RECOMMEND},
+				UNIT_PRECI_CODE = #{UNIT_PRECI_CODE}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过parentID获取数据 -->
+    <select id="findChildById" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			BD_KPI_FILES a
+		where 
+			a.PARENT_ID = #{ID}
+	</select>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			a.ID,	
+			a.KPI_CODE,
+			a.KPI_NAME,
+			a.KPI_CATEGORY_ID,
+			a.KPI_CATEGORY_NAME,
+			a.KPI_DESCRIPTION,
+			a.KPI_SQL,
+			a.KPI_UNIT,
+			a.PARENT_ID,
+			a.REMARKS,
+			a.ENABLED,
+			a.DOCUMENT_ID,
+			a.CREATE_TIME,
+			a.CREATE_USER,
+			a.LAST_UPDATE_TIME,
+			a.LAST_UPDATE_USER,
+			a.RELATION_ID,
+			a.SUBJECT_ATTR,
+			a.IS_RECOMMEND,
+			a.UNIT_PRECI_CODE
+		from 
+			BD_KPI_FILES a
+		where 
+			a.ID = #{ID}
+	</select>
+
+    <!-- 通过name获取数据 -->
+    <select id="findByName" parameterType="pd" resultType="pd">
+		select 
+			a.ID,	
+			a.KPI_CODE,
+			a.KPI_NAME,
+			a.KPI_CATEGORY_ID,
+			a.KPI_CATEGORY_NAME,
+			a.KPI_DESCRIPTION,
+			a.KPI_SQL,
+			a.KPI_UNIT,
+			a.PARENT_ID,
+			a.REMARKS,
+			a.ENABLED,
+			a.DOCUMENT_ID,
+			a.CREATE_TIME,
+			a.CREATE_USER,
+			a.LAST_UPDATE_TIME,
+			a.LAST_UPDATE_USER,
+			a.RELATION_ID,
+			a.SUBJECT_ATTR,
+			a.IS_RECOMMEND,
+			a.UNIT_PRECI_CODE
+		from 
+			BD_KPI_FILES a
+		where 
+			a.KPI_NAME = #{KPI_NAME}
+	</select>
+
+
+    <!-- 通过Code获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES
+        where
+        KPI_CODE = #{KPI_CODE}
+    </select>
+
+    <!-- 通过id获取数据文件 -->
+    <select id="findFileById" parameterType="pd" resultType="pd">
+			SELECT
+				b.FILENAME,
+				b.DOCUMENT_ID,
+				b.PATH
+			FROM
+				BD_KPI_FILES a
+			LEFT JOIN ss_docfile b ON a.DOCUMENT_ID = b.DOCUMENT_ID
+			WHERE
+				a.ID = #{ID}
+	</select>
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES a
+        where 1 = 1
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.SUBJECT_CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.SUBJECT_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.SUBJECT_CATEGORY LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.PARENT_ID LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAll" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES
+    </select>
+
+    <select id="checkEmp" parameterType="pd" resultType="java.util.LinkedHashMap">
+	  SELECT 
+	  COUNT(1) E
+	  FROM BD_KPI_FILES a 
+	  WHERE a.KPI_CATEGORY_ID =  #{ID}
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAllByModelId" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES
+        where KPI_CODE not in
+        (select
+        KPI_CODE
+        from BD_KPI_MODEL_LINE
+        where MODEL_ID = #{MODEL_ID}
+        )
+        <if test="KPI_ID != null and KPI_ID != '' and KPI_ID != 'a1'">
+            AND KPI_CATEGORY_ID= #{KPI_ID}
+        </if>
+        <if test="subIds !=null and subIds!=''">
+            AND id not in (${subIds})
+        </if>
+    </select>
+
+    <!-- 查询已启用的列表 -->
+    <select id="listAllEnab" parameterType="pd" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES
+        where ENABLED = 1
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAllByIds" parameterType="String" resultType="pd">
+        select
+        <include refid="kpiFilesColumns"/>
+        from
+        BD_KPI_FILES
+        where
+        ENABLED = 1
+        and
+        id not in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+    </select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from BD_KPI_FILES
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 批量获取 -->
+    <select id="getAllById" parameterType="String" resultType="pd">
+        select PATH from BD_KPI_FILES
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+    <!-- 列表(KPI类型) -->
+    <select id="listKpiType" parameterType="pd" resultType="pd">
+		select
+			a.ID,	
+			a.CODE,	
+			a.NAME,	
+			a.REMARKS
+		from 
+			BD_KPI_CATEGORY_FILES a
+	</select>
+
+
+</mapper>

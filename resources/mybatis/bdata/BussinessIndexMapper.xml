@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BussinessIndexMapper">
+
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd" keyProperty="ID">
+		insert into bd_bussiness_index(
+			INDEX_CODE,
+			INDEX_NAME,
+			ISDEL,
+			DESCP,
+			CREATE_USER,
+			CREATE_TIME,
+			UPDATE_USER,
+			UPDATE_TIME
+		) values (
+			#{INDEX_CODE},
+			#{INDEX_NAME},
+			0,
+			#{DESCP},
+			#{CREATE_USER},
+			#{CREATE_TIME},
+			#{UPDATE_USER},
+			#{UPDATE_TIME}
+		)
+	</insert>
+
+    <!-- 删除 -->
+    <update id="delete" parameterType="pd">
+		update  bd_bussiness_index
+			set 
+				ISDEL = 1,
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update  bd_bussiness_index
+			set 
+				INDEX_NAME = #{INDEX_NAME},
+				INDEX_CODE = #{INDEX_CODE},
+				DESCP  = #{DESCP},
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_bussiness_index
+		where 
+			ID = #{ID}
+	</select>
+
+
+    <!-- 列表 -->
+    <select id="listPageIndex" parameterType="page" resultType="pd">
+        select
+        *
+        from
+        bd_bussiness_index a
+        where a.ISDEL = 0
+        <if test="pd.INDEX_NAME != null and pd.INDEX_NAME != ''">
+            AND a.INDEX_NAME LIKE (CONCAT('%',#{pd.INDEX_NAME},'%'))
+        </if>
+        <if test="pd.INDEX_CODE != null and pd.INDEX_CODE != ''">
+            AND a.INDEX_CODE LIKE (CONCAT('%',#{pd.INDEX_CODE},'%'))
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by INDEX_CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 通过CODE获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_bussiness_index
+		where 
+			INDEX_CODE = #{INDEX_CODE}
+	</select>
+
+    <!-- 无参全部 -->
+    <select id="findAll" resultType="pd">
+        SELECT * FROM bd_bussiness_index WHERE ISDEL = 0;
+    </select>
+
+    <!-- 检查经营指标是否被使用 -->
+    <select id="checkBusiIndexUsed" parameterType="Integer" resultType="pd">
+    	select count(ID) num from b_year_target 
+    	where INDEX_CODE = (select INDEX_CODE from bd_bussiness_index where ID=#{id})
+    	and ISDEL=0
+    </select>
+</mapper>

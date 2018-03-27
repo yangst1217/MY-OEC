@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProjectChangeMapper">
+
+    <!-- 申请列表 -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        a.ID,
+        a.CHANGE_DESCP,
+        c.NAME CREATE_USER,
+        CONVERT(a.UPDATE_TIME,CHAR) UPDATE_TIME,
+        a.`STATUS`,
+        b.NAME
+        from
+        c_project_change a
+        LEFT JOIN c_project b ON b.CODE = a.C_PROJECT_CODE
+        LEFT JOIN sys_user c ON c.USERNAME = a.CREATE_USER
+        WHERE a.ISDEL = 0
+        AND a.CREATE_USER = #{pd.USER}
+        <if test="pd.STATUS != null and pd.STATUS != ''">
+            AND a.STATUS = #{pd.STATUS}
+        </if>
+        <if test="pd.NAME != null and pd.NAME != ''">
+            AND b.NAME LIKE (CONCAT('%',#{pd.NAME},'%'))
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                ORDER BY a.UPDATE_TIME DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 审批列表查询 -->
+    <select id="checklistPage" parameterType="page" resultType="pd">
+        select
+        a.ID,
+        a.CHANGE_DESCP,
+        c.NAME CREATE_USER,
+        CONVERT(a.UPDATE_TIME,CHAR) UPDATE_TIME,
+        a.`STATUS`,
+        d.`STATUS` AUDITSTATUS,
+        b.NAME
+        from
+        c_project_change a
+        LEFT JOIN c_project b ON b.CODE = a.C_PROJECT_CODE
+        LEFT JOIN sys_user c ON c.USERNAME = a.CREATE_USER
+        LEFT JOIN project_change_audit d on a.ID=d.project_change_id
+        WHERE a.ISDEL = 0
+        AND d.AUDITOR = #{pd.USERNUMBER}
+        <if test="pd.STATUS != null and pd.STATUS != ''">
+            AND a.STATUS = #{pd.STATUS}
+        </if>
+        <if test="pd.NAME != null and pd.NAME != ''">
+            AND b.NAME LIKE (CONCAT('%',#{pd.NAME},'%'))
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                ORDER BY a.UPDATE_TIME DESC
+            </otherwise>
+        </choose>
+    </select>
+
+
+    <!-- 审核列表 -->
+    <select id="listPageCheck" parameterType="page" resultType="pd">
+        select
+        a.ID,
+        a.CHANGE_DESCP,
+        c.NAME CREATE_USER,
+        CONVERT(a.UPDATE_TIME,CHAR) UPDATE_TIME,
+        a.STATUS,
+        b.NAME
+        from
+        c_project_change a,c_project b,sys_user c,bd_project_type d
+        WHERE a.ISDEL = 0
+        AND b.CODE = a.C_PROJECT_CODE
+        AND b.PROJECT_TYPE_ID = d.ID
+        AND c.NUMBER = d.CHECK_PERSON_CODE
+        AND c.USERNAME = #{pd.USER}
+        AND a.`STATUS` IN ('YW_DSX','YW_YSX','YW_YTH')
+        <if test="pd.STATUS != null and pd.STATUS != ''">
+            AND a.STATUS = #{pd.STATUS}
+        </if>
+        <if test="pd.NAME != null and pd.NAME != ''">
+            AND b.NAME LIKE (CONCAT('%',#{pd.NAME},'%'))
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                ORDER BY a.UPDATE_TIME DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!--保存文件-->
+    <insert id="saveDocument" parameterType="pd">
+		insert into ss_docfile(
+			DOCUMENT_ID,
+			FILENAME,
+			PATH
+		)values(
+			#{DOCUMENT_ID},
+			#{DOCUMENT},
+			#{PATH}
+		)
+	
+	</insert>
+
+    <!--新增变更单-->
+    <insert id="saveChange" parameterType="pd" useGeneratedKeys="true" keyProperty="ID">
+		insert into c_project_change(
+			C_PROJECT_CODE,
+			CHANGE_DESCP,
+			STATUS,
+			ISDEL,
+			CREATE_USER,
+			CREATE_TIME,
+			UPDATE_USER,
+			UPDATE_TIME,
+			DOCUMENT_ID,
+			CHANGE_COMPLETION
+		)values(
+			#{C_PROJECT_CODE},
+			#{CHANGE_DESCP},
+			'YW_CG',
+			'0',
+			#{CREATE_USER},
+			#{CREATE_TIME},
+			#{UPDATE_USER},
+			#{UPDATE_TIME},
+			#{DOCUMENT_ID},
+			#{CHANGE_COMPLETION}
+		)	
+	</insert>
+
+    <!--批量新增变更单明细-->
+    <insert id="batchAddDetail" parameterType="list" flushCache="false">
+        insert into c_project_change_detail(
+        C_PROJECT_CHANGE_ID,
+        CHANGE_TYPE,
+        CHANGE_OBJ_ID,
+        BEFORE_START_DATE,
+        AFTER_START_DATE,
+        BEFORE_END_DATE,
+        AFTER_END_DATE,
+        ISDEL,
+        CREATE_USER,
+        CREATE_TIME,
+        UPDATE_USER,
+        UPDATE_TIME,
+        BEFORE_WEIGHT,
+        AFTER_WEIGHT
+        )values
+        <foreach item="item" index="index" collection="list" separator=",">
+            (
+            #{item.C_PROJECT_CHANGE_ID},
+            #{item.CHANGE_TYPE},
+            #{item.CHANGE_OBJ_ID},
+            #{item.BEFORE_START_DATE},
+            #{item.AFTER_START_DATE},
+            #{item.BEFORE_END_DATE},
+            #{item.AFTER_END_DATE},
+            '0',
+            #{item.CREATE_USER},
+            #{item.CREATE_TIME},
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.BEFORE_WEIGHT},
+            #{item.AFTER_WEIGHT}
+            )
+        </foreach>
+    </insert>
+
+    <!--跟据ID查找变更单 -->
+    <select id="findChangeByID" parameterType="pd" resultType="pd">
+		select
+				a.*,
+				b.`NAME` C_PROJECT_NAME
+		from 
+				c_project_change a, c_project b
+		WHERE a.ID = #{ID}
+		AND b.`CODE` = a.C_PROJECT_CODE
+	</select>
+
+    <!--跟据ID查找变更单明细 -->
+    <select id="findChangeDetailByID" parameterType="pd" resultType="pd">
+		select
+				
+				(case a.CHANGE_TYPE when 'JDBG' then b.NODE_TARGET 
+             when 'HDBG' then c.NAME 
+				END) CHANGE_NAME,
+				a.*
+		from 
+				c_project_change_detail a
+		LEFT JOIN c_project_node b ON a.CHANGE_OBJ_ID = b.ID
+		LEFT JOIN c_project_event c ON a.CHANGE_OBJ_ID = c.ID
+		WHERE a.C_PROJECT_CHANGE_ID = #{ID}
+		AND a.ISDEL = 0
+	</select>
+
+    <!-- 删除变更单-->
+    <update id="deleteChange" parameterType="pd">
+		update c_project_change
+			set 
+				ISDEL = '1',
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过id获取数据文件 -->
+    <select id="findFileById" parameterType="pd" resultType="pd">
+			SELECT
+				FILENAME,
+				PATH
+			FROM
+				ss_docfile a
+			WHERE
+				a.DOCUMENT_ID = #{DOCUMENT_ID}
+	</select>
+
+    <!-- 修改变更单-->
+    <update id="edit" parameterType="pd">
+		update c_project_change
+			set 
+				CHANGE_DESCP = #{CHANGE_DESCP},
+				CHANGE_COMPLETION = #{CHANGE_COMPLETION},
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 删除变更单明细-->
+    <update id="deleteChangeDetail" parameterType="pd">
+		update c_project_change_detail
+			set 
+				ISDEL = '1',
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				C_PROJECT_CHANGE_ID = #{ID}
+	</update>
+
+    <!-- 批量删除变更单明细-->
+    <update id="batchDeleteDetail" parameterType="String">
+        update c_project_change_detail
+        set
+        ISDEL = '1'
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!-- 批量更新变更单明细-->
+    <update id="batchUpdate" parameterType="pd">
+        update c_project_change_detail
+        <set>
+            <if test="C_PROJECT_CHANGE_ID != null">
+                C_PROJECT_CHANGE_ID = #{C_PROJECT_CHANGE_ID,jdbcType=INTEGER},
+            </if>
+            <if test="CHANGE_TYPE != null">
+                CHANGE_TYPE = #{CHANGE_TYPE,jdbcType=VARCHAR},
+            </if>
+            <if test="CHANGE_OBJ_ID != null">
+                CHANGE_OBJ_ID = #{CHANGE_OBJ_ID,jdbcType=INTEGER},
+            </if>
+            <if test="BEFORE_START_DATE != null">
+                BEFORE_START_DATE = #{BEFORE_START_DATE,jdbcType=TIMESTAMP},
+            </if>
+            <if test="AFTER_START_DATE != null">
+                AFTER_START_DATE = #{AFTER_START_DATE,jdbcType=TIMESTAMP},
+            </if>
+            <if test="BEFORE_END_DATE != null">
+                BEFORE_END_DATE = #{BEFORE_END_DATE,jdbcType=TIMESTAMP},
+            </if>
+            <if test="AFTER_END_DATE != null">
+                AFTER_END_DATE = #{AFTER_END_DATE,jdbcType=TIMESTAMP},
+            </if>
+            <if test="AFTER_END_DATE != null">
+                AFTER_END_DATE = #{AFTER_END_DATE,jdbcType=TIMESTAMP},
+            </if>
+            <if test="ISDEL != null">
+                ISDEL = #{ISDEL,jdbcType=INTEGER},
+            </if>
+            <if test="CREATE_USER != null">
+                CREATE_USER = #{CREATE_USER,jdbcType=VARCHAR},
+            </if>
+            <if test="CREATE_TIME != null">
+                CREATE_TIME = #{CREATE_TIME,jdbcType=TIMESTAMP},
+            </if>
+            <if test="UPDATE_USER != null">
+                UPDATE_USER = #{UPDATE_USER,jdbcType=VARCHAR},
+            </if>
+            <if test="UPDATE_TIME != null">
+                UPDATE_TIME = #{UPDATE_TIME,jdbcType=TIMESTAMP},
+            </if>
+            <if test="BEFORE_WEIGHT != null">
+                BEFORE_WEIGHT = #{BEFORE_WEIGHT,jdbcType=VARCHAR},
+            </if>
+            <if test="AFTER_WEIGHT != null">
+                AFTER_WEIGHT = #{AFTER_WEIGHT,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation3 != null">
+                preparation3 = #{preparation3,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation4 != null">
+                preparation4 = #{preparation4,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation5 != null">
+                preparation5 = #{preparation5,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation6 != null">
+                preparation6 = #{preparation6,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation7 != null">
+                preparation7 = #{preparation7,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation8 != null">
+                preparation8 = #{preparation8,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation9 != null">
+                preparation9 = #{preparation9,jdbcType=VARCHAR},
+            </if>
+            <if test="preparation10 != null">
+                preparation10 = #{preparation10,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where ID = #{id,jdbcType=INTEGER}
+    </update>
+
+
+    <!-- 更新变更单状态-->
+    <update id="updateChangeStatus" parameterType="pd">
+        update c_project_change
+        set
+        <if test="OPINION != null and OPINION != ''">
+            OPINION = #{OPINION},
+        </if>
+        STATUS = #{STATUS},
+        UPDATE_USER = #{UPDATE_USER},
+        UPDATE_TIME = #{UPDATE_TIME}
+        where
+        ID = #{ID}
+    </update>
+
+    <!--项目列表 -->
+    <select id="findChangeByDocID" parameterType="pd" resultType="pd">
+		select
+				*								
+		from 
+				c_project_change 
+		WHERE DOCUMENT_ID = #{DOCUMENT_ID}
+	</select>
+
+
+    <!--项目列表 -->
+    <select id="findProjectByUSER" parameterType="pd" resultType="pd">
+		select
+				*								
+		from 
+				c_project a
+		WHERE a.CREATE_USER = #{USER}
+		AND ISDEL = 0
+		AND STATUS = 'YW_YSX'
+	</select>
+
+
+    <!--跟据项目查询活动 -->
+    <select id="findEvent" parameterType="pd" resultType="pd">
+		SELECT
+			ID,
+			NAME CHANGE_NAME,
+			CONVERT(START_DATE,CHAR)  BEFORE_START_DATE,
+			CONVERT(END_DATE,CHAR)  BEFORE_END_DATE
+		FROM
+			c_project_event
+		WHERE C_PROJECT_CODE = #{C_PROJECT_CODE}
+		AND ISDEL = 0
+		AND STATUS = 'YW_YSX'
+	</select>
+
+    <!--跟据项目查询节点 -->
+    <select id="findNode" parameterType="pd" resultType="pd">
+		SELECT
+			ID,
+			C_PROJECT_CODE,
+			NODE_TARGET CHANGE_NAME,
+			PROJECT_NODE_LEVEL_ID,
+			PARENT_ID,
+			DEPT_CODE,
+			EMP_CODE,
+			CONVERT(PLAN_DATE,CHAR) BEFORE_END_DATE,
+			WEIGHT,
+			DESCP,
+			STATUS,
+			ISDEL
+		FROM
+			c_project_node
+		WHERE C_PROJECT_CODE = #{C_PROJECT_CODE}
+		AND ISDEL = 0
+		AND STATUS = 'YW_YSX'
+	</select>
+
+
+    <!--跟据ID查询节点 -->
+    <select id="findNodeByID" parameterType="pd" resultType="pd">
+		select
+			CONVERT(PLAN_DATE,CHAR)	PLAN_DATE,
+			WEIGHT							
+		from 
+				c_project_node 
+		WHERE ID = #{NODE_ID}
+	</select>
+
+
+    <!--跟据ID查询活动 -->
+    <select id="findEventByID" parameterType="pd" resultType="pd">
+		select
+			CONVERT(START_DATE,CHAR) START_DATE,
+			CONVERT(END_DATE,CHAR) END_DATE,
+			WEIGHT				
+		from 
+				c_project_event 
+		WHERE ID = #{EVENT_ID}
+	</select>
+
+    <!--查询创新变更类型-->
+    <select id="findType" parameterType="pd" resultType="pd">
+		select
+				*							
+		from 
+				sys_dictionaries a
+		WHERE a.PARENT_ID = "867d855514214d4085a67a1bc7da798d"
+	</select>
+
+
+    <!--根据ID查找变更单 -->
+    <select id="findChangeByCode" parameterType="pd" resultType="pd">
+		select
+				b.NAME C_PROJECT_NAME,
+				a.*								
+		from 
+				c_project_change a
+		LEFT JOIN c_project b ON a.C_PROJECT_CODE= b.CODE
+		WHERE a.C_PROJECT_CODE = #{C_PROJECT_CODE}
+	</select>
+
+
+    <!-- 修改活动时间-->
+    <update id="updateEvent" parameterType="pd">
+        update c_project_event
+        set
+        START_DATE = #{AFTER_START_DATE},
+        END_DATE = #{AFTER_END_DATE},
+        UPDATE_USER = #{UPDATE_USER},
+        UPDATE_TIME = #{UPDATE_TIME}
+        <if test="AFTER_WEIGHT!=null and AFTER_WEIGHT!=''">
+            ,WEIGHT = #{AFTER_WEIGHT}
+        </if>
+        where
+        ID = #{CHANGE_OBJ_ID}
+    </update>
+
+    <!-- 修改节点时间-->
+    <update id="updateNode" parameterType="pd">
+        update c_project_node
+        set
+        PLAN_DATE = #{AFTER_END_DATE},
+        UPDATE_USER = #{UPDATE_USER},
+        UPDATE_TIME = #{UPDATE_TIME}
+        <if test="AFTER_WEIGHT!=null and AFTER_WEIGHT!=''">
+            ,WEIGHT = #{AFTER_WEIGHT}
+        </if>
+        where
+        ID = #{CHANGE_OBJ_ID}
+    </update>
+    <insert id="batchAddAuditors" parameterType="list" flushCache="false">
+        INSERT INTO project_change_audit(
+        PROJECT_CHANGE_ID,AUDITOR,`STATUS`,CREATE_USER,CREATE_TIME
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.PROJECT_CHANGE_ID},
+            #{item.AUDITOR},
+            #{item.STATUS},
+            #{item.CREATE_USER},
+            #{item.CREATE_TIME}
+            )
+        </foreach>
+    </insert>
+
+    <select id="findAuditors" parameterType="pd" resultType="pd">
+		select 
+			a.ID,CONVERT(a.UPDATE_TIME,CHAR) UPDATE_TIME,CONVERT(a.CREATE_TIME,CHAR) CREATE_TIME,
+			a.PROJECT_CHANGE_ID,a.OPINION,a.AUDITOR,a.CREATE_USER,a.UPDATE_USER,a.STATUS,
+			u.NUMBER EMP_CODE,u.`NAME` EMP_NAME, s.`NAME` STATUSNAME
+		from 
+			project_change_audit a 
+			LEFT JOIN c_project_change c on a.PROJECT_CHANGE_ID = c.ID
+			LEFT JOIN sys_user u on a.AUDITOR = u.NUMBER
+			LEFT JOIN sys_status s on a.`STATUS` = s.BIANMA
+		where 
+			a.PROJECT_CHANGE_ID = #{ID}
+		order by a.ID
+	</select>
+
+    <delete id="deleteAdudit" parameterType="pd">
+		delete from project_change_audit where PROJECT_CHANGE_ID = #{ID}
+	</delete>
+
+    <update id="updateAuditStatus" parameterType="pd">
+        update
+        project_change_audit
+        set
+        STATUS = #{STATUS}
+        <if test="OPINION != null and OPINION != ''">
+            ,OPINION = #{OPINION}
+        </if>
+        <if test="UPDATE_USER != null and UPDATE_USER != ''">
+            ,UPDATE_USER = #{UPDATE_USER}
+        </if>
+        <if test="UPDATE_TIME != null and UPDATE_TIME != ''">
+            ,UPDATE_TIME = #{UPDATE_TIME}
+        </if>
+        where
+        PROJECT_CHANGE_ID = #{ID}
+        <if test="AUDITOR != null and AUDITOR != ''">
+            AND AUDITOR = #{AUDITOR}
+        </if>
+    </update>
+
+    <select id="allDetail" parameterType="pd" resultType="Integer">
+		select 
+			count(1) 
+		from 
+			project_change_audit 
+		where 
+			PROJECT_CHANGE_ID = #{ID}
+	</select>
+
+    <select id="hasChecked" parameterType="pd" resultType="Integer">
+		select 
+			count(1) 
+		from 
+			project_change_audit 
+		where 
+			PROJECT_CHANGE_ID = #{ID}
+			and STATUS = 'YW_YSX'
+	</select>
+    <select id="findAuditDetail" parameterType="pd" resultType="pd">
+		select 
+			* 
+		from 
+			project_change_audit 
+		where 
+			PROJECT_CHANGE_ID = #{ID}
+			and AUDITOR = #{AUDITOR}
+	</select>
+</mapper>

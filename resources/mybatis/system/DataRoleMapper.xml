@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="dataroleMapper">
+
+    <select id="findByUser" parameterType="java.lang.String" resultType="pd">
+		select datarole.ID, datarole.USER_ID, datarole.DEPT_ID, datarole.CREATE_USER, datarole.CREATE_TIME, dep.DEPT_CODE, dep.DEPT_NAME
+		from sys_datarole datarole 
+		left join bd_department dep on dep.ID=datarole.DEPT_ID
+		where datarole.user_id = #{userid}
+		order by dep.ORDER_NUM
+	</select>
+
+    <!-- 保存数据权限 -->
+    <insert id="save" parameterType="DataRole">
+		INSERT INTO sys_datarole (
+			ID,
+			USER_ID,
+			DEPT_ID,
+			CREATE_USER,
+			CREATE_TIME
+		)
+		VALUES(
+			#{ID},
+			#{USER_ID},
+			#{DEPT_ID},
+			#{CREATE_USER},
+			#{CREATE_TIME}
+		);
+	</insert>
+
+    <!-- 删除用户相关数据权限 -->
+    <delete id="delete" parameterType="java.lang.String">
+		delete from sys_datarole where USER_ID = #{userid};
+	</delete>
+
+    <!-- 查询拥有某个部门数据权限的部长级别以上的领导 -->
+    <select id="findEmpCodeInDataRoleByDeptId" parameterType="Integer" resultType="pd">
+		select datarole.DEPT_ID, user.USER_ID, user.USERNAME, user.NUMBER
+		from sys_datarole datarole
+		left join sys_user user on user.USER_ID = datarole.USER_ID
+		where datarole.DEPT_ID = #{deptId} and user.DEPT_ID!=  #{deptId}
+	</select>
+</mapper>

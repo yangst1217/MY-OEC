@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="KpiCategoryMapper">
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd">
+		insert into BD_KPI_CATEGORY_FILES(
+		    
+			CODE,	
+			NAME,	
+			REMARKS,
+			PARENT_ID
+		) values (
+
+			#{CODE},	
+			#{NAME},	
+			#{REMARKS},
+			0	
+		)
+	</insert>
+
+    <!-- 新增次级-->
+    <insert id="saveSec" parameterType="pd">
+		insert into BD_KPI_CATEGORY_FILES(
+		    ID,
+			CODE,	
+			NAME,	
+			REMARKS,
+			PARENT_ID
+		) values (
+		    #{CODE},
+			#{CODE},	
+			#{NAME},	
+			#{REMARKS},
+			#{PARENT_ID}	
+		)
+	</insert>
+
+    <!-- 删除-->
+    <delete id="delete" parameterType="pd">
+		delete from BD_KPI_CATEGORY_FILES
+		where 
+			ID = #{ID}
+	</delete>
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update  BD_KPI_CATEGORY_FILES
+			set 
+				CODE = #{CODE},
+				NAME = #{NAME},
+				REMARKS = #{REMARKS}
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			ID,	
+			CODE,	
+			NAME,	
+			REMARKS,
+			PARENT_ID
+		from 
+			BD_KPI_CATEGORY_FILES
+		where 
+			ID = #{ID}
+	</select>
+
+    <!-- 通过Name获取数据 -->
+    <select id="findByName" parameterType="pd" resultType="pd">
+		select 
+			ID,	
+			CODE,	
+			NAME,	
+			REMARKS,
+			PARENT_ID
+		from 
+			BD_KPI_CATEGORY_FILES
+		where 
+			NAME = #{NAME}
+	</select>
+
+
+    <!-- 通过ID获取数据 -->
+    <select id="findByParentIdName" parameterType="pd" resultType="pd">
+		select 
+			NAME	
+			
+		from 
+			BD_KPI_CATEGORY_FILES
+		where 
+			ID = #{PARENT_ID}
+	</select>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findByIdName" parameterType="pd" resultType="pd">
+		select 
+			NAME	
+			
+		from 
+			BD_KPI_CATEGORY_FILES
+		where 
+			ID = #{ID}
+	</select>
+
+    <!-- 通过code获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+		select 
+			ID,	
+			CODE,	
+			NAME,	
+			REMARKS
+		from 
+			BD_KPI_CATEGORY_FILES
+		where 
+			CODE = #{CODE}
+	</select>
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        a.ID,
+        a.CODE,
+        a.NAME,
+        a.REMARKS
+        from
+        BD_CATEGORY_FILES a
+        where 1 = 1
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.CODE LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.REMARKS LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+    </select>
+
+    <!-- 列表(全部) -->
+    <select id="listAll" parameterType="pd" resultType="pd">
+		select
+			a.ID,	
+			a.CODE,	
+			a.NAME,	
+			a.REMARKS,
+			a.PARENT_ID
+		from 
+			BD_KPI_CATEGORY_FILES a
+	</select>
+
+    <!-- 列表(无参全部) -->
+    <select id="listAlln" resultType="pd">
+		select
+				a.ID,	
+				a.CODE,	
+				a.NAME,	
+				a.REMARKS
+		from 
+				BD_KPI_CATEGORY_FILES a
+	</select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from BD_KPI_CATEGORY_FILES
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 批量获取 -->
+    <select id="getAllById" parameterType="String" resultType="pd">
+        select PATH from BD_KPI_CATEGORY_FILES
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

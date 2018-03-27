@@ -1,0 +1,244 @@
+.mession.salesmession ul.dropdownStyleul2 {
+    position: absolute;
+    left: -190px;
+}
+
+.wrapStyle a.smallBtn img {
+    position: relative;
+    top: 50%;
+    margin-top: -4px;
+    left: 0;
+}
+
+.mession2 .wrapStyle .wrapContentleft {
+    width: 94px;
+    font-size: 14px;
+}
+
+.mession2 .wrapStyle .wrapContentright input.date_pic_css {
+    background: url(../images/icon_31_bb1.png) no-repeat 65px center #f1f2f6 !important;
+    cursor: pointer;
+    width: 94px;
+}
+
+/*报价单操作*/
+.wrapStyle a.btnstyle..salesBtn {
+    padding: 14px 28px;
+}
+
+.wrapStyle a.btnstyle.blueBtn.salesBtn {
+    padding: 14px 42px;
+}
+
+.mession2 .PB16 {
+    padding-bottom: 16px !important;
+}
+
+/*报价单列表*/
+.quotationlist .wrapStyle a.smallBtn {
+    padding: 6px 18px;
+}
+
+/*分页*/
+span.tongji {
+    line-height: 36px;
+    font-size: 12px;
+    color: #908f8f;
+    float: left;
+    margin-right: 16px;
+}
+
+/*弹窗位置调整*/
+.mession2 ul.dropdownStyleul2 {
+    left: -169px;
+}
+
+/*-------------------------------------------销售首页如上-----------------------------------------------*/
+/*-------------------------------------------销售详情页样式如下-----------------------------------------------*/
+.tag.quotation-tag ul li {
+    width: 238px;
+    padding: 13px 0;
+}
+
+.tag.quotation-tag ul li:last-child {
+    width: 238px;
+}
+
+.p-quotationpage .tag-div .tag-div-tag1-row1 ul li {
+    padding: 0;
+    line-height: 30px;
+}
+
+.quotation-tag .tag-div .tag-div-tag1 .tag-div-tag1-row1 ul {
+    padding-bottom: 14px;
+    padding-top: 3px;
+}
+
+.p-quotationpage .tag-div .tag-div-tag1-topic {
+    padding-top: 12px;
+}
+
+.quotation-tag .tag-div {
+    margin: 0 40px;
+}
+
+/*基本信息*/
+.basicinfo .rowStyle span.contentText {
+    font-size: 14px;
+    line-height: 36px;
+}
+
+.w448 {
+    width: 448px !important;
+}
+
+.moduleboxmid1 {
+    padding-left: 10px;
+    padding-bottom: 10px;
+}
+
+/*产品信息*/
+.quotationtagbox .boxright .quotationtag .tag-div .tag-div-tag1 .tag-div-tag1-row1 ul li {
+    padding-right: 10px !important;
+    width: 286px !important;
+    word-wrap: break-word;
+    word-break: break-all;
+    white-space: normal;
+}
+
+/*单选框开始*/
+.modulebox.moduleboxmid ul li {
+    float: left;
+    margin-right: 10px;
+    display: inline;
+}
+
+.modulebox.moduleboxmid ul li input {
+    display: none;
+}
+
+.modulebox.moduleboxmid ul li a {
+    float: left;
+    background: #fff;
+    font-size: 14px;
+    border: 1px solid #d0d0d0;
+    height: 14px;
+    line-height: 14px;
+    padding: 6px 9px;
+    display: block;
+}
+
+.modulebox.moduleboxmid ul li a.current {
+    background: url(../images/right-icon.png) no-repeat 100% 100%;
+    border: 2px solid #035aa9;
+    background-color: #fff;
+}
+
+.modulebox.moduleboxmid ul li a span {
+    color: #4b4b4b;
+}
+
+/*单选框结束*/
+.messionproduct {
+    margin-top: 10px;
+    background: none;
+}
+
+.messionproduct .listStyle {
+    background: none;
+}
+
+.quotationtagbox {
+    overflow: hidden;
+    background-color: #ffffff;
+}
+
+.productinfo {
+    overflow: hidden;
+    width: 260px;
+    float: left;
+    border-right: 1px solid #d0d0d0;
+}
+
+.productinfoLeft {
+    /* float: left; */
+    border-bottom: 1px solid #dfdfdf;
+    width: 260px;
+    height: 260px;
+    position: relative;
+    /* margin: 20px; */
+}
+
+.boxright {
+    float: right;
+    margin-left: -261px;
+    width: 929px;
+    border-left: 1px solid #d0d0d0;
+}
+
+.tag.S5tag.quotationtag {
+    margin-top: 0;
+}
+
+.quotationtag .tag-div {
+    margin: 0 20px;
+    padding: 0;
+}
+
+.productinfoLeft img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -50px;
+    margin-left: -50px;
+}
+
+.productinfoRight {
+    margin-top: 10px;
+    margin-left: 20px;
+}
+
+span.productinfo-previous {
+    font-size: 14px;
+    line-height: 36px;
+    width: 85px;
+    display: inline-block;
+    overflow: hidden;
+}
+
+span.productinfo-back {
+    font-size: 14px;
+    line-height: 36px;
+    width: 130px;
+    display: inline-block;
+    overflow: hidden;
+    /* text-overflow: ellipsis; */
+    /* white-space: nowrap; */
+    word-wrap: break-word;
+    word-break: break-all;
+    vertical-align: top;
+}
+
+/*.productinfoRight ul li {
+	float: left;
+}*/
+.productinfoRight ul {
+    overflow: hidden;
+}
+
+/*摘除放在less里*/
+.tag.S5tag.quotationtag ul:first-child li:last-child {
+    border-right: none;
+}
+
+.tag.S5tag.quotationtag ul:first-child li {
+    width: 19.915% !important;
+}
+
+.tag.S5tag.quotationtag ul:first-child li {
+    padding: 13px 0;
+    border-bottom: 1px solid #d0d0d0;
+    border-right: 1px solid #d0d0d0;
+}
+
+/*-------------------------------------------销售详情页样式如上-----------------------------------------------*/

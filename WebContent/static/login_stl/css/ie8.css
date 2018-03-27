@@ -1,0 +1,172 @@
+﻿@charset "utf-8";
+/* CSS Document */
+/*登陆页BTN*/
+a.btn-Login, a.btn-register {
+    width: 235px;
+}
+
+.loginCenter-moudleRight A.moudle1.loginCenter-moudle1.loginCenter-mStyle {
+    padding-top: 0px;
+}
+
+.loginCenter-moudleRight A.moudle2.loginCenter-moudle2.loginCenter-mStyle {
+    padding-top: 0px;
+}
+
+.loginCenter-moudleRight A.moudle3.loginCenter-moudle3.loginCenter-mStyle {
+    padding: 0px;
+}
+
+/*忘记密码*/
+.ieContentstyle {
+    width: 302px !important;
+}
+
+.w400 {
+    width: 410px !important;
+}
+
+.Contentstyle SPAN.Contentstyle6 SPAN.ContentstyleNew {
+    vertical-align: middle;
+}
+
+.Contentstyle SPAN.Contentstyle6 .input3 {
+    vertical-align: middle;
+}
+
+/*注册代码*/
+.registerStyle-left3 .ui-form-item SELECT.selectStyle {
+    margin-left: 0px;
+    padding: 10px 0px;
+    line-height: 38px;
+}
+
+/*首页搜索框*/
+.search INPUT[type='text'] {
+    height: 34px;
+    vertical-align: middle;
+    line-height: 34px;
+}
+
+/*项目执行页面样式*/
+.implementContent-top SPAN.text1 {
+    width: 148px;
+}
+
+.w148 {
+    width: 145px !important;
+}
+
+.wrapStyle input {
+    padding-left: 0px;
+}
+
+ul.dropdownStyleul2, ul.dropdownStyleul3, ul.dropdownStyleul2, ul.dropdownStyleul6 {
+    left: -152px;
+    top: 35px;
+    z-index: 10;
+}
+
+ul.dropdownStyleul4 {
+    left: -91px;
+    top: 33px;
+    z-index: 10;
+}
+
+/*项目执行中的身份证*/
+.informationCard {
+    width: 328px;
+}
+
+/*首页上传附件弹窗*/
+.windowRadio .element_radio {
+    vertical-align: top;
+}
+
+/*交互记录文本域*/
+.comment1 textarea {
+    height: 65px;
+    border: 2px solid #f1f2f6;
+    padding: 10px;
+    resize: none;
+    width: 558px;
+    border-right: none;
+    border-top: none;
+}
+
+/*tab切换页*/
+.tag.S5tag.quotationtag ul:first-child li {
+    width: 19.89% !important;
+}
+
+/*产品库详情页*/
+.filter .f-edit {
+    margin-top: -19px;
+}
+
+.btn-related {
+    line-height: 27px !important;
+}
+
+.nopass {
+    background: url(../images/nopass.png) repeat;
+}
+
+.passing {
+    background: url(../images/passing.png) repeat;
+}
+
+.saving {
+    background: url(../images/saving.png) repeat;
+}
+
+.nofinal {
+    background: url(../images/nofinal.png) repeat;
+}
+
+.p-copy {
+    background: url(../images/pcopy.png) repeat;
+}
+
+/*供应商信息管理页面*/
+.w185 {
+    width: 185px !important;
+}
+
+.wrapStyle .wrapContentright textarea {
+    padding: 0;
+    width: 505px;
+    height: 78px !important;
+}
+
+.wrapStyle .wrapContentright.wraptextie textarea {
+    width: 832px !important;
+}
+
+.w94 {
+    width: 94px !important;
+}
+
+.dropdownBtn {
+    height: 32px;
+}
+
+.w504 {
+    width: 504px !important;
+}
+
+.Contentstyle span.Contentstyle2 .input2 {
+    height: 36px;
+}
+
+.refuse-reason textarea {
+    width: 570px;
+}
+
+.poptextarea {
+    width: 781px;
+}
+
+.pt153 {
+    padding-top: 169px !important;
+}

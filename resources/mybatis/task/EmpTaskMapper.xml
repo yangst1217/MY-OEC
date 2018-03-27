@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmpTaskMapper">
+
+    <!-- 查询员工月度目标中的产品 -->
+    <select id="findProductByEmp" parameterType="string" resultType="pd">
+		select p.PRODUCT_CODE, p.PRODUCT_NAME
+		from bd_product p
+		where p.ISDEL!=1 and p.PRODUCT_CODE in(
+			select distinct(t.PRODUCT_CODE) 
+			from b_week_emp_task w
+			left join b_year_target t on t.CODE=w.B_YEAR_TARGET_CODE
+			where t.ISDEL!=1 and w.ISDEL!=1 
+				and w.EMP_CODE=#{empCode}
+		  )
+	</select>
+
+    <!-- 查询员工创新活动中的项目 -->
+    <select id="findProjectByEmp" parameterType="string" resultType="pd">
+		select p.CODE, p.NAME
+		from c_project p
+		where p.ISDEL!=1 and p.CODE in(
+			select distinct(C_PROJECT_CODE) 
+			from c_project_event 
+			where ISDEL!=1 and EMP_CODE=#{empCode}
+		)
+	</select>
+
+    <!-- 根据部门编码查询员工月度目标中的产品 -->
+    <select id="findProductByDept" parameterType="List" resultType="pd">
+        select p.PRODUCT_CODE, p.PRODUCT_NAME
+        from bd_product p
+        where p.ISDEL!=1 and p.PRODUCT_CODE in(
+        select distinct(t.PRODUCT_CODE)
+        from b_week_emp_task w
+        left join b_year_target t on t.CODE=w.B_YEAR_TARGET_CODE
+        where t.ISDEL!=1 and w.ISDEL!=1
+        and w.DEPT_CODE in
+        <foreach collection="list" item="deptCode" open="(" close=")" separator=",">
+            #{deptCode}
+        </foreach>
+        )
+    </select>
+
+    <!-- 根据部门编码查询活动中的创新项目 -->
+    <select id="findProjectByDept" parameterType="List" resultType="pd">
+        select p.CODE, p.NAME
+        from c_project p
+        where p.ISDEL!=1 and p.CODE in(
+        select distinct(C_PROJECT_CODE)
+        from c_project_event
+        where ISDEL!=1 and DEPT_CODE in
+        <foreach collection="list" item="deptCode" open="(" close=")" separator=",">
+            #{deptCode}
+        </foreach>
+        )
+    </select>
+
+    <!-- 查询员工的周工作任务列表(未生效的不返回) -->
+    <select id="empWeekTasklistPage" parameterType="page" resultType="pd">
+        select weekTask.ID, weekTask.YEAR, weekTask.MONTH, weekTask.WEEK, weekTask.WEEK_COUNT, weekTask.EMP_CODE,
+        target.NAME TARGET_NAME, product.PRODUCT_NAME, lev.JOB_RANK,
+        DATE_FORMAT(weekTask.WEEK_START_DATE, '%Y-%m-%d') WEEK_START_DATE, DATE_FORMAT(weekTask.WEEK_END_DATE,
+        '%Y-%m-%d') WEEK_END_DATE,
+        sys_status.NAME STATUS, emp.EMP_NAME, busiIndex.INDEX_NAME, u.UNIT_NAME, dep.DEPT_NAME,
+        IFNULL((select sum(task.FINISH_PERCENT) from b_daily_emp_task task
+        where task.ISDEL!=1 and task.STATUS='YW_YSX' and task.B_WEEK_EMP_TASK_ID=weekTask.ID), 0) actual_percent,
+        <![CDATA[ FORMAT( IF(taskDay.pastdays<0, 0, IF( (taskDay.pastdays+1)/taskdays>1, 1, (taskDay.pastdays+1)/taskdays ) )*100, 2) plan_percent ]]>
+        from b_week_emp_task weekTask
+        left join (
+        select ID, (TO_DAYS(now())-TO_DAYS(WEEK_START_DATE)) pastdays,
+        (TO_DAYS(WEEK_END_DATE)-TO_DAYS(WEEK_START_DATE))+1 taskdays
+        from b_week_emp_task
+        ) as taskDay on taskDay.ID=weekTask.ID
+        left join B_MONTH_EMP_TARGET monthEmpTarget on (weekTask.B_MONTH_EMP_TARGET_ID = monthEmpTarget.ID)
+        left join B_MONTH_DEPT_TASK monthDeptTarget on (monthEmpTarget.B_MONTH_DEPT_TASK_ID = monthDeptTarget.ID)
+        left join B_YEAR_DEPT_TASK yearDeptTarget on (monthDeptTarget.B_YEAR_DEPT_TASK_ID = yearDeptTarget.ID)
+        left join b_year_target target on (weekTask.B_YEAR_TARGET_CODE=target.CODE and target.ISDEL!=1)
+        left join bd_bussiness_index busiIndex on (target.INDEX_CODE=busiIndex.INDEX_CODE and busiIndex.ISDEL!=1)
+        left join bd_unit u on (target.UNIT_CODE=u.UNIT_CODE and u.ISDEL!=1)
+        left join bd_product product on (yearDeptTarget.PRODUCT_CODE=product.PRODUCT_CODE and product.ISDEL!=1)
+        left join sys_status on weekTask.STATUS=sys_status.BIANMA
+        left join bd_employee emp on (weekTask.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+        left join bd_department dep on (dep.DEPT_CODE=weekTask.DEPT_CODE and dep.ENABLED=1)
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        where weekTask.ISDEL!=1 and target.ISDEL!=1
+        and weekTask.STATUS!=#{pd.useStatus}
+        <if test="pd.empCode != null and pd.empCode != '' "><!-- 员工只查看自己的 -->
+            and weekTask.EMP_CODE = #{pd.empCode}
+        </if>
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and weekTask.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    <if test="pd.deptCodeStr != null and pd.deptCodeStr !='' ">
+                        and weekTask.DEPT_CODE in ${pd.deptCodeStr}
+                    </if>
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.productCode != null and pd.productCode != ''"><!-- 过滤产品 -->
+            and product.PRODUCT_CODE=#{pd.productCode}
+        </if>
+        <if test="pd.productName != null and pd.productName != ''"><!-- 过滤产品 -->
+            and product.PRODUCT_NAME like '%${pd.productName}%'
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and weekTask.WEEK_END_DATE>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and weekTask.WEEK_START_DATE<=#{pd.endDate} ]]>
+        </if>
+        <if test="pd.status != null and pd.status != '' ">
+            and weekTask.STATUS=#{pd.status}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by lev.JOB_RANK, weekTask.WEEK_START_DATE desc, weekTask.WEEK_END_DATE desc, TARGET_NAME desc
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 查询行政类任务列表 -->
+    <select id="empProjectManagelistPage" parameterType="page" resultType="pd">
+        select pos.ID, emp.EMP_NAME, DATE_FORMAT(pos.DATETIME, '%Y-%m-%d')
+        DATETIME,sta.NAME,dep.DEPT_NAME,lev.GRADE_NAME
+        from position_daily_task pos
+        left join sys_status sta on pos.STATUS=sta.BIANMA
+        left join bd_employee emp on (pos.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+        left join bd_department dep on (dep.ID=emp.EMP_DEPARTMENT_ID and dep.ENABLED=1)
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        where 0=0
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            and pos.STATUS != #{pd.useStatus}
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and dep.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    and dep.DEPT_CODE in ${pd.deptCodeStr}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.empCode != null and pd.empCode != '' "><!-- 员工只查看自己的 -->
+            and pos.EMP_CODE = #{pd.empCode}
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and pos.datetime>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and pos.datetime<=#{pd.endDate} ]]>
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by pos.datetime desc
+            </otherwise>
+        </choose>
+    </select>
+    <!-- 查询周工作任务详情 -->
+    <select id="findWeekTaskDetail" parameterType="pd" resultType="pd">
+		select weekTask.ID,yearTarget.NAME TARGET_NAME,weekTask.YEAR, weekTask.MONTH, weekTask.WEEK, weekTask.WEEK_COUNT, yearTarget.TARGET_TYPE,
+			DATE_FORMAT(weekTask.WEEK_START_DATE, '%Y-%m-%d') WEEK_START_DATE, DATE_FORMAT(weekTask.WEEK_END_DATE, '%Y-%m-%d') WEEK_END_DATE,
+			product.PRODUCT_NAME, emp.EMP_NAME, busiIndex.INDEX_NAME, u.UNIT_NAME,dict.NAME typeName
+		from b_week_emp_task weekTask
+		left join B_MONTH_EMP_TARGET monthEmpTarget on (weekTask.B_MONTH_EMP_TARGET_ID = monthEmpTarget.ID)
+		left join B_MONTH_DEPT_TASK monthDeptTarget on (monthEmpTarget.B_MONTH_DEPT_TASK_ID = monthDeptTarget.ID)
+		left join B_YEAR_DEPT_TASK yearDeptTarget on (monthDeptTarget.B_YEAR_DEPT_TASK_ID = yearDeptTarget.ID)
+		left join B_YEAR_TARGET yearTarget on (weekTask.B_YEAR_TARGET_CODE=yearTarget.CODE and yearTarget.ISDEL!=1)
+		left join sys_dictionaries dict on yearTarget.target_type = dict.BIANMA
+		left join bd_product product on (yearDeptTarget.PRODUCT_CODE=product.PRODUCT_CODE and product.ISDEL!=1)
+		left join bd_employee emp on (weekTask.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+		left join bd_bussiness_index busiIndex on (yearTarget.INDEX_CODE=busiIndex.INDEX_CODE and busiIndex.ISDEL!=1)
+		left join bd_unit u on (yearTarget.UNIT_CODE=u.UNIT_CODE and u.ISDEL!=1)
+		where weekTask.ID=#{id}
+	</select>
+
+    <!-- 查询员工的创新活动列表 -->
+    <select id="projectEventlistPage" parameterType="page" resultType="pd">
+        select event.ID, event.NAME EVENT_NAME, event.WEIGHT, DATE_FORMAT(event.START_DATE, '%Y-%m-%d') START_DATE,
+        DATE_FORMAT(event.END_DATE, '%Y-%m-%d') END_DATE, event.RELATEEVENTS, event.CHECK_EMP_CODE,
+        event.CHECK_EMP_NAME,
+        (select NAME from c_project_event where ID=event.RELATEEVENTS) as preTaskName, event.EMP_CODE, event.SCORE,
+        IFNULL(
+        (select sum(task.FINISH_PERCENT) from c_daily_emp_task task
+        where task.ISDEL!=1 and task.STATUS='YW_YSX' and task.C_PROJECT_EVENT_ID=event.RELATEEVENTS), 0)
+        as preTask_percent,<!-- 查询前置活动的进度 -->
+        project.NAME PROJECT_NAME, node.NODE_TARGET, dic.NAME PROJECT_TYPE, sys_status.NAME STATUS, emp.EMP_NAME,
+        dep.DEPT_NAME, lev.JOB_RANK,
+        IFNULL((select sum(task.FINISH_PERCENT)from c_daily_emp_task task
+        where task.ISDEL!=1 and task.STATUS='YW_YSX' and task.C_PROJECT_EVENT_ID=event.ID), 0) actual_percent,
+        <![CDATA[ FORMAT( IF(taskDay.pastdays<0, 0, IF( (taskDay.pastdays+1)/taskdays>1, 1, (taskDay.pastdays+1)/taskdays ) )*100, 2) plan_percent ]]>
+        from c_project_event event
+        left join (
+        select ID, (TO_DAYS(now())-TO_DAYS(START_DATE)) pastdays,
+        (TO_DAYS(END_DATE)-TO_DAYS(START_DATE))+1 taskdays
+        from c_project_event
+        ) as taskDay on taskDay.ID=event.ID
+        left join c_project project on (event.C_PROJECT_CODE=project.CODE and project.ISDEL!=1)
+        left join c_project_node node on (event.C_PROJECT_NODE_ID=node.ID and node.ISDEL!=1)
+        left join sys_dictionaries dic on dic.ZD_ID = project.PROJECT_TYPE_ID
+        left join sys_status on event.STATUS=sys_status.BIANMA
+        left join bd_employee emp on (event.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+        left join bd_department dep on (dep.DEPT_CODE=event.DEPT_CODE and dep.ENABLED=1)
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        where event.ISDEL!=1 and project.ISDEL!=1
+        <if test="pd.empCode != null and pd.empCode != '' ">
+            and event.EMP_CODE=#{pd.empCode}
+        </if>
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and event.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    <if test="pd.deptCodeStr != null and pd.deptCodeStr !='' ">
+                        and event.DEPT_CODE in ${pd.deptCodeStr}
+                    </if>
+
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.projectCode != null and pd.projectCode != ''"><!-- 过滤项目 -->
+            and project.CODE = #{pd.projectCode}
+        </if>
+        <if test="pd.projectName != null and pd.projectName != ''"><!-- 过滤项目 -->
+            and project.NAME like '%${pd.projectName}%'
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and event.END_DATE>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and event.START_DATE<=#{pd.endDate} ]]>
+        </if>
+        <if test="pd.status != null and pd.status != '' ">
+            and event.STATUS=#{pd.status}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by lev.JOB_RANK, event.START_DATE desc, event.END_DATE desc, PROJECT_NAME desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 查询创新活动详情 -->
+    <select id="findProjectEventDetail" parameterType="pd" resultType="pd">
+		select event.ID, event.C_PROJECT_NODE_ID, event.NAME EVENT_NAME, event.WEIGHT, event.TYPE, event.COST, event.DESCP,
+			DATE_FORMAT(event.START_DATE, '%Y-%m-%d') START_DATE, DATE_FORMAT(event.END_DATE, '%Y-%m-%d') END_DATE, 
+			project.NAME PROJECT_NAME, node.NODE_TARGET, emp.EMP_NAME, event.SCORE, event.CHECK_EMP_NAME, 
+			(select count(split.ID) from c_project_event_split split
+				where split.C_PROJECT_EVENT_ID=event.id and event.STATUS=#{status}
+				and split.ISDEL!=1 and (split.ISFINISH is null or split.ISFINISH!=1) ) SPLIT_COUNT
+		from c_project_event event
+		left join c_project project on (event.C_PROJECT_CODE=project.CODE and project.ISDEL!=1)
+		left join c_project_node node on (event.C_PROJECT_NODE_ID=node.ID and node.ISDEL!=1)
+		left join bd_employee emp on (event.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+		where event.ID=#{id}
+	</select>
+
+    <!-- 查询部门id  -->
+    <select id="findDeptId" parameterType="pd" resultType="pd">
+		select DEPT_ID
+		from
+		sys_datarole
+		where USER_ID = #{USER_NUMBER}
+	</select>
+
+    <!-- 查询员工岗位职责任务列表 -->
+    <select id="empPositionTasklistPage" parameterType="page" resultType="pd">
+        select pos.ID, pos.EMP_CODE, emp.EMP_NAME, DATE_FORMAT(pos.DATETIME, '%Y-%m-%d') DATETIME,
+        sta.NAME STATUS, dep.DEPT_NAME, lev.GRADE_NAME, lev.JOB_RANK
+        from position_daily_task pos
+        left join sys_status sta on pos.STATUS=sta.BIANMA
+        left join bd_employee emp on (pos.EMP_CODE=emp.EMP_CODE and emp.ENABLED=1)
+        left join bd_department dep on (dep.ID=emp.EMP_DEPARTMENT_ID and dep.ENABLED=1)
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        where 0=0
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            and pos.STATUS != #{pd.useStatus}
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and dep.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    and dep.DEPT_CODE in ${pd.deptCodeStr}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.empCode != null and pd.empCode != '' "><!-- 员工只查看自己的 -->
+            and pos.EMP_CODE = #{pd.empCode}
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and pos.datetime>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and pos.datetime<=#{pd.endDate} ]]>
+        </if>
+        <if test="pd.status != null and pd.status != '' ">
+            and pos.STATUS=#{pd.status}
+        </if>
+
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by lev.JOB_RANK, pos.datetime desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 更新日常工作状态 -->
+    <update id="updateStatus" parameterType="pd">
+    	UPDATE position_daily_task
+		SET status = 'YW_YWB'
+		WHERE
+			ID = #{flgId}
+    </update>
+
+    <!-- 查询员工流程工作 -->
+    <select id="empFlowWorklistPage" parameterType="page" resultType="pd">
+        select node.ID, node.FLOW_ID, model.MODEL_NAME, node.NODE_LEVEL, node.NODE_NAME, node.TIME_INTERVAL,
+        node.COST_TIME, node.DEPT_ID, node.POSITION_ID,
+        node.EMP_CODE, node.PARENT_ID, node.STATUS, node.FILE_ID, node.REMARKS, node.CREATE_TIME, node.CREATE_USER,
+        node.UPDATE_TIME,
+        node.UPDATE_USER, sys_status.NAME STATUS_NAME, flow.FLOW_NAME, flow.CREATE_USER FLOW_CREATE_USER,
+        flowStatus.NAME FLOW_STATUS_NAME,
+        n.NODE_NAME OPERA_NODE, history.OPERATOR, history.OPERA_TYPE, DATE_FORMAT(history.OPERA_TIME, '%Y-%m-%d %T')
+        OPERA_TIME,
+        history.REMARKS OPERA_REMARKS, dept.DEPT_NAME, emp.EMP_NAME,
+        (select max(f.NODE_LEVEL) from flow_work_node f where f.FLOW_ID=node.FLOW_ID ) as maxLevel,su.NAME SPONSOR
+        from flow_work_node node
+        left join flow_work flow on flow.ID = node.FLOW_ID
+        left join sys_user su on flow.CREATE_USER = su.USERNAME
+        left join flow_model model on model.id = flow.MODEL_ID
+        left join sys_status flowStatus on flowStatus.BIANMA = flow.STATUS
+        left join flow_work_history history on history.NEXT_NODE = node.ID and
+        history.ID=(select max(ID) from flow_work_history where NEXT_NODE = node.ID)
+        left join flow_work_node n on n.ID = history.CURRENT_NODE
+        left join sys_status on sys_status.BIANMA = node.STATUS
+        left join bd_department dept on (dept.ID = node.DEPT_ID and dept.ENABLED=1)
+        left join bd_employee emp on emp.EMP_CODE = node.EMP_CODE
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        where node.ISDEL = 0 and node.STATUS!='YW_DSX'
+        <if test="pd.empCode != null and pd.empCode != '' "><!-- 员工只查看自己的 -->
+            and node.EMP_CODE = #{pd.empCode}
+        </if>
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and dept.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    and dept.DEPT_CODE in ${pd.deptCodeStr}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.flowName != null and pd.flowName != '' ">
+            and flow.FLOW_NAME like '%${pd.flowName}%'
+        </if>
+        <if test="pd.flowStatus != null and pd.flowStatus != '' ">
+            and node.STATUS = #{pd.flowStatus}
+        </if>
+        <if test="pd.sponsor != null and pd.sponsor != '' ">
+            and su.NAME like '%${pd.sponsor}%'
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and DATE_FORMAT(history.OPERA_TIME, '%Y-%m-%d')>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and DATE_FORMAT(history.OPERA_TIME, '%Y-%m-%d')<=#{pd.endDate} ]]>
+        </if>
+        <if test="pd.status != null and pd.status != '' ">
+            and node.STATUS=#{pd.status}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise><!-- 以节点生效时间排序 -->
+                order by lev.JOB_RANK, history.OPERA_TIME desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 临时工作列表 -->
+    <select id="tempTasklistPage" resultType="pd" parameterType="page">
+        SELECT
+        task.TASK_CODE,
+        task.TASK_TYPE,
+        task.TASK_NAME,
+        DATE_FORMAT(task.START_TIME, '%Y-%m-%d %T') START_TIME,
+        DATE_FORMAT(task.END_TIME, '%Y-%m-%d %T') END_TIME,
+        task.TASK_CONTECT,
+        task.COMPLETION,
+        task.NEED_CHECK,
+        task.CHECK_PERSON,
+        detail.ID,
+        detail.EMP_NAME,
+        g.NAME CREATE_USER,
+        detail.CREATE_TIME,
+        detail.STATUS,
+        sys_status.NAME statusName,
+        datediff(task.END_TIME, NOW()) REMAIN_DAY,
+        dept.DEPT_NAME,
+        checkEmp.EMP_CODE CHECK_PERSON_CODE
+        FROM
+        daily_task_information task
+        LEFT JOIN daily_task_information_detail detail ON detail.DAILY_TASK_ID=task.ID
+        LEFT JOIN sys_status ON sys_status.BIANMA=detail.STATUS
+        LEFT JOIN bd_employee emp ON emp.ID=detail.EMP_ID
+        LEFT JOIN bd_department dept on dept.ID=emp.EMP_DEPARTMENT_ID
+        LEFT JOIN sys_user g ON g.USERNAME = detail.CREATE_USER
+        left join bd_position_level lev on (lev.ID=emp.EMP_GRADE_ID)
+        left join bd_employee checkEmp on checkEmp.ID = task.CHECK_PERSON
+        where task.STATUS = 'YW_YSX'
+        <if test="pd.empCode != null and pd.empCode != '' "><!-- 员工只查看自己的 -->
+            and emp.EMP_CODE = #{pd.empCode}
+        </if>
+        <if test="pd.showDept"><!-- 领导可以查看下属部门的 -->
+            <choose>
+                <when test="pd.deptCode != null and pd.deptCode != ''"><!-- 显示选择的部门的 -->
+                    and dept.DEPT_CODE = #{pd.deptCode}
+                </when>
+                <otherwise><!-- 显示所有下属部门的 -->
+                    and dept.DEPT_CODE in ${pd.deptCodeStr}
+                </otherwise>
+            </choose>
+        </if>
+        <if test="pd.tempTaskName != null and pd.tempTaskName != '' ">
+            and task.TASK_NAME like '%${pd.tempTaskName}%'
+        </if>
+        <if test="pd.startDate != null and pd.startDate != '' ">
+            <![CDATA[ and task.END_TIME>=#{pd.startDate} ]]>
+        </if>
+        <if test="pd.endDate != null and pd.endDate != '' ">
+            <![CDATA[ and task.START_TIME<=#{pd.endDate} ]]>
+        </if>
+        <if test="pd.status != null and pd.status != '' ">
+            and detail.STATUS=#{pd.status}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by lev.JOB_RANK, task.START_TIME DESC, task.END_TIME DESC, detail.CREATE_TIME DESC
+            </otherwise>
+        </choose>
+    </select>
+    <update id="saveScore" parameterType="pd">
+		UPDATE  position_daily_task SET SCORE = #{score},
+		SCORE_DATE = #{score_date},
+		SCOREPERSON = #{scorePerson} WHERE ID = #{manageId}
+	</update>
+    <!-- 根据ID获取流程历史 -->
+    <select id="findHistoryById" resultType="pd">
+		SELECT
+			wh.*, wn1.NODE_NAME CURRENT_NODE_NAME,
+			wn2.NODE_NAME NEXT_NODE_NAME, wh.NEXT_NODE_EMP_CODE, nextEmp.EMP_NAME,
+			DATE_FORMAT(
+				wh.OPERA_TIME,
+				'%Y-%m-%d %T'
+			) operTime,
+			wh.FILE_ID
+		FROM
+			flow_work_history wh
+		LEFT JOIN flow_work_node wn1 ON wh.CURRENT_NODE = wn1.ID
+		LEFT JOIN flow_work_node wn2 ON wh.NEXT_NODE = wn2.ID
+		LEFT JOIN task_file tf on tf.ID = wh.FILE_ID and tf.ISDEL=0
+		LEFT JOIN bd_employee nextEmp on nextEmp.EMP_CODE = wh.NEXT_NODE_EMP_CODE
+		WHERE wh.FLOW_ID = #{ID}
+	</select>
+
+    <select id="countPercentBySplitIds" resultType="java.lang.Double">
+        SELECT
+        sum(PERCENT_SPLIT)
+        FROM
+        c_project_event_split
+        WHERE
+        id IN
+        <foreach collection="array" open="(" separator="," close=")" item="item">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="updatePercent">
+	   UPDATE c_daily_emp_task
+	   SET FINISH_PERCENT = #{FINISH_PERCENT},
+	       UPDATE_USER = #{updateUser},
+	       UPDATE_TIME = #{updateTime}
+	   WHERE ID = #{ID}
+	</update>
+</mapper>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ParameterMapper">
+
+    <resultMap type="Parameter" id="ParameterResultMapper">
+        <id column="ID" property="ID"/>
+        <result column="SYSTEM_KEY" property="SYSTEM_KEY"/>
+        <result column="SYSTEM_ORDER" property="SYSTEM_ORDER"/>
+        <result column="YEARNO" property="YEARNO"/>
+        <result column="MONTHNO" property="MONTHNO"/>
+        <result column="DAYNO" property="DAYNO"/>
+        <result column="SYSTEM_VALUE" property="SYSTEM_VALUE"/>
+        <result column="LAST_UPDATE_USER" property="DESCRIPTION"/>
+        <result column="LAST_UPDATE_TIME" property="DESCRIPTION"/>
+    </resultMap>
+
+    <!--插入一条参数-->
+    <insert id="insertParameter" parameterType="Parameter">
+        insert into SYS_PARAMETER (
+        ID,
+        SYSTEM_KEY,
+        SYSTEM_ORDER,
+        YEARNO,
+        MONTHNO,
+        DAYNO,
+        SYSTEM_VALUE,
+        LAST_UPDATE_USER,
+        LAST_UPDATE_TIME,
+        DEFINE1,
+        DEFINE2,
+        DEFINE3,
+        DEFINE4,
+        DEFINE5
+        ) values (
+        #{ID},
+        #{SYSTEM_KEY},
+        #{SYSTEM_ORDER},
+        #{YEARNO},
+        #{MONTHNO},
+        #{DAYNO},
+        #{SYSTEM_VALUE},
+        #{LAST_UPDATE_USER},
+        #{LAST_UPDATE_TIME},
+        #{DEFINE1},
+        #{DEFINE2},
+        #{DEFINE3},
+        #{DEFINE4},
+        #{DEFINE5}
+        )
+    </insert>
+
+    <!--更新一条参数-->
+    <update id="updateParameter" parameterType="Parameter">
+        update SYS_PARAMETER set
+        SYSTEM_KEY =#{SYSTEM_KEY},
+        SYSTEM_ORDER  =#{SYSTEM_ORDER} ,
+        YEARNO =#{YEARNO},
+        MONTHNO=#{MONTHNO},
+        DAYNO =#{DAYNO},
+        SYSTEM_VALUE =#{SYSTEM_VALUE},
+        LAST_UPDATE_USER =#{LAST_UPDATE_USER},
+        LAST_UPDATE_TIME =#{LAST_UPDATE_TIME},
+        DEFINE1 = #{DEFINE1},
+        DEFINE2 = #{DEFINE2},
+        DEFINE3 = #{DEFINE3},
+        DEFINE4 = #{DEFINE4},
+        DEFINE5 = #{DEFINE5}
+        where
+        ID=#{ID}
+    </update>
+
+    <select id="getParameterByKeyAndOrderAndDate" parameterType="pd" resultType="pd">
+        select  ID,
+        SYSTEM_KEY,
+        SYSTEM_ORDER,
+        YEARNO,
+        MONTHNO,
+        DAYNO,
+        SYSTEM_VALUE,
+        LAST_UPDATE_USER,
+        LAST_UPDATE_TIME,
+        DEFINE1,
+        DEFINE2,
+        DEFINE3,
+        DEFINE4,
+        DEFINE5
+        from SYS_PARAMETER
+        where SYSTEM_KEY=#{SYSTEM_KEY}
+        AND SYSTEM_ORDER=#{SYSTEM_ORDER}
+        AND IFNULL(DEFINE1,'')=IFNULL(#{DEFINE1},'')
+        AND IFNULL(DEFINE2,'')=IFNULL(#{DEFINE2},'')
+        AND IFNULL(DEFINE3,'')=IFNULL(#{DEFINE3},'')
+        AND IFNULL(DEFINE4,'')=IFNULL(#{DEFINE4},'')
+        AND IFNULL(DEFINE5,'')=IFNULL(#{DEFINE5},'')
+        AND (
+	(
+		LENGTH(#{DATE}) = 4
+		AND YEARNO = #{DATE}
+		AND MONTHNO IS NULL
+		AND DAYNO IS NULL
+	)
+	OR (
+		LENGTH(#{DATE}) = 6
+		AND YEARNO = SUBSTRING(#{DATE}, 1, 4)
+		AND MONTHNO = SUBSTRING(#{DATE}, 5, 2)
+		AND DAYNO IS NULL
+	)
+	OR (
+		LENGTH(#{DATE}) = 8
+		AND YEARNO = SUBSTRING(#{DATE}, 1, 4)
+		AND MONTHNO = SUBSTRING(#{DATE}, 5, 2)
+		AND DAYNO = SUBSTRING(#{DATE}, 7, 2)
+	)
+)
+    </select>
+
+    <select id="listAllReport" resultType="ReportParameter">
+      select  * from report_parameter_model GROUP BY REPORT_CODE order by REPORT_CODE
+    </select>
+
+
+    <select id="getParameterByReportCode" resultType="ReportParameter" parameterType="String">
+        select * from report_parameter_model WHERE REPORT_CODE = #{REPORT_CODE} ORDER BY PARAMETER_CODE
+    </select>
+</mapper>

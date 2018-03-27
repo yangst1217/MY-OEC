@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UnitMapper">
+
+
+    <!-- 新增-->
+    <insert id="save" parameterType="pd" keyProperty="ID">
+		insert into bd_unit(
+			UNIT_CODE,
+			UNIT_NAME,
+			ISDEL,
+			DESCP,
+			CREATE_USER,
+			CREATE_TIME,
+			UPDATE_USER,
+			UPDATE_TIME
+		) values (
+			#{UNIT_CODE},
+			#{UNIT_NAME},
+			0,
+			#{DESCP},
+			#{CREATE_USER},
+			#{CREATE_TIME},
+			#{UPDATE_USER},
+			#{UPDATE_TIME}
+		)
+	</insert>
+
+    <!-- 删除 -->
+    <update id="delete" parameterType="pd">
+		update  bd_unit
+			set 
+				ISDEL = 1,
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+
+    <!-- 修改 -->
+    <update id="edit" parameterType="pd">
+		update  bd_unit
+			set 
+				UNIT_NAME = #{UNIT_NAME},
+				UNIT_CODE = #{UNIT_CODE},
+				DESCP  = #{DESCP},
+				UPDATE_USER = #{UPDATE_USER},
+				UPDATE_TIME = #{UPDATE_TIME}
+			where 
+				ID = #{ID}
+	</update>
+
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_unit
+		where 
+			ID = #{ID}
+	</select>
+
+
+    <!-- 列表 -->
+    <select id="listPageUnit" parameterType="page" resultType="pd">
+        select
+        *
+        from
+        bd_unit a
+        where a.ISDEL = 0
+        <if test="pd.UNIT_NAME != null and pd.UNIT_NAME != ''">
+            AND a.UNIT_NAME LIKE (CONCAT('%',#{pd.UNIT_NAME},'%'))
+        </if>
+        <if test="pd.UNIT_CODE != null and pd.UNIT_CODE != ''">
+            AND a.UNIT_CODE = #{pd.UNIT_CODE}
+        </if>
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by UNIT_CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 通过CODE获取数据 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			bd_unit
+		where 
+			UNIT_CODE = #{UNIT_CODE}
+	</select>
+
+    <!-- 无参全部 -->
+    <select id="findAll" resultType="pd" parameterType="pd">
+        SELECT * FROM bd_unit WHERE ISDEL = 0;
+    </select>
+
+    <!-- 检查单位是否被使用 -->
+    <select id="checkUnitUsed" parameterType="Integer" resultType="pd">
+    	select count(ID) num from b_year_target 
+    	where UNIT_CODE = (select UNIT_CODE from bd_unit where ID=#{id})
+    	and ISDEL=0
+    </select>
+</mapper>

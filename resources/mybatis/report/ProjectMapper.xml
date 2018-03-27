@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProjectMapper">
+
+
+    <!-- 通过ID获取部门数据 -->
+    <select id="findDeptById" parameterType="String" resultType="pd">
+		select 
+			ID,	
+			DEPT_CODE,	
+			DEPT_NAME,
+			DEPT_SIGN,	
+			ENABLED
+		from 
+			BD_DEPARTMENT
+		where 
+			ID = #{dept_id}
+	</select>
+
+    <!-- 通过登录用户获取部门ID -->
+    <select id="findDeptByUser" parameterType="pd" resultType="String">
+		select 
+			EMP_DEPARTMENT_ID
+		from 
+			bd_employee
+		where 
+			EMP_CODE = #{User}
+	</select>
+
+
+    <!-- 通过ID获取子部门数据 -->
+    <select id="findChildDeptById" parameterType="pd" resultType="pd">
+		select 
+			ID,	
+			DEPT_CODE,	
+			DEPT_NAME,
+			DEPT_SIGN,	
+			ENABLED
+		from 
+			BD_DEPARTMENT
+		where 
+			PARENT_ID = #{ID}
+	</select>
+
+
+    <!-- 通过部门获取订单数据 -->
+    <select id="findProByDept" parameterType="pd" resultType="pd">
+		SELECT DISTINCT
+			b.ORDER_ID,
+			a.ORDER_NAME
+		FROM
+			project_order_scale b
+		LEFT JOIN project_order a ON (a.ORDER_NO =b.ORDER_ID)
+		WHERE
+			b.DEPT_ID IN  
+			(${deptids})
+	</select>
+
+</mapper>

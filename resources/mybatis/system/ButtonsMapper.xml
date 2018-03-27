@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ButtonsMapper">
+
+    <resultMap type="Buttons" id="buttonsResultMap">
+        <id column="BUTTONS_ID" property="BUTTONS_ID"/>
+        <result column="BUTTONS_NAME" property="ROLE_NAME"/>
+        <result column="BUTTONS_EVENT" property="BUTTONS_EVENT"/>
+        <result column="BUTTONS_ORDER" property="BUTTONS_ORDER"/>
+        <result column="BUTTONS_ICON" property="BUTTONS_ICON"/>
+        <result column="ENABLED" property="ENABLED"/>
+        <result column="DESCRIPTION" property="DESCRIPTION"/>
+    </resultMap>
+
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        a.BUTTONS_ID,
+        a.BUTTONS_NAME,
+        a.BUTTONS_EVENT,
+        a.BUTTONS_ORDER,
+        a.BUTTONS_ICON,
+        a.ENABLED,
+        a.DESCRIPTION
+        from
+        SYS_BUTTONS a
+        where 1 = 1
+        <if test="pd.KEYW != null and pd.KEYW != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.BUTTONS_NAME LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.DESCRIPTION LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            or
+            a.BUTTONS_EVENT LIKE CONCAT(CONCAT('%', #{pd.KEYW}),'%')
+            )
+        </if>
+        <if test="pd.ENABLED != null and pd.ENABLED != ''"><!-- 关键词检索 -->
+            and
+            a.ENABLED = #{pd.ENABLED}
+        </if>
+        order by a.BUTTONS_ORDER
+    </select>
+
+    <!-- 添加按钮 -->
+    <insert id="insert" parameterType="pd">
+		insert into SYS_BUTTONS (
+			BUTTONS_ID,	
+			BUTTONS_NAME,	
+			BUTTONS_EVENT,	
+			BUTTONS_ORDER,	
+			BUTTONS_ICON,	
+			ENABLED,	
+			DESCRIPTION
+		) values (
+			#{BUTTONS_ID},
+			#{BUTTONS_NAME},
+			#{BUTTONS_EVENT},
+			#{BUTTONS_ORDER},
+			#{BUTTONS_ICON},
+			#{ENABLED},
+			#{DESCRIPTION}
+		)
+	</insert>
+
+    <!-- 通过id查找 -->
+    <select id="findObjectById" parameterType="pd" resultType="pd">
+		select  
+			BUTTONS_ID,	
+			BUTTONS_NAME,	
+			BUTTONS_EVENT,	
+			BUTTONS_ORDER,	
+			BUTTONS_ICON,	
+			ENABLED,	
+			DESCRIPTION
+		from SYS_BUTTONS
+		where BUTTONS_ID = #{BUTTONS_ID}
+	</select>
+
+    <!-- 编辑按钮 -->
+    <update id="edit" parameterType="pd">
+		update SYS_BUTTONS 
+		set BUTTONS_NAME = #{BUTTONS_NAME},
+		BUTTONS_EVENT= #{BUTTONS_EVENT},
+		BUTTONS_ORDER= #{BUTTONS_ORDER},
+		ENABLED= #{ENABLED},
+		DESCRIPTION= #{DESCRIPTION}
+		where BUTTONS_ID = #{BUTTONS_ID}
+	</update>
+
+    <!-- 删除按钮 -->
+    <delete id="deleteButtonsById" parameterType="String">
+		delete from SYS_BUTTONS 
+		where BUTTONS_ID=#{BUTTONS_ID}
+	</delete>
+</mapper>

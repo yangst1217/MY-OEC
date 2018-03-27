@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CDailyEmpTaskMapper">
+
+    <!-- 查询创新活动分解列表(未关联的) -->
+    <select id="listUnfinishEventSplit" parameterType="pd" resultType="pd">
+		select ID, NAME, PERCENT_SPLIT, COST_SPLIT, DESCP
+		from c_project_event_split 
+		where C_PROJECT_EVENT_ID=#{projectEventId}
+			and ISDEL!=1 and C_DAILY_EMP_TASK_ID is null and STATUS=#{status}
+	</select>
+
+    <!-- 更新创新活动分解项为完成 -->
+    <update id="finishEventSplit" parameterType="pd">
+        update c_project_event_split
+        set ISFINISH=0, C_DAILY_EMP_TASK_ID=#{empTaskId}, UPDATE_USER=#{user}, UPDATE_TIME=#{time}
+        where ID in
+        <foreach collection="eventSplitIdArr" item="splitId" open="(" close=")" separator=",">
+            #{splitId}
+        </foreach>
+    </update>
+
+    <!-- 更新创新活动分解项 -->
+    <update id="updateEventSplit" parameterType="pd">
+        update c_project_event_split
+        set ISFINISH=#{isFinish},
+        <if test="isFinish==0">
+            C_DAILY_EMP_TASK_ID=null,
+        </if>
+        UPDATE_USER=#{user}, UPDATE_TIME=#{time}
+        where C_DAILY_EMP_TASK_ID=#{empTaskId}
+    </update>
+
+    <!-- 根据ID更新活动信息 -->
+    <update id="updateProjectEventByID" parameterType="pd">
+        update c_project_event
+        <set>
+            <if test="score != null and score != ''">
+                SCORE = #{score},
+                SCORE_DATE = #{score_date},
+            </if>
+            <if test="checkEmpCode != null and checkEmpCode != ''">
+                CHECK_EMP_CODE = #{checkEmpCode},
+            </if>
+            <if test="checkEmpName != null and checkEmpName != ''">
+                CHECK_EMP_NAME = #{checkEmpName},
+            </if>
+        </set>
+        where ID=#{id}
+    </update>
+
+    <!-- 根据创新活动id查询员工日清列表 -->
+    <select id="listEmptaskByProjectEventId" parameterType="pd" resultType="pd">
+		select task.ID, task.C_PROJECT_EVENT_ID, task.ANALYSIS, task.MEASURE, task.FINISH_PERCENT, task.ISDELAY,
+			DATE_FORMAT(task.CREATE_TIME, '%Y-%m-%d') AS CREATE_TIME, task.CREATE_USER, sys_status.NAME STATUS, 
+			task_file.FILENAME, task_file.FILENAME_SERVER, task.STATUS STATUS_BIANMA, 
+			IFNULL(task.FINISH_EVENT_SPLIT, (select GROUP_CONCAT(Name) from c_project_event_split 
+				where C_DAILY_EMP_TASK_ID=task.ID)) splitName, task.CHECK_EMP_CODE, task.CHECK_EMP_NAME
+		from c_daily_emp_task task
+		left join sys_status on task.STATUS=sys_status.BIANMA
+		left join task_file on task.ID=task_file.TASK_ID and task_file.TASK_TYPE=#{taskType} and task_file.ISDEL=0
+		where task.ISDEL!=1 and task.C_PROJECT_EVENT_ID=#{eventId}
+	</select>
+
+    <!-- 保存创新活动日清 -->
+    <insert id="saveEventEmpTask" parameterType="pd" useGeneratedKeys="true" keyProperty="id">
+		insert into c_daily_emp_task(C_PROJECT_EVENT_ID, ANALYSIS, MEASURE, FINISH_PERCENT,EVENT_SPLIT_ID,
+			ISDELAY, STATUS, ISDEL, CREATE_USER, CREATE_TIME, FINISH_EVENT_SPLIT, CHECK_EMP_CODE, CHECK_EMP_NAME)
+		values(#{projectEventId}, #{analysis}, #{measure}, #{finishPercent},#{eventSplitIds},
+			#{isDelay}, #{status}, #{isDel}, #{user}, #{time}, #{finishEventSplit}, #{checkEmpCode}, #{checkEmpName})
+	</insert>
+
+    <!-- 删除创新活动日清 -->
+    <update id="delEventEmpTask" parameterType="pd">
+		update c_daily_emp_task 
+		set ISDEL=1
+		where ID=#{id}
+	</update>
+
+    <!-- 更新创新活动日清状态  -->
+    <update id="updateEventEmpTaskStatus" parameterType="pd">
+		update c_daily_emp_task 
+		set STATUS=#{status}, ISDELAY=#{isDelay}, UPDATE_USER=#{updateUser}, UPDATE_TIME=#{updateTime}
+		where ID=#{id}
+	</update>
+
+    <!-- 查询已审批过的日清进度 -->
+    <select id="findEventActualPercent" parameterType="pd" resultType="pd">
+		select IFNULL(sum(FINISH_PERCENT), 0) FINISH_PERCENT
+		from c_daily_emp_task 
+		where (C_PROJECT_EVENT_ID=#{projectEventId} and STATUS=#{status} and ISDEL!=1 
+			<![CDATA[ and DATE_FORMAT(CREATE_TIME, '%Y-%m-%d')<=#{taskTime} ]]>)
+			or ID=#{id};
+	</select>
+
+    <!-- 根据创新活动ID查询日清批示 -->
+    <select id="listEventComment" parameterType="pd" resultType="pd">
+		select C_PROJECT_EVENT_ID, COMMENT, CREATE_USER, CREATE_TIME  
+		from c_daily_emp_comment
+		where C_PROJECT_EVENT_ID=#{eventId}
+	</select>
+
+    <!-- 保存创新活动日清批示 -->
+    <insert id="saveEventComment" parameterType="pd">
+		insert into c_daily_emp_comment(
+			C_PROJECT_EVENT_ID, COMMENT, ISDEL, CREATE_USER, CREATE_TIME)
+		values(#{eventId}, #{comment}, #{isDel}, #{createUser}, #{createDate})
+	</insert>
+
+</mapper>

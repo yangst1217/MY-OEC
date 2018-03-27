@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ProjectManagementMapper">
+    <resultMap id="BaseResultMap" type="PositionLevel">
+        <id column="ID" property="id" jdbcType="INTEGER"/>
+        <result column="GRADE_CODE" property="gradeCode" jdbcType="VARCHAR"/>
+        <result column="GRADE_NAME" property="gradeName" jdbcType="VARCHAR"/>
+        <result column="LABOR_COST" property="laborCost" jdbcType="DECIMAL"/>
+        <result column="GRADE_DESC" property="gradeDesc" jdbcType="VARCHAR"/>
+        <result column="ATTACH_DEPT_ID" property="attachDeptId" jdbcType="INTEGER"/>
+        <result column="ATTACH_DEPT_NAME" property="attachDeptName" jdbcType="VARCHAR"/>
+        <result column="ATTACH_KPI_MODEL" property="attachKpiModel" jdbcType="INTEGER"/>
+
+    </resultMap>
+    <sql id="Base_Column_List">
+    ID, GRADE_CODE, GRADE_NAME, LABOR_COST, GRADE_DESC, ATTACH_DEPT_ID, ATTACH_DEPT_NAME, ATTACH_KPI_MODEL
+  </sql>
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer">
+        select
+        <include refid="Base_Column_List"/>
+        from bd_position_level
+        where ID = #{id,jdbcType=INTEGER}
+    </select>
+
+    <insert id="insert" parameterType="PositionLevel">
+    insert into bd_position_level (ID, GRADE_CODE, GRADE_NAME, 
+      LABOR_COST, GRADE_DESC, ATTACH_DEPT_ID, 
+      ATTACH_DEPT_NAME,ATTACH_KPI_MODEL)
+    values (#{id,jdbcType=INTEGER}, #{gradeCode,jdbcType=VARCHAR}, #{gradeName,jdbcType=VARCHAR}, 
+      #{laborCost,jdbcType=DECIMAL}, #{gradeDesc,jdbcType=VARCHAR}, #{attachDeptId,jdbcType=INTEGER}, 
+      #{attachDeptName,jdbcType=VARCHAR},#{attachKpiModel,jdbcType=INTEGER})
+  </insert>
+    <insert id="insertSelective" parameterType="PositionLevel">
+        insert into bd_position_level
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                ID,
+            </if>
+            <if test="gradeCode != null">
+                GRADE_CODE,
+            </if>
+            <if test="gradeName != null">
+                GRADE_NAME,
+            </if>
+            <if test="laborCost != null">
+                LABOR_COST,
+            </if>
+            <if test="gradeDesc != null">
+                GRADE_DESC,
+            </if>
+            <if test="attachDeptId != null">
+                ATTACH_DEPT_ID,
+            </if>
+            <if test="attachDeptName != null">
+                ATTACH_DEPT_NAME,
+            </if>
+            <if test="attachKpiModel != null and attachKpiModel != '' ">
+                ATTACH_KPI_MODEL,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=INTEGER},
+            </if>
+            <if test="gradeCode != null">
+                #{gradeCode,jdbcType=VARCHAR},
+            </if>
+            <if test="gradeName != null">
+                #{gradeName,jdbcType=VARCHAR},
+            </if>
+            <if test="laborCost != null">
+                #{laborCost,jdbcType=DECIMAL},
+            </if>
+            <if test="gradeDesc != null">
+                #{gradeDesc,jdbcType=VARCHAR},
+            </if>
+            <if test="attachDeptId != null">
+                #{attachDeptId,jdbcType=INTEGER},
+            </if>
+            <if test="attachDeptName != null">
+                #{attachDeptName,jdbcType=VARCHAR},
+            </if>
+
+            <if test="attachKpiModel != null and attachKpiModel != ''">
+                #{attachKpiModel,jdbcType=INTEGER},
+            </if>
+
+        </trim>
+    </insert>
+
+    <!-- 列表(全部) -->
+    <select id="listPage" parameterType="page" resultType="pd">
+        select
+        ID,
+        cast(CODE as signed) as CODE,
+        FORMULA,
+        FITABLE,
+        CREATE_TIMER
+        from sal_formula
+
+        where ISDEL = 0
+        <if test="pd.CODE != null and pd.CODE != '' ">
+            and CODE like "%"#{pd.CODE}"%"
+        </if>
+        <if test="pd.FITABLE != null and pd.FITABLE != ''">
+            and FITABLE like "%"#{pd.FITABLE}"%"
+        </if>
+        <if test="pd.CREATE_TIMER != null and pd.CREATE_TIMER != ''">
+            and CREATE_TIMER like "%"#{pd.CREATE_TIMER}"%"
+        </if>
+
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+            <otherwise>
+                order by CODE asc
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 保存薪资方案-->
+    <insert id="save" parameterType="pd">
+		insert into sal_formula(
+			CODE,
+			FORMULA,
+			ISDEL,
+			CREATE_USER,
+			CREATE_TIMER,
+			LAST_UPDATE_USER,
+			LAST_UPDATE_TIME
+		) values (
+			#{CODE},
+			#{FORMULA},
+			0,
+			#{CREATE_USER},
+			#{CREATE_TIMER},
+			#{LAST_UPDATE_USER},
+			#{LAST_UPDATE_TIME}
+		)
+	</insert>
+
+    <!-- 修改薪资方案 -->
+    <update id="edit" parameterType="pd">
+		update  sal_formula
+			set 
+				FORMULA = #{FORMULA},
+				LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+				LAST_UPDATE_TIME  = #{LAST_UPDATE_TIME}
+		
+			where 
+				ID = #{ID}
+	</update>
+
+    <!-- 删除薪资方案 -->
+    <update id="delete" parameterType="pd">
+		update  sal_formula
+			set 
+				ISDEL = 1,
+				LAST_UPDATE_USER = #{LAST_UPDATE_USER},
+				LAST_UPDATE_TIME  = #{LAST_UPDATE_TIME}
+		
+			where 
+				ID = #{id}
+	</update>
+
+    <!-- 保存薪资方案明细-->
+    <insert id="saveDet" parameterType="pd">
+		insert into sal_formula_detail(
+			PID,
+			BS_ID,
+			ORDER_NUM
+			
+		) values (
+			#{PID},
+			#{BS_ID},
+			#{ORDER_NUM}
+			
+		)
+	</insert>
+
+    <!-- 删除薪资方案明细 -->
+    <delete id="deleteDet" parameterType="pd">
+		delete from sal_formula_detail
+		where 
+			PID = #{ID}
+	</delete>
+
+    <!-- 取最大编码-->
+    <select id="maxCode" parameterType="pd" resultType="String">
+		select 
+			max(cast(CODE as signed)) 
+		from 
+			sal_formula
+		
+	</select>
+
+    <!-- depList列表(全部) -->
+    <select id="depList" parameterType="pd" resultType="pd">
+		select
+			ID,
+			GRADE_NAME
+		from 
+			bd_position_level
+	</select>
+
+    <!-- salaryList列表(全部) -->
+    <select id="salaryList" parameterType="pd" resultType="pd">
+		select
+			NAME
+		from 
+			bd_payment
+		where
+		 	TYPE = 1 and ISDEL = 0
+	</select>
+
+    <!-- operList列表(全部) -->
+    <select id="operList" parameterType="pd" resultType="pd">
+		select
+			NAME
+		from 
+			bd_payment
+		where
+		 	TYPE = 2 and ISDEL = 0
+	</select>
+
+    <!-- edit列表(全部) -->
+    <select id="findByEditId" parameterType="pd" resultType="pd">
+		select
+			pm.NAME
+		from 
+			sal_formula_detail fd
+		left join 
+			bd_payment pm
+		on
+			fd.BS_ID = pm.ID
+		where
+		 	fd.PID = #{ID} and pm.ISDEL = 0
+		order by 
+		 	fd.ORDER_NUM
+	</select>
+
+    <!-- 通过id查找 -->
+    <select id="findObjectById" parameterType="pd" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ID = #{ID,jdbcType=INTEGER}
+	</select>
+
+    <!-- 通过View id查找 -->
+    <select id="findByViewId" parameterType="pd" resultType="pd">
+		select  
+			*
+		from sal_formula
+		where ID = #{ID,jdbcType=INTEGER}
+	</select>
+
+    <!-- 通过CODE查找 -->
+    <select id="findByCode" parameterType="pd" resultType="pd">
+		select  
+			ID
+		from sal_formula
+		where CODE = #{CODE}
+	</select>
+
+    <!-- 通过NAME查找 -->
+    <select id="findByName" parameterType="pd" resultType="pd">
+		select  
+			ID
+		from bd_payment
+		where NAME = #{NAME} and ISDEL = 0
+	</select>
+
+    <!-- 通过id查找 -->
+    <select id="findById" parameterType="String" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ID = #{ID}
+	</select>
+
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="String">
+        delete from bd_position_level
+        where
+        ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="checkCodeByGradeCode" parameterType="pd" resultType="java.util.LinkedHashMap">
+        select
+        count(1) SL
+        from bd_position_level
+        where GRADE_CODE = #{gradeCode,jdbcType=VARCHAR}
+        <if test="id != null and id != ''">
+            and ID != #{id}
+        </if>
+    </select>
+
+    <!-- 通过部门id查找 -->
+    <select id="findLevelByDeptId" parameterType="String" resultType="pd">
+		select  
+			*
+		from bd_position_level
+		where ATTACH_DEPT_ID = #{deptId}
+	</select>
+
+    <!-- 查询所有职位，不分页 -->
+    <select id="findAll" resultType="pd">
+		select * from bd_position_level
+	</select>
+</mapper>

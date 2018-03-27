@@ -1,0 +1,59 @@
+.ui-btn-wrap {
+    overflow: hidden;
+}
+
+/*标题开始*/
+h2.bt {
+    padding-left: 15px;
+    line-height: 44px;
+    font-size: 16px;
+    color: #00A5E3;
+    top: 0;
+    -webkit-box-sizing: border-box;
+    width: 100%;
+    z-index: 10;
+    background-color: #f8f9fa;
+}
+
+.btB {
+    margin-bottom: 45px;
+}
+
+/*标题结束*/
+/*带图标的按钮开始*/
+.pb-left {
+    position: absolute;
+    top: 3px;
+    left: 10px;
+}
+
+.pb-left img {
+    height: 16px;
+}
+
+.btnlink {
+    text-decoration: none;
+    height: 30px;
+    line-height: 30px;
+    float: left;
+    border: 1px solid #cacccd;
+    border-radius: 3px;
+    color: #00a5e0;
+    background-color: #fdfdfd;
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.5, white), to(#fafafa));
+    cursor: hand;
+    margin: 5px;
+    position: relative;
+}
+
+.btnlink span {
+    padding: 7px 20px 7px 10px;
+    margin: 0 0 0 20px;
+    float: left;
+    height: 16px;
+    display: block;
+    line-height: 16px;
+    vertical-align: middle;
+}
+
+/*带图标的按钮结束*/

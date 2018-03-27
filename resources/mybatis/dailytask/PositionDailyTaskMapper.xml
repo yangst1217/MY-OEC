@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PositionDailyTaskMapper">
+
+    <!--行政日清列表页-->
+    <select id="listPage" parameterType="pd" resultType="pd">
+        SELECT
+        t1.*, emp.EMP_NAME
+        FROM
+        position_daily_task t1
+        LEFT JOIN bd_employee emp ON emp.EMP_CODE = t1.EMP_CODE
+        WHERE
+        1 = 1
+        <!-- 起始时间检索 -->
+        <if test="pd.START_DATE != null and pd.START_DATE != ''">
+            AND t1.datetime &gt;= #{pd.START_DATE}
+        </if>
+        <if test="pd.END_DATE != null and pd.END_DATE != ''">
+            AND t1.datetime &lt;= #{pd.END_DATE}
+        </if>
+        <!-- 员工 -->
+        <if test="pd.USER_NUMBER != null and pd.USER_NUMBER != ''">
+            AND t1.EMP_CODE = #{pd.USER_NUMBER}
+        </if>
+        ORDER BY
+        t1.datetime DESC
+    </select>
+
+    <!-- 新增 -->
+    <insert id="add" parameterType="pd" keyProperty="ID" useGeneratedKeys="true">
+        INSERT INTO position_daily_task (
+            EMP_CODE,
+            datetime,
+            status,
+            CREATE_TIME,
+            CREATE_USER,
+            UPDATE_TIME,
+            UPDATE_USER
+        )
+        VALUES
+            (
+                #{EMP_CODE},
+                DATE_FORMAT(NOW(), '%Y-%m-%d'),
+                #{STATUS},
+                #{createTime},
+                #{createUser},
+                #{updateTime},
+                #{updateUser}
+            );
+    </insert>
+
+    <!--行政日清列表页-->
+    <select id="find" parameterType="pd" resultType="pd">
+        SELECT
+        t1.*, emp.EMP_NAME, emp.EMP_DEPARTMENT_ID, emp.EMP_DEPARTMENT_NAME, emp.EMP_GRADE_ID, emp.EMP_GRADE_NAME,
+        pos.GRADE_CODE,substring_index(file.filename,"_",-1) FILENAME,file.filename FILESERVER,file.FILENAME_SERVER
+        FROM
+        position_daily_task t1
+        LEFT JOIN bd_employee emp ON emp.EMP_CODE = t1.EMP_CODE
+        LEFT JOIN bd_position_level pos ON pos.ID = emp.EMP_GRADE_ID
+        LEFT JOIN task_file file ON t1.ID = file.TASK_ID and file.ISDEL=0
+        WHERE
+        1 = 1
+        <!-- ID -->
+        <if test="ID != null and ID != ''">
+            AND t1.ID = ${ID}
+        </if>
+        <if test="date_flag != null and date_flag != ''">
+            and t1.datetime = DATE_FORMAT(NOW(), '%Y-%m-%d')
+        </if>
+        <if test="EMP_CODE != null and EMP_CODE != ''">
+            and t1.EMP_CODE = #{EMP_CODE}
+        </if>
+    </select>
+
+    <!--通过员工CODE获得员工名，部门等基本信息-->
+    <select id="findBaseDate" parameterType="pd" resultType="pd">
+        SELECT
+        emp.EMP_NAME,
+        emp.EMP_GRADE_ID,
+        dept.DEPT_NAME,
+        posi.GRADE_NAME,
+        posi.GRADE_CODE
+        FROM
+        bd_employee emp
+        LEFT JOIN bd_department dept ON (
+        dept.ID = emp.EMP_DEPARTMENT_ID
+        )
+        LEFT JOIN bd_position_level posi ON (posi.ID = emp.EMP_GRADE_ID)
+        WHERE
+        1 = 1
+        <!-- EMP_CODE -->
+        <if test="EMP_CODE != null and EMP_CODE != ''">
+            AND emp.EMP_CODE = #{EMP_CODE}
+        </if>
+        ;
+    </select>
+
+    <!--通过GRADE_CODE获取工作明细列表-->
+    <select id="findResponseList" parameterType="pd" resultType="pd">
+        SELECT
+        resd.*,resp.responsibility
+        FROM
+        bd_responsibility_detail resd
+        LEFT JOIN bd_position_responsibility resp ON (resd.responsibility_id = resp.ID)
+        WHERE
+        resd.responsibility_id IN (
+        SELECT
+        res.ID
+        FROM
+        bd_position_responsibility res
+        WHERE
+        1 = 1
+        <!-- GRADE_CODE -->
+        <if test="GRADE_CODE != null and GRADE_CODE != ''">
+            AND res.GRADE_CODE = #{GRADE_CODE}
+        </if>
+        )
+        ORDER BY resp.responsibility;
+    </select>
+
+    <!--通过日常工作id获取工作明细列表-->
+    <select id="findPositionDailyTaskDetail" parameterType="pd" resultType="pd">
+        SELECT
+        resd.*, resp.responsibility, taskDetail.count, taskDetail.ID taskDetailID, detailTime.START_TIME_ARR,
+        detailTime.END_TIME_ARR,
+        detailTime.totalTime, sys_status.NAME statusName, sys_user.NAME UPDATE_USER_NAME
+        FROM
+        bd_responsibility_detail resd
+        LEFT JOIN bd_position_responsibility resp ON (resd.responsibility_id = resp.ID)
+        LEFT JOIN (
+        SELECT ID, daily_task_id, detail_id, count, score, status, UPDATE_USER FROM position_daily_task_detail
+        WHERE daily_task_id=#{dailyTaskId}
+        ) taskDetail ON taskDetail.detail_id=resd.ID
+        LEFT JOIN (
+        SELECT
+        REPLACE (
+        GROUP_CONCAT(
+        DATE_FORMAT(start_time, '%H:%i:%s')
+        ),
+        ',',
+        ';'
+        ) AS START_TIME_ARR,
+        REPLACE (
+        GROUP_CONCAT(
+        DATE_FORMAT(end_time, '%H:%i:%s')
+        ),
+        ',',
+        ';'
+        ) AS END_TIME_ARR,
+        FORMAT(SUM(duration)/60, 2) totalTime,
+        task_detail_id
+        FROM
+        daily_task_detail_time
+        GROUP BY
+        task_detail_id
+        ) detailTime ON detailTime.task_detail_id=taskDetail.ID
+        LEFT JOIN sys_status ON sys_status.BIANMA = taskDetail.status
+        LEFT JOIN sys_user ON sys_user.USERNAME = taskDetail.UPDATE_USER
+        WHERE
+        resd.responsibility_id IN (
+        SELECT
+        res.ID
+        FROM
+        bd_position_responsibility res
+        WHERE
+        1 = 1
+        <!-- GRADE_CODE -->
+        <if test="gradeCode != null and gradeCode != ''">
+            AND res.GRADE_CODE = #{gradeCode}
+        </if>
+        )
+        ORDER BY resp.responsibility,resd.ID
+    </select>
+
+    <!--现在已经存在的时间段-->
+    <select id="findTimeList" parameterType="pd" resultType="pd">
+        SELECT
+        t1.*
+        FROM
+        daily_task_detail_time t1
+        WHERE
+        1 = 1
+        <!-- GRADE_CODE -->
+        <if test="task_detail_id != null and task_detail_id != ''">
+            AND t1.task_detail_id = #{task_detail_id}
+        </if>
+        ;
+    </select>
+
+    <!--批量删除细节表-->
+    <delete id="batchDeleteDetail" parameterType="pd">
+        DELETE
+        FROM
+        position_daily_task_detail
+        WHERE
+        ID NOT IN (
+        <foreach item="item" index="index" collection="update_ids" separator=",">
+            ${item}
+        </foreach>
+        )
+        AND daily_task_id = #{daily_task_id}
+    </delete>
+
+    <!--批量删除时间细节表-->
+    <delete id="batchDeleteDetailTime" parameterType="pd">
+        DELETE
+        FROM
+        daily_task_detail_time
+        WHERE
+        <if test="update_ids != null and update_ids != ''">
+            task_detail_id NOT IN (
+            <foreach item="item" index="index" collection="update_ids" separator=",">
+                ${item}
+            </foreach>
+        </if>
+        <if test="new_update_ids != null and new_update_ids != ''">
+            task_detail_id IN (
+            <foreach item="item" index="index" collection="new_update_ids" separator=",">
+                ${item}
+            </foreach>
+        </if>
+        );
+    </delete>
+
+    <!-- 新增行政日清细节 -->
+    <insert id="addDetail" parameterType="pd" keyProperty="ID" useGeneratedKeys="true">
+        INSERT INTO position_daily_task_detail (
+            daily_task_id,
+            detail_id,
+            count,
+            score,
+            status,
+            CREATE_TIME,
+            CREATE_USER,
+            UPDATE_TIME,
+            UPDATE_USER,
+            ID
+        )
+        VALUES
+        (
+            #{daily_task_id},
+            #{detail_id},
+            #{count},
+            #{score},
+            #{status},
+            #{CREATE_TIME},
+            #{CREATE_USER},
+            #{UPDATE_TIME},
+            #{UPDATE_USER},
+            #{ID}
+        );
+    </insert>
+
+    <!-- 新增行政日清细节时间 -->
+    <insert id="addDetailTime" parameterType="pd" keyProperty="ID" useGeneratedKeys="true">
+        INSERT INTO daily_task_detail_time (
+            task_detail_id,
+            start_time,
+            end_time,
+            duration,
+            status,
+            groups,
+            CREATE_TIME,
+            CREATE_USER,
+            UPDATE_TIME,
+            UPDATE_USER
+        )
+        VALUES
+        (
+            #{task_detail_id},
+            #{start_time},
+            #{end_time},
+            #{duration},
+            #{status},
+            #{groups},
+            #{createTime},
+            #{createUser},
+            #{updateTime},
+            #{updateUser}
+        );
+    </insert>
+
+    <!--更新行政日清细节-->
+    <update id="updateDetail" parameterType="pd">
+        UPDATE position_daily_task_detail
+        <set>
+            <if test="daily_task_id != null and daily_task_id != '' ">
+                daily_task_id = #{daily_task_id},
+            </if>
+            <if test="detail_id != null and detail_id != '' ">
+                detail_id = #{detail_id},
+            </if>
+            <if test="count != null and count != '' ">
+                count = #{count},
+            </if>
+            <if test="score != null and score != '' ">
+                score = #{score},
+            </if>
+            <if test="status != null and status != '' ">
+                status = #{status},
+            </if>
+            <if test="UPDATE_TIME != null and UPDATE_TIME != '' ">
+                UPDATE_TIME = #{UPDATE_TIME},
+            </if>
+            <if test="UPDATE_USER != null and UPDATE_USER != '' ">
+                UPDATE_USER = #{UPDATE_USER}
+            </if>
+        </set>
+        WHERE
+        ID = ${ID};
+    </update>
+
+    <select id="findTaskDetailByID" resultType="pd">
+		select * from position_daily_task_detail where ID=#{id}
+	</select>
+
+    <!--通过ID获取行政日清细节列表-->
+    <select id="findDetailList" parameterType="pd" resultType="pd">
+        SELECT
+        t1.*, s1.START_TIME_ARR,
+        s1.END_TIME_ARR
+        FROM
+        position_daily_task_detail t1
+        LEFT JOIN (
+        SELECT
+        REPLACE (
+        GROUP_CONCAT(
+        DATE_FORMAT(t2.start_time, '%H:%i')
+        ),
+        ',',
+        ';'
+        ) AS START_TIME_ARR,
+        REPLACE (
+        GROUP_CONCAT(
+        DATE_FORMAT(t2.end_time, '%H:%i')
+        ),
+        ',',
+        ';'
+        ) AS END_TIME_ARR,
+        t2.task_detail_id
+        FROM
+        daily_task_detail_time t2
+        GROUP BY
+        t2.task_detail_id
+        ) s1 ON t1.ID = s1.task_detail_id
+        WHERE
+        1 = 1
+        <!-- daily_task_id -->
+        <if test="daily_task_id != null and daily_task_id != ''">
+            AND t1.daily_task_id = #{daily_task_id}
+        </if>
+        <if test="detail_id != null and detail_id != ''">
+            AND t1.detail_id = #{detail_id}
+        </if>
+    </select>
+
+    <!--判断今日是否可添加-->
+    <select id="checkAdd" resultType="String" parameterType="pd">
+        SELECT IF(COUNT(t1.ID)>0, 'false', 'true') 
+        FROM position_daily_task t1 
+        WHERE t1.datetime = DATE_FORMAT(NOW(), '%Y-%m-%d')
+              AND t1.EMP_CODE = #{EMP_CODE}
+    </select>
+
+    <select id="getToadyDailyTask" resultType="pd">
+		SELECT
+			dt.ID,
+			dt.task_detail_id,
+			td.detail_id,
+			dt.start_time,
+			dt.end_time,
+			dt.duration,
+			dt.`status`,
+			dt.groups,
+			t.EMP_CODE
+		FROM
+			position_daily_task t,
+			position_daily_task_detail td,
+			daily_task_detail_time dt
+		WHERE
+			dt.task_detail_id = td.ID
+		AND td.daily_task_id = t.ID
+		AND t.EMP_CODE = #{EMP_CODE}
+		AND (
+			t.datetime = DATE_FORMAT(NOW(), '%Y-%m-%d')
+			OR t.datetime = DATE_FORMAT(
+				date_sub(NOW(), INTERVAL 1 DAY),
+				'%Y-%m-%d'
+			)
+		)
+		ORDER BY
+			dt.start_time
+	</select>
+
+    <select id="getWeekDailyTask" resultType="pd">
+		SELECT
+			dt.ID,
+			dt.task_detail_id,
+			td.detail_id,
+			dt.start_time,
+			dt.end_time,
+			dt.duration,
+			dt.`status`,
+			dt.groups,
+			t.EMP_CODE
+		FROM
+			position_daily_task t,
+			position_daily_task_detail td,
+			daily_task_detail_time dt
+		WHERE
+			dt.task_detail_id = td.ID
+		AND td.daily_task_id = t.ID
+		AND t.EMP_CODE = #{EMP_CODE}
+		AND (
+			t.datetime > DATE_FORMAT(
+				date_sub(NOW(), INTERVAL 7 DAY),
+				'%Y-%m-%d'
+			)
+		)
+		ORDER BY
+			dt.start_time
+	</select>
+
+    <!--提交行政日清-->
+    <update id="arrange" parameterType="String">
+        UPDATE position_daily_task
+        SET
+            STATUS = 'YW_YSX'
+        WHERE
+            ID = #{id};
+    </update>
+
+    <!--删除行政日清-->
+    <delete id="del" parameterType="String">
+        DELETE
+        FROM
+            position_daily_task
+        WHERE
+            ID = #{id}
+    </delete>
+    <!-- 查询批示记录  -->
+    <select id="findComment" parameterType="pd" resultType="pd">
+    	SELECT
+		    t.comments,
+		    t.create_time,
+		    e.EMP_NAME create_user
+		FROM
+		    daily_comments t,
+		    sys_user u,
+		    bd_employee e
+		WHERE
+		    t.CREATE_USER = u.USERNAME
+		AND u.NUMBER = e.EMP_CODE
+		AND t.TASK_ID = #{manage_id}
+    </select>
+
+    <!-- 根据ID获取日清工作时间 -->
+    <select id="findTimeById" resultType="pd">
+    	select * from daily_task_detail_time where ID = #{id}
+    </select>
+
+    <!-- 更新日清工作时间 -->
+    <update id="updateDetailTime" parameterType="pd">
+    	UPDATE daily_task_detail_time
+		SET end_time = #{end_time},
+			duration = TIMESTAMPDIFF(SECOND,#{start_time},#{end_time}),
+			status = #{status},
+			UPDATE_TIME = #{updateTime},
+			UPDATE_USER = #{updateUser} 
+		WHERE
+			ID = #{ID}
+    </update>
+
+    <!-- 获取员工某天的日常工作 -->
+    <select id="findPositionDailyTaskOnDay" parameterType="pd" resultType="pd">
+    	select ID, EMP_CODE, datetime, status
+    	from position_daily_task
+    	where EMP_CODE = #{empCode} and datetime=DATE_FORMAT(#{taskTime}, '%Y-%m-%d')
+    </select>
+
+    <!-- 根据岗位日常工作id查询详细工作列表的时间 -->
+    <select id="findPositionDailyTaskDetailById" parameterType="Integer" resultType="pd">
+    	SELECT
+			dt.ID,
+			dt.task_detail_id,
+			td.detail_id,
+			dt.start_time,
+			dt.end_time,
+			dt.duration,
+			dt.`status`,
+			dt.groups,
+			t.EMP_CODE
+			
+		FROM
+			position_daily_task t,
+			position_daily_task_detail td,
+			daily_task_detail_time dt
+		WHERE
+			dt.task_detail_id = td.ID
+			AND td.daily_task_id = t.ID
+			AND t.ID=#{posDailyTaskId}
+		ORDER BY detail_id, groups, end_time
+    </select>
+    <delete id="delDoingData" parameterType="pd">
+    	delete from daily_task_detail_time
+    	where groups = #{groups}
+    	and status = 'doing'
+    </delete>
+</mapper>

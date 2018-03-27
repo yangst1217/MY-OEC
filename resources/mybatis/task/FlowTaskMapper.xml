@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FlowTaskMapper">
+    <!-- 流程工作 -->
+
+    <!-- 更新流程节点 -->
+    <update id="updateFlowWorkNode" parameterType="pd">
+        update flow_work_node
+        <set>
+            <if test="deptId != null and deptId != '' ">
+                DEPT_ID = #{deptId},
+            </if>
+            <if test="positionId != null and positionId != '' ">
+                POSITION_ID = #{positionId},
+            </if>
+            <if test="empCode != null and empCode != '' ">
+                EMP_CODE = #{empCode},
+            </if>
+            <if test="status != null and status != '' ">
+                STATUS = #{status},
+            </if>
+            <if test="selectedDuty != null and selectedDuty != '' ">
+                RESPONSIBILITY_DETAIL_IDS = #{selectedDuty},
+            </if>
+        </set>
+        where ID = #{nodeId}
+    </update>
+
+    <!-- 添加流程工作历史记录 -->
+    <insert id="saveFlowWorkHistory" parameterType="pd">
+		insert into flow_work_history(FLOW_ID, OPERA_TIME, OPERATOR, CURRENT_NODE, NEXT_NODE, NEXT_NODE_EMP_CODE, OPERA_TYPE, REMARKS, FILE_ID, SCORE)
+		values(#{flowId}, #{operaTime}, #{perator}, #{currentNode}, #{nextNode}, #{nextNodeEmp}, #{operaType}, #{remarks}, #{fileId}, #{score})
+	</insert>
+
+    <!-- 添加流程节点时间信息 -->
+    <insert id="saveFlowNodeTime" parameterType="pd">
+		insert into flow_node_time(NODE_ID, START_TIME, END_TIME)
+		values(#{nodeId}, #{startTime}, #{endTime})
+	</insert>
+
+    <!-- 更新流程节点时间信息 -->
+    <update id="updateFlowNodeTime" parameterType="pd">
+		update flow_node_time set END_TIME = #{endTime}
+		where NODE_ID = #{nodeId} and END_TIME is NULL
+	</update>
+
+    <!-- 查询当前节点可以启动的子流程模板 -->
+    <select id="findFlowByFlowWorkNodeId" parameterType="pd" resultType="pd">
+		select ID, MODEL_CODE, MODEL_NAME from flow_model
+		where ISDEL = 0 and ID = (select SUBFLOW_ID from flow_work_node where ID = #{nodeId} )
+	</select>
+
+    <!-- 查询流程下的所有节点实例 -->
+    <select id="findAllNodeByFLowWorkId" parameterType="pd" resultType="pd">
+        select node.ID, node.FLOW_ID, node.NODE_LEVEL, node.NODE_NAME, node.DEPT_ID, node.POSITION_ID, node.EMP_CODE,
+        node.STATUS,
+        dep.DEPT_NAME, emp.EMP_NAME, pos.GRADE_NAME, sys_status.NAME STATUS_NAME
+        from flow_work_node node
+        left join bd_department dep on dep.ID = node.DEPT_ID
+        left join bd_employee emp on emp.EMP_CODE = node.EMP_CODE
+        left join bd_position_level pos on pos.ID = node.POSITION_ID
+        left join sys_status on sys_status.BIANMA = node.STATUS
+        where node.FLOW_ID = #{flowId} and node.ISDEL=0
+        <choose>
+            <when test="handleType=='back'">
+                and node.NODE_LEVEL&lt;(select NODE_LEVEL from flow_work_node where ID=#{nodeId})
+                and node.STATUS = #{finishStatus}
+            </when>
+            <otherwise>
+                <if test="handleType=='next'">
+                    and node.NODE_LEVEL&gt;(select NODE_LEVEL from flow_work_node where ID=#{nodeId})
+                    <if test="availableStatus!=null and availableStatus!='' ">
+                        and node.STATUS = #{availableStatus}
+                    </if>
+                </if>
+            </otherwise>
+        </choose>
+        order by node.NODE_LEVEL
+    </select>
+
+    <!-- 更新流程状态 -->
+    <update id="endFlow" parameterType="pd">
+		update flow_work set STATUS = #{status}
+		where id = #{flowId}
+	</update>
+
+    <!-- 根据节点ID查询节点信息 -->
+    <select id="findFlowWorkNodeById" parameterType="Integer" resultType="pd">
+		select ID, FLOW_ID, NODE_NAME, DEPT_ID, POSITION_ID, EMP_CODE, STATUS
+		from flow_work_node
+		where ID=#{id} and ISDEL=0
+	</select>
+</mapper>

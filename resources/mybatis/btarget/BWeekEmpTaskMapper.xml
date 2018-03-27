@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BWeekEmpTaskMapper">
+
+    <sql id="bWeekEmpTaskColumns">
+        B_MONTH_EMP_TARGET_ID,
+        B_YEAR_TARGET_CODE,
+        DEPT_CODE,
+        EMP_CODE,
+        YEAR,
+        MONTH,
+        WEEK,
+        WEEK_START_DATE,
+        WEEK_END_DATE,
+        WEEK_COUNT,
+        MONEY_COUNT,
+        STATUS,
+        ISDEL,
+        CREATE_USER,
+        CREATE_TIME,
+        UPDATE_USER,
+        UPDATE_TIME,
+        PARTICIPANT
+    </sql>
+
+    <!--获取目标的现有拆分-->
+    <select id="getWeekEmpTaskList" parameterType="pd" resultType="pd">
+        SELECT
+        GREATEST(
+        dc.START_DATE,
+        t3.START_DATE
+        ) AS DC_START_DATE,
+        LEAST(dc.END_DATE, t3.END_DATE) AS DC_END_DATE,
+        dc.`WEEK` AS DC_WEEK,
+        s1.ID,
+        s1.B_MONTH_EMP_TARGET_ID,
+        s1.B_YEAR_TARGET_CODE,
+        s1.DEPT_CODE,
+        s1.EMP_CODE,
+        s1.`YEAR`,
+        s1.`MONTH`,
+        s1.`WEEK`,
+        s1.WEEK_START_DATE,
+        s1.WEEK_END_DATE,
+        IFNULL(s1.WEEK_COUNT, 0) AS 'WEEK_COUNT',
+        IFNULL(s1.MONEY_COUNT, 0) AS 'MONEY_COUNT',
+        s1.`STATUS`,
+        s1.ISDEL,
+        s1.CREATE_USER,
+        s1.CREATE_TIME,
+        s1.UPDATE_TIME,
+        s1.UPDATE_USER,
+        s1.PARTICIPANT,
+        IF (
+        DATE_FORMAT(NOW(), '%Y-%m-%d') &lt;= dc.START_DATE,
+        'false',
+        'true'
+        ) AS TO_CHANGE,
+        IFNULL(s1.`REAL_COUNT`, 0) AS 'REAL_COUNT',
+        IFNULL(
+        IFNULL(s1.WEEK_COUNT, 0) - IFNULL(s1.`REAL_COUNT`, 0),
+        0
+        ) AS 'DIFF_COUNT'
+        FROM
+        (
+        date_cycle dc,
+        b_month_emp_target t1
+        )
+        JOIN b_year_target t3 ON t1.B_YEAR_TARGET_CODE = t3.`CODE`
+        LEFT JOIN (
+        SELECT
+        t2.*, s2.`REAL_COUNT`
+        FROM
+        b_week_emp_task t2
+        LEFT JOIN (
+        SELECT
+        t3.B_WEEK_EMP_TASK_ID,
+        SUM(t3.DAILY_COUNT) AS REAL_COUNT
+        FROM
+        b_daily_emp_task t3
+        GROUP BY
+        t3.B_WEEK_EMP_TASK_ID
+        ) s2 ON (
+        t2.ID = s2.B_WEEK_EMP_TASK_ID
+        )
+        WHERE
+        B_MONTH_EMP_TARGET_ID = ${ID}
+        AND ISDEL = 0
+        ) s1 ON (
+        dc.`YEAR` = s1.`YEAR`
+        AND dc.`MONTH` = s1.`MONTH`
+        AND dc.`WEEK` = s1.`WEEK`
+        )
+        WHERE
+        t1.ID = ${ID}
+        AND dc.`YEAR` = t1.`YEAR`
+        AND dc.`MONTH` = t1.`MONTH`
+        AND GREATEST(dc.START_DATE,t3.START_DATE) &lt;= LEAST(dc.END_DATE, t3.END_DATE)
+        <!-- AND dc.START_DATE &gt;= t3.START_DATE
+        AND dc.END_DATE &lt;= t3.END_DATE; -->
+    </select>
+
+    <!--批量新增-->
+    <insert id="batchAdd" parameterType="java.util.List" flushCache="false">
+        INSERT INTO b_week_emp_task (
+        <include refid="bWeekEmpTaskColumns"/>
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (
+            ${item.B_MONTH_EMP_TARGET_ID},
+            #{item.B_YEAR_TARGET_CODE},
+            #{item.DEPT_CODE},
+            #{item.EMP_CODE},
+            #{item.YEAR},
+            #{item.MONTH},
+            #{item.WEEK},
+            #{item.WEEK_START_DATE},
+            #{item.WEEK_END_DATE},
+            #{item.WEEK_COUNT},
+            #{item.MONEY_COUNT},
+            #{item.STATUS},
+            0,
+            #{item.CREATE_USER},
+            #{item.CREATE_TIME},
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.PARTICIPANT}
+            )
+        </foreach>
+    </insert>
+
+    <!--批量更新-->
+    <update id="batchUpdate" parameterType="pd">
+        UPDATE b_week_emp_task
+        SET
+            WEEK_COUNT = #{WEEK_COUNT},
+            MONEY_COUNT = #{MONEY_COUNT},
+            ISDEL = 0,
+            `STATUS` = #{STATUS},
+            UPDATE_USER = #{UPDATE_USER},
+            UPDATE_TIME = #{UPDATE_TIME}
+        WHERE
+            ID = ${ID}
+        AND B_MONTH_EMP_TARGET_ID = ${B_MONTH_EMP_TARGET_ID}
+    </update>
+
+    <!--批量新增历史记录-->
+    <insert id="batchHisAdd" parameterType="java.util.List" flushCache="false">
+        INSERT INTO b_week_emp_task_his (
+        <include refid="bWeekEmpTaskColumns"/>
+        )
+        VALUES
+        <foreach item="item" index="index" collection="list" separator=",">
+            (
+            ${item.B_MONTH_EMP_TARGET_ID},
+            #{item.B_YEAR_TARGET_CODE},
+            #{item.DEPT_CODE},
+            #{item.EMP_CODE},
+            #{item.YEAR},
+            #{item.MONTH},
+            #{item.WEEK},
+            #{item.WEEK_START_DATE},
+            #{item.WEEK_END_DATE},
+            #{item.WEEK_COUNT},
+            #{item.MONEY_COUNT},
+            #{item.STATUS},
+            0,
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.UPDATE_USER},
+            #{item.UPDATE_TIME},
+            #{item.PARTICIPANT}
+            )
+        </foreach>
+    </insert>
+
+    <!--获取历史数据时间分组-->
+    <select id="getHisTimeList" parameterType="String" resultType="pd">
+        SELECT
+            t1.UPDATE_TIME,
+            SUM(t1.WEEK_COUNT) AS WEEK_COUNT_SUM,
+            SUM(t1.MONEY_COUNT) AS WEEK_COUNT_SUM_MONEY,
+            (
+                SELECT
+                    t2.MONTH_COUNT
+                FROM
+                    b_month_emp_target_his t2
+                WHERE
+                    MAX(t1.EMP_CODE) = t2.EMP_CODE
+                AND MAX(t1.B_YEAR_TARGET_CODE) = t2.B_YEAR_TARGET_CODE
+                AND MAX(t1.`MONTH`) = t2.`MONTH`
+                AND MAX(t1.`YEAR`) = t2.`YEAR`
+                AND t1.UPDATE_TIME > t2.UPDATE_TIME
+                ORDER BY
+                    t2.UPDATE_TIME DESC
+                LIMIT 1
+            ) AS HIS_COUNT,
+            (
+                SELECT
+                    t2.MONEY_COUNT
+                FROM
+                    b_month_emp_target_his t2
+                WHERE
+                    MAX(t1.EMP_CODE) = t2.EMP_CODE
+                AND MAX(t1.B_YEAR_TARGET_CODE) = t2.B_YEAR_TARGET_CODE
+                AND MAX(t1.`MONTH`) = t2.`MONTH`
+                AND MAX(t1.`YEAR`) = t2.`YEAR`
+                AND t1.UPDATE_TIME > t2.UPDATE_TIME
+                ORDER BY
+                    t2.UPDATE_TIME DESC
+                LIMIT 1
+            ) AS HIS_COUNT_MONEY
+        FROM
+            b_week_emp_task_his t1
+        WHERE
+            t1.B_MONTH_EMP_TARGET_ID = ${ID}
+        AND t1.ISDEL = 0
+        GROUP BY
+            t1.UPDATE_TIME
+        ORDER BY
+            t1.UPDATE_TIME DESC
+    </select>
+
+    <!--按时间获取历史记录-->
+    <select id="getHisListByTime" parameterType="pd" resultType="pd">
+        SELECT
+            t1.*
+        FROM
+            b_week_emp_task_his t1
+        WHERE
+            t1.B_MONTH_EMP_TARGET_ID = #{B_MONTH_DEPT_TASK_ID}
+        AND t1.UPDATE_TIME = #{UPDATE_TIME}
+        AND ISDEL = 0
+    </select>
+
+    <!-- 下发目标分解 -->
+    <update id="arrange" parameterType="pd">
+        UPDATE b_week_emp_task
+        SET `STATUS` = 'YW_YSX',
+            UPDATE_TIME = #{UPDATE_TIME},
+            UPDATE_USER = #{UPDATE_USER}
+        WHERE
+            B_MONTH_EMP_TARGET_ID = #{ID}
+    </update>
+
+    <update id="deleteByYearTargetCode">
+        update b_week_emp_task
+        set isdel = 1,
+            update_time = #{updateTime},
+            update_user = #{updateUser}
+        where B_YEAR_TARGET_CODE = #{yearTargetCode}
+    </update>
+</mapper>
