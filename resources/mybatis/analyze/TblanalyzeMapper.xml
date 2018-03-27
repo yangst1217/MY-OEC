@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="tblanalyzeMapper">
+    <!-- 查询日常工作数据 -->
+    <select id="findEmplistPage" parameterType="page" resultType="pd">
+        SELECT
+        e.ID,
+        e.EMP_CODE,
+        e.EMP_NAME,
+        IFNULL(MAX(ALLDATA.allTime), 0) AS MAXTIME,
+        IFNULL(MIN(ALLDATA.allTime), 0) AS MINTIME,
+        IFNULL(AVG(ALLDATA.allTime), 0) AS AVGTIME,
+        IFNULL(SUM(ALLDATA.allTime), 0) AS SUMTIME
+        FROM
+        bd_employee e
+        JOIN bd_department d
+        ON e.EMP_DEPARTMENT_ID = d.ID
+        LEFT JOIN
+        (SELECT
+        SUM(t.duration) AS allTime,
+        p.EMP_CODE,
+        p.`datetime`
+        FROM
+        position_daily_task p,
+        position_daily_task_detail s,
+        daily_task_detail_time t
+        WHERE p.ID = s.DAILY_TASK_ID
+        AND s.ID = t.TASK_DETAIL_ID
+        AND s.status = 'YW_YSX'
+        <if test="pd.startTime != null and pd.startTime != ''">
+            <![CDATA[ AND p.DATETIME >= #{pd.startTime} ]]>
+        </if>
+        <if test="pd.endTime != null and pd.endTime != ''">
+            <![CDATA[ AND p.DATETIME <= #{pd.endTime} ]]>
+        </if>
+        GROUP BY p.emp_code,p.datetime
+        ) AS ALLDATA
+        ON ALLDATA.EMP_CODE = e.EMP_CODE
+        WHERE d.DEPT_CODE IN
+        ${pd.deptCodeStr}
+        AND e.ENABLED = '1'
+        AND d.IS_DELETE = '0'
+        <if test="pd.DEPT_ID!=null and pd.DEPT_ID!=''">
+            AND e.EMP_DEPARTMENT_ID = #{pd.DEPT_ID}
+        </if>
+        GROUP BY e.`EMP_CODE`
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+        </choose>
+
+    </select>
+    <!-- 查询流程工作数据 -->
+    <select id="findEmplistPage2" parameterType="page" resultType="pd">
+        SELECT
+        e.ID,
+        e.EMP_CODE,
+        e.EMP_NAME,
+        IFNULL(MAX(ALLDATA.allTime), 0) AS MAXTIME,
+        IFNULL(MIN(ALLDATA.allTime), 0) AS MINTIME,
+        IFNULL(AVG(ALLDATA.allTime), 0) AS AVGTIME,
+        IFNULL(SUM(ALLDATA.allTime), 0) AS SUMTIME
+        FROM
+        bd_employee e
+        JOIN bd_department d
+        ON e.EMP_DEPARTMENT_ID = d.ID
+        LEFT JOIN
+        (SELECT
+        n.`EMP_CODE`,
+        SUM(TIMESTAMPDIFF(
+        SECOND,
+        t.`START_TIME`,
+        t.`END_TIME`
+        )) AS allTime
+        FROM
+        flow_work_node n
+        LEFT JOIN flow_node_time t
+        ON n.`ID` = t.`NODE_ID`
+        WHERE n.`EMP_CODE` != 'null'
+        AND t.`START_TIME` != 'null'
+        AND t.`END_TIME` != 'null'
+        <if test="pd.startTime != null and pd.startTime != ''">
+            <![CDATA[ AND t.`START_TIME` >= #{pd.startTime} ]]>
+        </if>
+        <if test="pd.endTime != null and pd.endTime != ''">
+            <![CDATA[ AND  t.`END_TIME` <= #{pd.endTime} ]]>
+        </if>
+        GROUP BY n.emp_code,SUBSTRING(t.START_TIME,1,10)
+        ) AS ALLDATA
+        ON ALLDATA.EMP_CODE = e.EMP_CODE
+        WHERE d.DEPT_CODE IN
+        ${pd.deptCodeStr}
+        AND e.ENABLED = '1'
+        AND d.IS_DELETE = '0'
+        <if test="pd.DEPT_ID!=null and pd.DEPT_ID!=''">
+            AND e.EMP_DEPARTMENT_ID = #{pd.DEPT_ID}
+        </if>
+        GROUP BY e.`EMP_CODE`
+        <choose>
+            <when test="pd.sortKey != null and pd.sortKey != ''">
+                order by ${pd.sortKey} ${pd.sortMethod}
+            </when>
+        </choose>
+
+    </select>
+    <!-- 查询人员 -->
+    <select id="queryEmp" parameterType="pd" resultType="pd">
+        SELECT
+        e.EMP_CODE,e.EMP_NAME FROM bd_employee e,bd_department
+        d,bd_position_level l
+        WHERE
+        e.EMP_DEPARTMENT_ID = d.ID
+        AND l.ID = e.EMP_GRADE_ID
+        AND d.DEPT_CODE IN ${deptCodeStr}
+        AND
+        e.ENABLED = '1'
+        AND d.IS_DELETE = '0'
+        AND l.GRADE_CODE = #{GRADE_CODE}
+    </select>
+    <!-- 查询岗位 -->
+    <select id="queryPos" parameterType="pd" resultType="pd">
+        SELECT
+        GRADE_CODE,GRADE_NAME FROM bd_position_level l
+        LEFT JOIN bd_department d
+        ON l.ATTACH_DEPT_ID = d.ID
+        WHERE 0=0
+        <if test="deptCodeStr != null and deptCodeStr != ''">
+            AND d.DEPT_CODE IN ${deptCodeStr}
+        </if>
+    </select>
+    <!-- 查询比武数据 -->
+    <select id="queryPkData" parameterType="pd" resultType="pd">
+        SELECT
+        *,SUM(tb2.dua) AS duration
+        FROM
+        (SELECT
+        d.`ID`,
+        d.`detail`,
+        d.`standard_time`,
+        r.`responsibility`,
+        l.`GRADE_CODE`
+        FROM
+        bd_responsibility_detail d
+        LEFT JOIN bd_position_responsibility r
+        ON r.`ID` = d.`responsibility_id`
+        LEFT JOIN bd_position_level l
+        ON l.`GRADE_CODE` = r.`GRADE_CODE`
+        WHERE l.GRADE_CODE = #{GRADE_CODE} ) tb1
+        LEFT JOIN
+        (SELECT
+        ti.duration AS dua,
+        de.id
+        FROM
+        `daily_task_detail_time` ti
+        LEFT JOIN `position_daily_task_detail` pdetail
+        ON ti.task_detail_id = pdetail.id
+        LEFT JOIN `bd_responsibility_detail` de
+        ON pdetail.detail_id = de.ID
+        LEFT JOIN `position_daily_task` ptask
+        ON ptask.id = pdetail.daily_task_id
+        WHERE ptask.EMP_CODE = #{empCode}
+        AND pdetail.status = 'YW_YSX'
+        <if test="startTime != null">
+            <![CDATA[ AND ptask.DATETIME >= #{startTime} ]]>
+        </if>
+        <if test="endTime != null">
+            <![CDATA[ AND ptask.DATETIME <= #{endTime} ]]>
+        </if>
+        ) tb2
+        ON tb1.ID = tb2.id
+        GROUP BY tb1.ID
+    </select>
+    <!-- 查询单个员工技能熟练度 -->
+    <select id="querySkillData" parameterType="pd" resultType="pd">
+        SELECT
+        *,SUM(tb2.dua) AS duration
+        FROM
+        (SELECT
+        d.`ID`,
+        d.`detail`,
+        d.`standard_time`,
+        r.`responsibility`,
+        l.`GRADE_CODE`
+        FROM
+        bd_responsibility_detail d
+        LEFT JOIN bd_position_responsibility r
+        ON r.`ID` = d.`responsibility_id`
+        LEFT JOIN bd_position_level l
+        ON l.`GRADE_CODE` = r.`GRADE_CODE`
+        WHERE l.GRADE_CODE = #{GRADE_CODE}
+        AND d.ID = #{ID} ) tb1
+        LEFT JOIN
+        (SELECT
+        ti.duration AS dua,
+        de.id,
+        ptask.DATETIME
+        FROM
+        `daily_task_detail_time` ti
+        LEFT JOIN `position_daily_task_detail` pdetail
+        ON ti.task_detail_id = pdetail.id
+        LEFT JOIN `bd_responsibility_detail` de
+        ON pdetail.detail_id = de.ID
+        LEFT JOIN `position_daily_task` ptask
+        ON ptask.id = pdetail.daily_task_id
+        WHERE ptask.EMP_CODE = #{EMP_CODE}
+        AND pdetail.status = 'YW_YSX'
+        <if test="startTime != null">
+            <![CDATA[ AND ptask.DATETIME >= #{startTime} ]]>
+        </if>
+        <if test="endTime != null">
+            <![CDATA[ AND ptask.DATETIME <= #{endTime} ]]>
+        </if>
+        ) tb2
+        ON tb1.ID = tb2.id
+        GROUP BY SUBSTRING(tb2.DATETIME,1,7)
+
+    </select>
+
+    <!--查询部门 -->
+    <select id="findDept" parameterType="pd" resultType="pd">
+        SELECT
+        ID,DEPT_NAME FROM bd_department WHERE DEPT_CODE IN ${deptCodeStr}
+        AND
+        ENABLED = '1'
+    </select>
+    <!--根据岗位查询职责 -->
+    <select id="queryPosTask" parameterType="pd" resultType="pd">
+        SELECT
+        d.ID,
+        d.detail
+        FROM
+        bd_responsibility_detail d
+        LEFT JOIN
+        bd_position_responsibility r
+        ON d.responsibility_id = r.ID
+        LEFT JOIN
+        bd_position_level l
+        ON l.GRADE_CODE = r.GRADE_CODE
+        WHERE l.GRADE_CODE =
+        #{GRADE_CODE}
+    </select>
+    <!--根据部门查询员工 -->
+    <select id="queryDeptEmp" parameterType="pd" resultType="pd">
+        SELECT
+        e.EMP_CODE,e.EMP_NAME,l.GRADE_CODE FROM bd_employee
+        e,bd_position_level l
+        WHERE e.EMP_DEPARTMENT_ID =
+        #{deptId}
+        AND
+        e.EMP_GRADE_ID = l.ID
+        AND
+        e.ENABLED = '1'
+    </select>
+    <!--查询工作分配时间 -->
+    <select id="queryAllocation" parameterType="pd" resultType="pd">
+        SELECT
+        *,SUM(tb2.dua) AS duration
+        FROM
+        (SELECT
+        d.`ID`,
+        d.`detail`,
+        d.`standard_time`,
+        r.`responsibility`,
+        l.`GRADE_CODE`
+        FROM
+        bd_responsibility_detail d
+        LEFT JOIN bd_position_responsibility r
+        ON r.`ID` = d.`responsibility_id`
+        LEFT JOIN bd_position_level l
+        ON l.`GRADE_CODE` = r.`GRADE_CODE`
+        WHERE l.GRADE_CODE = #{GRADE_CODE} ) tb1
+        LEFT JOIN
+        (SELECT
+        ti.duration AS dua,
+        de.id
+        FROM
+        `daily_task_detail_time` ti
+        LEFT JOIN `position_daily_task_detail` pdetail
+        ON ti.task_detail_id = pdetail.id
+        LEFT JOIN `bd_responsibility_detail` de
+        ON pdetail.detail_id = de.ID
+        LEFT JOIN `position_daily_task` ptask
+        ON ptask.id = pdetail.daily_task_id
+        WHERE ptask.EMP_CODE = #{empCode}
+        AND pdetail.status = 'YW_YSX'
+        <if test="startTime != null">
+            <![CDATA[ AND ptask.DATETIME >= #{startTime} ]]>
+        </if>
+        <if test="endTime != null">
+            <![CDATA[ AND ptask.DATETIME <= #{endTime} ]]>
+        </if>
+        ) tb2
+        ON tb1.ID = tb2.id
+        GROUP BY tb1.ID
+    </select>
+    <!--查询技能评定数据 -->
+    <select id="queryJudgeData" parameterType="pd" resultType="pd">
+        SELECT
+        *,SUM(tb2.duration) AS sumDuration,
+        SUM(tb2.num) AS sumNum
+        FROM
+        (SELECT
+        d.`ID`,
+        d.`detail`,
+        d.`standard_time`,
+        r.`responsibility`,
+        l.`GRADE_CODE`
+        FROM
+        bd_responsibility_detail d
+        LEFT JOIN bd_position_responsibility r
+        ON r.`ID` = d.`responsibility_id`
+        LEFT JOIN bd_position_level l
+        ON l.`GRADE_CODE` = r.`GRADE_CODE`
+        WHERE l.GRADE_CODE = #{GRADE_CODE} ) tb1
+        LEFT JOIN
+        (SELECT
+        ti.duration,
+        de.id,
+        CASE WHEN ti.status = 'end' THEN 1 WHEN ti.status != 'end' THEN 0 END AS num
+        FROM
+        `daily_task_detail_time` ti
+        LEFT JOIN `position_daily_task_detail` pdetail
+        ON ti.task_detail_id = pdetail.id
+        LEFT JOIN `bd_responsibility_detail` de
+        ON pdetail.detail_id = de.ID
+        LEFT JOIN `position_daily_task` ptask
+        ON ptask.id = pdetail.daily_task_id
+        WHERE ptask.EMP_CODE = #{empCode}
+        AND pdetail.status = 'YW_YSX'
+        <if test="startTime != null">
+            <![CDATA[ AND ptask.DATETIME >= #{startTime} ]]>
+        </if>
+        <if test="endTime != null">
+            <![CDATA[ AND ptask.DATETIME <= #{endTime} ]]>
+        </if>
+        ) tb2
+        ON tb1.ID = tb2.id
+        GROUP BY tb1.ID
+    </select>
+</mapper> 
